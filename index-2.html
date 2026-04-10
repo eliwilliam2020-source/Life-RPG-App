@@ -1,0 +1,1801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life RPG</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cinzel:wght@400;600&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #10101a;
+    --panel:    #1c1c2e;
+    --panel2:   #242438;
+    --border:   #36365a;
+    --border2:  #4a4a78;
+    --text:     #e8e4f8;
+    --muted:    #9090c0;
+    --accent:   #d4a843;
+    --accent2:  #f0d470;
+    --common:   #4dd4f4;
+    --uncommon: #50e898;
+    --rare:     #d46bff;
+    --onetime:  #ff8c3a;
+    --reward:   #ffd642;
+    --danger:   #ff4f4f;
+    --food:     #ff7a50;
+    --pos:      #50e898;
+    --neg:      #ff4f4f;
+    --glow-c:   0 0 22px #4dd4f460;
+    --glow-u:   0 0 22px #50e89860;
+    --glow-r:   0 0 22px #d46bff60;
+    --glow-o:   0 0 22px #ff8c3a60;
+    --glow-rw:  0 0 22px #ffd64260;
+    --glow-food: 0 0 22px #ff7a5060;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Crimson Pro', serif; font-size: 16px; min-height: 100vh; overflow-x: hidden; }
+
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, #ffffff30 0%, transparent 100%),
+      radial-gradient(1px 1px at 80% 10%, #ffffff26 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 50% 70%, #ffffff22 0%, transparent 100%),
+      radial-gradient(1px 1px at 10% 90%, #ffffff28 0%, transparent 100%),
+      radial-gradient(1px 1px at 65% 50%, #ffffff1a 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 90% 80%, #ffffff26 0%, transparent 100%);
+    pointer-events: none; z-index: 0;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0;
+    background: radial-gradient(ellipse at 50% 0%, transparent 40%, #10101acc 100%);
+    pointer-events: none; z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 16px 100px; }
+
+  /* ── Header ── */
+  header { text-align: center; padding: 32px 0 18px; }
+  .header-stars { font-size: clamp(28px, 6vw, 44px); letter-spacing: 6px; line-height: 1; margin-bottom: 8px; display: block; }
+  .star-filled  { color: #ffd642; text-shadow: 0 0 16px #ffd64299, 0 0 32px #ffd64255; }
+  .star-empty   { color: #3a3a5a; }
+  header h1 { font-family: 'Cinzel Decorative', serif; font-size: clamp(22px, 5vw, 38px); color: var(--accent2); text-shadow: 0 0 30px #d4a84388, 0 0 60px #d4a84344; letter-spacing: 4px; }
+  header p.tagline { font-family: 'Cinzel', serif; font-size: 12px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+
+  .stats-nav-btn {
+    border: none; color: #fff;
+    font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px;
+    padding: 8px 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s;
+    white-space: nowrap; flex-shrink: 0; font-weight: 600;
+  }
+  .stats-nav-btn.btn-save  { background: linear-gradient(135deg, #2a7aff, #1a5fe0); box-shadow: 0 2px 10px #2a7aff44; }
+  .stats-nav-btn.btn-clean { background: linear-gradient(135deg, #22c97a, #19a862); box-shadow: 0 2px 10px #22c97a44; }
+  .stats-nav-btn.btn-stats { background: linear-gradient(135deg, #9b4dff, #7a2fe0); box-shadow: 0 2px 10px #9b4dff44; }
+  .stats-nav-btn.btn-export { background: linear-gradient(135deg, #22c97a, #19a862); box-shadow: 0 2px 10px #22c97a44; }
+  .stats-nav-btn.btn-import { background: linear-gradient(135deg, #2a7aff, #1a5fe0); box-shadow: 0 2px 10px #2a7aff44; }
+  .stats-nav-btn.btn-save:hover  { background: linear-gradient(135deg, #4090ff, #2a6af0); box-shadow: 0 3px 16px #2a7aff66; transform: translateY(-1px); }
+  .stats-nav-btn.btn-clean:hover { background: linear-gradient(135deg, #33e08a, #22b870); box-shadow: 0 3px 16px #22c97a66; transform: translateY(-1px); }
+  .stats-nav-btn.btn-stats:hover { background: linear-gradient(135deg, #b060ff, #8a40f0); box-shadow: 0 3px 16px #9b4dff66; transform: translateY(-1px); }
+  .stats-nav-btn.btn-export:hover { background: linear-gradient(135deg, #33e08a, #22b870); box-shadow: 0 3px 16px #22c97a66; transform: translateY(-1px); }
+  .stats-nav-btn.btn-import:hover { background: linear-gradient(135deg, #4090ff, #2a6af0); box-shadow: 0 3px 16px #2a7aff66; transform: translateY(-1px); }
+  .stats-nav-btn.active { outline: 2px solid #fff4; }
+  .stats-nav-btn.btn-save.unsaved { background: linear-gradient(135deg, #ff8c3a, #cc5500); box-shadow: 0 2px 14px #ff8c3a66; animation: saveGlow 1.5s ease infinite; }
+  .stats-nav-btn.btn-save.unsaved:hover { background: linear-gradient(135deg, #ffa050, #dd6600); }
+  @keyframes saveGlow { 0%,100% { box-shadow: 0 2px 10px #ff8c3a55; } 50% { box-shadow: 0 2px 22px #ff8c3aaa; } }
+
+  /* ── Points bar ── */
+  .points-bar { background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 20px; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 12px #00000044; }
+  .points-label { font-family: 'Cinzel', serif; font-size: 11px; color: var(--muted); letter-spacing: 2px; }
+  .points-value { font-family: 'Cinzel', serif; font-size: 22px; color: var(--reward); text-shadow: 0 0 16px #ffd64280; }
+
+  /* ── Tabs ── */
+  .tabs { display: flex; gap: 4px; margin-bottom: 20px; }
+  .tab-btn { flex: 1; padding: 9px 4px 8px; background: var(--panel); border: 1px solid var(--border2); border-radius: 6px; color: var(--muted); font-family: 'Cinzel', serif; font-size: 9.5px; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .tab-btn:hover { color: var(--text); border-color: var(--border2); background: var(--panel2); }
+  .tab-dot { display: block; width: 6px; height: 6px; border-radius: 50%; margin: 0 auto 5px; }
+  .tab-btn[data-tab="common"].active   { background: #4dd4f422; border-color: var(--common);  color: var(--common);  box-shadow: var(--glow-c); }
+  .tab-btn[data-tab="uncommon"].active { background: #50e89822; border-color: var(--uncommon);color: var(--uncommon);box-shadow: var(--glow-u); }
+  .tab-btn[data-tab="rare"].active     { background: #d46bff22; border-color: var(--rare);    color: var(--rare);    box-shadow: var(--glow-r); }
+  .tab-btn[data-tab="onetime"].active  { background: #ff8c3a22; border-color: var(--onetime); color: var(--onetime); box-shadow: var(--glow-o); }
+  .tab-btn[data-tab="rewards"].active  { background: #ffd64222; border-color: var(--reward);  color: var(--reward);  box-shadow: var(--glow-rw); }
+  .tab-btn[data-tab="food"].active     { background: #ff7a5022; border-color: var(--food);    color: var(--food);    box-shadow: var(--glow-food); }
+
+  /* ── Sections ── */
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.25s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  .section-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .section-title { font-family: 'Cinzel', serif; font-size: 18px; font-weight: 600; }
+  .section-meta  { font-size: 13px; color: var(--muted); margin-top: 3px; font-style: italic; }
+  .section-title.common   { color: var(--common);  text-shadow: var(--glow-c); }
+  .section-title.uncommon { color: var(--uncommon);text-shadow: var(--glow-u); }
+  .section-title.rare     { color: var(--rare);    text-shadow: var(--glow-r); }
+  .section-title.onetime  { color: var(--onetime); text-shadow: var(--glow-o); }
+  .section-title.rewards  { color: var(--reward);  text-shadow: var(--glow-rw); }
+  .section-title.food     { color: var(--food);    text-shadow: var(--glow-food); }
+  .section-title.stats    { color: var(--accent2); text-shadow: 0 0 18px #e8c96a40; }
+
+  /* ── Add form ── */
+  .add-form { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .add-form input { background: var(--panel); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 9px 12px; font-family: 'Crimson Pro', serif; font-size: 15px; outline: none; transition: border-color 0.2s; }
+  .add-form input:focus { border-color: var(--border2); }
+  .add-form input.task-name  { flex: 1; min-width: 140px; }
+  .add-form input.unit-label { width: 110px; }
+  .add-form input.num-input  { width: 72px; }
+
+  /* step editor on card */
+  .step-wrap { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+  .step-label { font-family: 'Cinzel', serif; font-size: 10px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
+  .step-input { width: 46px; background: var(--panel2); border: 1px solid var(--border2); border-radius: 5px; color: var(--accent2); font-family: 'Cinzel', serif; font-size: 13px; text-align: center; padding: 4px; outline: none; transition: border-color 0.2s; }
+  .step-input:focus { border-color: var(--accent); }
+
+  .btn-add { padding: 9px 18px; border: none; border-radius: 6px; color: #fff; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-weight: 600; }
+  .btn-add:hover { transform: translateY(-1px); filter: brightness(1.15); }
+  #section-common   .btn-add { background: linear-gradient(135deg, #2ab8d8, #1a90b0); box-shadow: 0 2px 10px #4dd4f444; }
+  #section-uncommon .btn-add { background: linear-gradient(135deg, #28d878, #18b060); box-shadow: 0 2px 10px #50e89844; }
+  #section-rare     .btn-add { background: linear-gradient(135deg, #b84dff, #9020e0); box-shadow: 0 2px 10px #d46bff44; }
+  #section-onetime  .btn-add { background: linear-gradient(135deg, #ff7a28, #e05510); box-shadow: 0 2px 10px #ff8c3a44; }
+  #section-rewards  .btn-add { background: linear-gradient(135deg, #e8b820, #c09010); box-shadow: 0 2px 10px #ffd64244; }
+  #section-food     .btn-add { background: linear-gradient(135deg, #ff6030, #d04010); box-shadow: 0 2px 10px #ff7a5044; }
+
+  /* ── Task list ── */
+  .task-list { display: flex; flex-direction: column; gap: 8px; }
+  .task-empty { text-align: center; color: var(--muted); font-style: italic; padding: 32px; border: 1px dashed var(--border); border-radius: 8px; font-size: 14px; }
+
+  /* ── Task card ── */
+  .task-card { background: var(--panel); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 14px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; position: relative; overflow: hidden; }
+  .task-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
+  .task-card.common::before   { background: var(--common); box-shadow: 0 0 8px var(--common); }
+  .task-card.uncommon::before { background: var(--uncommon); box-shadow: 0 0 8px var(--uncommon); }
+  .task-card.rare::before     { background: var(--rare); box-shadow: 0 0 8px var(--rare); }
+  .task-card.onetime::before  { background: var(--onetime); box-shadow: 0 0 8px var(--onetime); }
+  .task-card:hover { border-color: var(--border2); background: var(--panel2); }
+
+  /* one-time complete button */
+  .complete-onetime-btn {
+    width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--border2);
+    background: transparent; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; font-size: 13px; color: transparent;
+  }
+  .complete-onetime-btn:hover { border-color: var(--onetime); color: var(--onetime); }
+
+  /* completed onetime section */
+  .onetime-completed-header {
+    font-family: 'Cinzel', serif; font-size: 11px; color: var(--muted);
+    letter-spacing: 2px; margin: 18px 0 8px; padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .task-card.onetime-done { opacity: 0.5; }
+  .task-card.onetime-done .task-name-text { text-decoration: line-through; color: var(--muted); }
+  .onetime-done-date { font-size: 11px; color: var(--onetime); margin-top: 2px; font-family: 'Cinzel', serif; font-style: italic; }
+
+  .reorder-btns { display: flex; flex-direction: column; gap: 2px; flex-shrink: 0; }
+  .arrow-btn { background: transparent; border: none; color: var(--border2); font-size: 13px; line-height: 1; cursor: pointer; padding: 1px 4px; transition: color 0.15s; user-select: none; }
+  .arrow-btn:hover { color: var(--accent2); }
+  .arrow-btn:disabled { opacity: 0.2; cursor: default; }
+
+  .task-info { flex: 1; min-width: 0; }
+  .task-name-text { font-size: 15px; color: var(--text); }
+  .task-unit-line { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'Cinzel', serif; letter-spacing: 0.5px; }
+
+  .task-counter { display: flex; align-items: center; background: var(--panel2); border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; flex-shrink: 0; }
+  .ctr-btn { background: transparent; border: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 6px 12px; transition: color 0.15s, background 0.15s; font-family: monospace; }
+  .ctr-btn:hover { color: var(--text); background: var(--border); }
+  .ctr-btn.minus:hover { color: #ff6666; background: #ff444422; }
+  .ctr-btn.plus:hover  { color: #60ff90; background: #40ff6022; }
+  .ctr-count { font-family: 'Cinzel', serif; font-size: 14px; color: var(--text); min-width: 28px; text-align: center; padding: 0 2px; user-select: none; }
+  .ctr-count.positive { color: var(--accent2); }
+
+  .task-earned { font-family: 'Cinzel', serif; font-size: 12px; padding: 3px 10px; border-radius: 20px; border: 1px solid; white-space: nowrap; flex-shrink: 0; min-width: 54px; text-align: center; }
+  .task-card.common   .task-earned { color: var(--common);  border-color: var(--common);  background: #6ab8d412; }
+  .task-card.uncommon .task-earned { color: var(--uncommon);border-color: var(--uncommon);background: #7ed49412; }
+  .task-card.rare     .task-earned { color: var(--rare);    border-color: var(--rare);    background: #c46bff12; }
+  .task-card.onetime  .task-earned { color: var(--onetime); border-color: var(--onetime); background: #ff9d5c12; }
+
+  .delete-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 15px; padding: 4px 6px; border-radius: 4px; transition: color 0.2s; flex-shrink: 0; line-height: 1; }
+  .delete-btn:hover { color: var(--danger); }
+
+  .edit-btn { background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 13px; padding: 4px 6px; border-radius: 4px; transition: color 0.2s; flex-shrink: 0; line-height: 1; }
+  .edit-btn:hover { color: var(--accent2); }
+
+  /* ── Edit modal ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: #00000088; z-index: 200; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+  .modal { background: var(--panel2); border: 1px solid var(--border2); border-radius: 12px; padding: 24px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
+  .modal-title { font-family: 'Cinzel', serif; font-size: 15px; color: var(--accent2); letter-spacing: 1px; }
+  .modal-field { display: flex; flex-direction: column; gap: 5px; }
+  .modal-label { font-family: 'Cinzel', serif; font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+  .modal-input { background: var(--panel); border: 1px solid var(--border2); border-radius: 6px; color: var(--text); padding: 9px 12px; font-family: 'Crimson Pro', serif; font-size: 15px; outline: none; transition: border-color 0.2s; width: 100%; }
+  .modal-input:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  .modal-save { padding: 9px 22px; border: none; border-radius: 6px; background: linear-gradient(135deg, #d4a843, #a87820); color: #fff; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; font-weight: 600; box-shadow: 0 2px 8px #d4a84344; }
+  .modal-save:hover { filter: brightness(1.15); transform: translateY(-1px); }
+  .modal-cancel { padding: 9px 16px; border: 1px solid var(--border2); border-radius: 6px; background: transparent; color: var(--muted); font-family: 'Cinzel', serif; font-size: 11px; cursor: pointer; transition: all 0.2s; }
+  .modal-cancel:hover { color: var(--text); border-color: var(--text); }
+
+  /* ── Rewards ── */
+  .reward-list { display: flex; flex-direction: column; gap: 10px; }
+  .reward-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; display: flex; align-items: center; gap: 10px; transition: all 0.2s; position: relative; }
+  .reward-card::before { content: ''; position: absolute; inset: 0; border-radius: 10px; background: radial-gradient(ellipse at 50% 0%, #f4c84210, transparent 70%); pointer-events: none; }
+  .reward-card:hover { border-color: var(--reward); box-shadow: 0 0 20px #f4c84218; }
+  .reward-info { flex: 1; min-width: 0; }
+  .reward-name { font-size: 15px; font-weight: 600; }
+  .reward-cost { font-family: 'Cinzel', serif; font-size: 12px; color: var(--reward); text-shadow: 0 0 8px #f4c84260; margin-top: 2px; }
+  .reward-redeemed { font-family: 'Cinzel', serif; font-size: 11px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+  .reward-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .buy-btn { background: linear-gradient(135deg, #d4a030, #b07820); border: none; color: #fff; border-radius: 6px; padding: 7px 12px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; white-space: nowrap; font-weight: 600; box-shadow: 0 2px 8px #d4a03044; }
+  .buy-btn:hover:not(:disabled) { filter: brightness(1.2); transform: translateY(-1px); box-shadow: 0 4px 14px #d4a03066; }
+  .buy-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .undo-btn { background: var(--panel2); border: 1px solid var(--border2); color: var(--muted); border-radius: 6px; padding: 7px 10px; font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .undo-btn:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); background: #ff4f4f18; }
+  .undo-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+  /* ── Food Rewards ── */
+  .food-group-title {
+    font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2px;
+    text-transform: uppercase; margin: 18px 0 10px; padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .food-group-title.poor { color: var(--uncommon); }
+  .food-group-title.bad  { color: var(--danger); }
+
+  .food-item {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px; position: relative; overflow: hidden; transition: border-color 0.2s;
+  }
+  .food-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
+  .food-item.poor::before { background: var(--uncommon); }
+  .food-item.bad::before  { background: var(--danger); }
+  .food-item:hover { border-color: var(--border2); }
+
+  .food-item-info { flex: 1; min-width: 0; }
+  .food-item-name { font-size: 15px; color: var(--text); }
+  .food-item-meta { font-size: 11px; color: var(--muted); font-family: 'Cinzel', serif; margin-top: 2px; letter-spacing: 0.5px; }
+
+  .food-tier-btns { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
+  .food-tier-btn {
+    border: 1px solid var(--border2); border-radius: 6px; background: transparent;
+    color: var(--muted); font-family: 'Cinzel', serif; font-size: 10px;
+    letter-spacing: 0.5px; padding: 5px 9px; cursor: pointer; transition: all 0.2s;
+    white-space: nowrap; display: flex; flex-direction: column; align-items: center; gap: 1px;
+  }
+  .food-tier-btn .tier-name { font-size: 10px; }
+  .food-tier-btn .tier-cost { font-size: 9px; color: var(--danger); }
+  .food-tier-btn:hover { border-color: var(--danger); color: var(--text); }
+
+  .food-item-count {
+    font-family: 'Cinzel', serif; font-size: 12px; color: var(--danger);
+    min-width: 60px; text-align: right; flex-shrink: 0;
+  }
+
+  /* ── Stats ── */
+  #section-stats { display: none; }
+  #section-stats.active { display: block; animation: fadeIn 0.25s ease; }
+
+  .btn-reset-stats { background: transparent; border: 1px solid var(--border2); color: var(--muted); font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px; padding: 7px 14px; border-radius: 6px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .btn-reset-stats:hover { color: var(--danger); border-color: var(--danger); }
+
+  .stats-empty { text-align: center; color: var(--muted); font-style: italic; padding: 48px 32px; border: 1px dashed var(--border); border-radius: 8px; font-size: 14px; line-height: 1.8; }
+
+  .stats-group { margin-bottom: 28px; }
+  .stats-group-title { font-family: 'Cinzel', serif; font-size: 13px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+
+  /* summary cards row */
+  .stat-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .stat-card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; }
+  .stat-card-label { font-family: 'Cinzel', serif; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; }
+  .stat-card-value { font-family: 'Cinzel', serif; font-size: 20px; color: var(--accent2); }
+  .stat-card-value.pos { color: var(--pos); }
+  .stat-card-value.neg { color: var(--neg); }
+
+  /* table */
+  .stats-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .stats-table th { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 1px; color: var(--muted); text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+  .stats-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+  .stats-table tr:last-child td { border-bottom: none; }
+  .stats-table td.num { font-family: 'Cinzel', serif; font-size: 13px; text-align: right; }
+  .stats-table td.pos { color: var(--pos); }
+  .stats-table td.neg { color: var(--neg); }
+
+  /* bar chart */
+  .bar-chart { display: flex; flex-direction: column; gap: 6px; }
+  .bar-row { display: flex; align-items: center; gap: 10px; }
+  .bar-label { font-family: 'Cinzel', serif; font-size: 11px; color: var(--muted); width: 90px; flex-shrink: 0; text-align: right; }
+  .bar-track { flex: 1; height: 18px; background: var(--panel2); border-radius: 4px; overflow: hidden; position: relative; }
+  .bar-fill { height: 100%; border-radius: 4px; transition: width 0.4s ease; min-width: 2px; }
+  .bar-fill.pos { background: linear-gradient(90deg, var(--uncommon), #a8f0c0); }
+  .bar-fill.neg { background: linear-gradient(90deg, var(--danger), #ff7777); }
+  .bar-fill.neutral { background: var(--border2); }
+  .bar-val { font-family: 'Cinzel', serif; font-size: 11px; width: 52px; flex-shrink: 0; }
+  .bar-val.pos { color: var(--pos); }
+  .bar-val.neg { color: var(--neg); }
+
+  /* ── EOD footer ── */
+  .eod-footer { position: fixed; bottom: 0; left: 0; right: 0; padding: 14px 20px; background: linear-gradient(to top, #10101a 60%, transparent); display: flex; justify-content: center; gap: 10px; z-index: 50; }
+  .eod-btn { background: linear-gradient(135deg, #d4a843, #a87820); border: none; color: #fff; font-family: 'Cinzel', serif; font-size: 13px; letter-spacing: 2px; padding: 13px 28px; border-radius: 8px; cursor: pointer; transition: all 0.2s; box-shadow: 0 3px 18px #d4a84355; font-weight: 600; }
+  .eod-btn:hover { filter: brightness(1.15); transform: translateY(-2px); box-shadow: 0 6px 24px #d4a84377; }
+  .eod-btn.eod-yesterday { background: var(--panel2); border: 1px solid var(--border2); color: var(--muted); box-shadow: none; font-size: 11px; padding: 13px 18px; font-weight: 400; }
+  .eod-btn.eod-yesterday:hover { border-color: var(--accent); color: var(--accent2); background: #d4a84318; transform: translateY(-1px); }
+  .eod-btn.confirming { background: linear-gradient(135deg, #ff8c3a, #cc5500); box-shadow: 0 3px 18px #ff8c3a55; animation: pulse 1s ease infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 3px 18px #ff8c3a44; } 50% { box-shadow: 0 6px 28px #ff8c3a88; } }
+
+  /* ── Toast ── */
+  #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--panel2); border: 1px solid var(--border2); border-radius: 8px; padding: 12px 22px; font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 1px; color: var(--accent2); box-shadow: 0 4px 30px #00000088; opacity: 0; transition: all 0.3s ease; z-index: 100; white-space: nowrap; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="header-stars" id="headerStars"></span>
+    <h1 id="greeting">✦ Life RPG ✦</h1>
+    <p class="tagline" id="subgreeting">Your adventure awaits</p>
+  </header>
+
+  <div class="points-bar">
+    <span class="points-label">POINTS</span>
+    <span class="points-value" id="pointsDisplay" onclick="editPoints()" title="Tap to adjust" style="cursor:pointer">0</span>
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--muted);cursor:pointer" onclick="editPoints()" title="Tap to adjust">✎</span>
+    <button class="stats-nav-btn btn-export" onclick="exportData()" style="margin-left:auto" title="Download your data as a backup file">⬇ Export</button>
+    <button class="stats-nav-btn btn-import" onclick="document.getElementById('importInput').click()" title="Load a previously exported data file">⬆ Import</button>
+    <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)" />
+    <button class="stats-nav-btn btn-stats" id="statsNavBtn" onclick="toggleStats()">📊 Stats</button>
+  </div>
+
+  <!-- Main tabs (hidden when stats open) -->
+  <div id="mainUI">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="common"><span class="tab-dot" style="background:var(--common)"></span>Common</button>
+      <button class="tab-btn" data-tab="uncommon"><span class="tab-dot" style="background:var(--uncommon)"></span>Uncommon</button>
+      <button class="tab-btn" data-tab="rare"><span class="tab-dot" style="background:var(--rare)"></span>Rare</button>
+      <button class="tab-btn" data-tab="onetime"><span class="tab-dot" style="background:var(--onetime)"></span>One-Time</button>
+      <button class="tab-btn" data-tab="rewards"><span class="tab-dot" style="background:var(--reward)"></span>Rewards</button>
+      <button class="tab-btn" data-tab="food"><span class="tab-dot" style="background:var(--food)"></span>Food</button>
+    </div>
+
+    <!-- COMMON -->
+    <div class="section active" id="section-common">
+      <div class="section-header">
+        <div><div class="section-title common">Common Tasks</div><div class="section-meta">Daily habits & routines.</div></div>
+      </div>
+      <div class="add-form">
+        <input class="task-name"  id="common-name"  type="text"   placeholder="Task name…" />
+        <input class="unit-label" id="common-unit"  type="text"   placeholder="Unit of measure" />
+        <input class="num-input"  id="common-step"  type="number" placeholder="Step" min="1" value="1" />
+        <input class="num-input"  id="common-pts"   type="number" placeholder="Pts/unit" min="0.01" step="any" value="10" />
+        <button class="btn-add" onclick="addTask('common')">+ Add</button>
+      </div>
+      <div class="task-list" id="list-common"></div>
+    </div>
+
+    <!-- UNCOMMON -->
+    <div class="section" id="section-uncommon">
+      <div class="section-header">
+        <div><div class="section-title uncommon">Uncommon Tasks</div><div class="section-meta">Weekly or occasional goals.</div></div>
+      </div>
+      <div class="add-form">
+        <input class="task-name"  id="uncommon-name" type="text"   placeholder="Task name…" />
+        <input class="unit-label" id="uncommon-unit" type="text"   placeholder="Unit of measure" />
+        <input class="num-input"  id="uncommon-step" type="number" placeholder="Step" min="1" value="1" />
+        <input class="num-input"  id="uncommon-pts"  type="number" placeholder="Pts/unit" min="0.01" step="any" value="15" />
+        <button class="btn-add" onclick="addTask('uncommon')">+ Add</button>
+      </div>
+      <div class="task-list" id="list-uncommon"></div>
+    </div>
+
+    <!-- RARE -->
+    <div class="section" id="section-rare">
+      <div class="section-header">
+        <div><div class="section-title rare">Rare Tasks</div><div class="section-meta">Monthly milestones & achievements.</div></div>
+      </div>
+      <div class="add-form">
+        <input class="task-name"  id="rare-name" type="text"   placeholder="Task name…" />
+        <input class="unit-label" id="rare-unit" type="text"   placeholder="Unit of measure" />
+        <input class="num-input"  id="rare-step" type="number" placeholder="Step" min="1" value="1" />
+        <input class="num-input"  id="rare-pts"  type="number" placeholder="Pts/unit" min="0.01" step="any" value="40" />
+        <button class="btn-add" onclick="addTask('rare')">+ Add</button>
+      </div>
+      <div class="task-list" id="list-rare"></div>
+    </div>
+
+    <!-- ONE-TIME -->
+    <div class="section" id="section-onetime">
+      <div class="section-header">
+        <div><div class="section-title onetime">One-Time Quests</div><div class="section-meta">Complete once and it's done forever.</div></div>
+      </div>
+      <div class="add-form">
+        <input class="task-name" id="onetime-name" type="text"   placeholder="Quest name…" />
+        <input class="num-input" id="onetime-pts"  type="number" placeholder="Points" min="0.01" step="any" value="75" />
+        <button class="btn-add" onclick="addOnetimeTask()">+ Add</button>
+      </div>
+      <div class="task-list" id="list-onetime"></div>
+    </div>
+
+    <!-- REWARDS -->
+    <div class="section" id="section-rewards">
+      <div class="section-header">
+        <div><div class="section-title rewards">Reward Shop</div><div class="section-meta">Spend your points on things you love.</div></div>
+      </div>
+      <div class="add-form">
+        <input class="task-name" id="reward-name" type="text"   placeholder="Reward name…" />
+        <input class="num-input" id="reward-cost" type="number" placeholder="Cost" min="1" value="50" />
+        <button class="btn-add" onclick="addReward()">+ Add</button>
+      </div>
+      <div class="reward-list" id="list-rewards"></div>
+    </div>
+    <!-- FOOD REWARDS -->
+    <div class="section" id="section-food">
+      <div class="section-header">
+        <div><div class="section-title food">Food Rewards</div><div class="section-meta">Track indulgences. Costs scale with how much you have.</div></div>
+      </div>
+      <div id="list-food"></div>
+    </div>
+  </div>
+  <div id="section-stats">
+    <div class="section-header">
+      <div><div class="section-title stats">Statistics</div><div class="section-meta">Updated each time you confirm End of Day.</div></div>
+      <button class="btn-reset-stats" onclick="resetStats()">Reset Stats</button>
+    </div>
+    <div id="stats-content"></div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Edit Task</div>
+    <div class="modal-field" id="modalNameField">
+      <div class="modal-label">NAME</div>
+      <input class="modal-input" id="modalName" type="text" />
+    </div>
+    <div class="modal-field" id="modalDateField" style="display:none">
+      <div class="modal-label">DATE (YYYY-MM-DD)</div>
+      <input class="modal-input" id="modalDate" type="date" />
+    </div>
+    <div class="modal-field" id="modalSectionField" style="display:none">
+      <div class="modal-label">MOVE TO SECTION</div>
+      <select class="modal-input" id="modalSection">
+        <option value="common">Common</option>
+        <option value="uncommon">Uncommon</option>
+        <option value="rare">Rare</option>
+      </select>
+    </div>
+    <div class="modal-field" id="modalUnitField">
+      <div class="modal-label">UNIT OF MEASURE</div>
+      <input class="modal-input" id="modalUnit" type="text" />
+    </div>
+    <div class="modal-field" id="modalStepField">
+      <div class="modal-label">STEP (units per + click)</div>
+      <input class="modal-input" id="modalStep" type="number" min="1" />
+    </div>
+    <div class="modal-field" id="modalPtsField">
+      <div class="modal-label" id="modalPtsLabel">PTS / UNIT</div>
+      <input class="modal-input" id="modalPts" type="number" min="0.01" step="any" />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <button class="modal-save" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- History Task Editor Modal -->
+<div class="modal-overlay" id="historyTaskModal">
+  <div class="modal" style="max-width:500px;max-height:80vh;overflow-y:auto">
+    <div class="modal-title" id="historyTaskModalTitle">Edit Day</div>
+    <div id="historyTaskList" style="display:flex;flex-direction:column;gap:10px;margin:4px 0 8px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeHistoryTaskModal()">Cancel</button>
+      <button class="modal-save" onclick="saveHistoryTasks()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="eod-footer">
+  <button class="eod-btn eod-yesterday" id="eoyBtn" onclick="endYesterday()">↩ Yesterday</button>
+  <button class="eod-btn" id="eodBtn" onclick="endOfDay()">✦ End of Day ✦</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const STORAGE_KEY = 'life_rpg_v5';
+let state = load();
+
+function defaultState() {
+  return {
+    points: 0,
+    tasks: { common: [], uncommon: [], rare: [], onetime: [] },
+    rewards: [],
+    food: [],
+    history: []
+  };
+}
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (!s) return defaultState();
+    if (!s.food)    s.food = [];
+    if (!s.history) s.history = [];
+    return s;
+  } catch { return defaultState(); }
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function markUnsaved() {}
+function markSaved() {}
+function r2(n) { return Math.round(n * 100) / 100; }
+function updatePoints() { document.getElementById('pointsDisplay').textContent = r2(state.points); }
+
+// ── Render ────────────────────────────────────────────────────────────
+function renderAll() {
+  ['common','uncommon','rare'].forEach(renderTasks);
+  renderOnetimeTasks();
+  renderRewards();
+  renderFood();
+  updatePoints();
+}
+
+function earnedPts(t) { return r2((t.count || 0) * t.ptsPerUnit); }
+
+function renderTasks(type) {
+  const list = document.getElementById(`list-${type}`);
+  const tasks = state.tasks[type];
+  if (!tasks.length) { list.innerHTML = `<div class="task-empty">No ${type} tasks yet. Add one above.</div>`; return; }
+  list.innerHTML = tasks.map((t, i) => {
+    const count = t.count || 0;
+    const step  = t.step  || 1;
+    const earned = earnedPts(t);
+    const ptsPerClick = r2(step * t.ptsPerUnit);
+    return `
+    <div class="task-card ${type}">
+      <div class="reorder-btns">
+        <button class="arrow-btn" onclick="moveTask('${type}',${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="arrow-btn" onclick="moveTask('${type}',${i},+1)" ${i===tasks.length-1?'disabled':''}>▼</button>
+      </div>
+      <div class="task-info">
+        <div class="task-name-text">${esc(t.name)}</div>
+      </div>
+      <div class="task-counter">
+        <button class="ctr-btn minus" onclick="adjustCount('${type}',${i},-1)">−</button>
+        <span class="ctr-count ${count>0?'positive':''}">${count}</span>
+        <button class="ctr-btn plus"  onclick="adjustCount('${type}',${i},+1)">+</button>
+      </div>
+      <span class="task-earned">${earned>0?'+':''}${earned} pts</span>
+      <button class="edit-btn" onclick="openEditTask('${type}',${i})" title="Edit">✎</button>
+      <button class="delete-btn" onclick="deleteTask('${type}',${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function renderOnetimeTasks() {
+  const list = document.getElementById('list-onetime');
+  const tasks = state.tasks.onetime;
+  const pending   = tasks.filter(t => !t.done);
+  const completed = tasks.filter(t =>  t.done);
+
+  let html = '';
+
+  if (!pending.length && !completed.length) {
+    html = `<div class="task-empty">No one-time quests yet. Add one above.</div>`;
+  }
+
+  // Pending quests
+  pending.forEach((t, ri) => {
+    const i = tasks.indexOf(t);
+    html += `
+    <div class="task-card onetime">
+      <div class="reorder-btns">
+        <button class="arrow-btn" onclick="moveTask('onetime',${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="arrow-btn" onclick="moveTask('onetime',${i},+1)" ${i===pending.length-1?'disabled':''}>▼</button>
+      </div>
+      <button class="complete-onetime-btn" onclick="completeOnetime(${i})" title="Complete">✓</button>
+      <div class="task-info">
+        <div class="task-name-text">${esc(t.name)}</div>
+      </div>
+      <span class="task-earned" style="color:var(--onetime);border-color:var(--onetime);background:#ff9d5c12">+${t.pts} pts</span>
+      <button class="edit-btn" onclick="openEditOnetime(${i})" title="Edit">✎</button>
+      <button class="delete-btn" onclick="deleteTask('onetime',${i})">✕</button>
+    </div>`;
+  });
+
+  // Completed quests
+  if (completed.length) {
+    html += `<div class="onetime-completed-header">COMPLETED</div>`;
+    completed.forEach(t => {
+      const i = tasks.indexOf(t);
+      html += `
+      <div class="task-card onetime onetime-done">
+        <div class="task-info" style="flex:1">
+          <div class="task-name-text">${esc(t.name)}</div>
+          <div class="onetime-done-date">Completed ${t.completedDate || '—'}</div>
+        </div>
+        <span class="task-earned" style="color:var(--onetime);border-color:var(--onetime);background:#ff9d5c12">+${t.pts} pts</span>
+        <button class="undo-btn" onclick="undoOnetime(${i})" style="margin-left:4px">↩ Undo</button>
+        <button class="delete-btn" onclick="deleteTask('onetime',${i})">✕</button>
+      </div>`;
+    });
+  }
+
+  list.innerHTML = html;
+}
+
+function renderRewards() {
+  const grid = document.getElementById('list-rewards');
+  if (!state.rewards.length) { grid.innerHTML = `<div class="task-empty">No rewards yet.</div>`; return; }
+  grid.innerHTML = state.rewards.map((r, i) => {
+    const redeemed = r.redeemed || 0;
+    return `
+    <div class="reward-card">
+      <div class="reorder-btns">
+        <button class="arrow-btn" onclick="moveReward(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="arrow-btn" onclick="moveReward(${i},+1)" ${i===state.rewards.length-1?'disabled':''}>▼</button>
+      </div>
+      <div class="reward-info">
+        <div class="reward-name">${esc(r.name)}</div>
+        <div class="reward-cost">✦ ${r.cost} pts</div>
+        <div class="reward-redeemed">Redeemed: ${redeemed}×</div>
+      </div>
+      <div class="reward-actions">
+        <button class="buy-btn" onclick="buyReward(${i})">Redeem</button>
+        <button class="undo-btn" ${redeemed===0?'disabled':''} onclick="undoReward(${i})">↩ Undo</button>
+      </div>
+      <button class="edit-btn" onclick="openEditReward(${i})" title="Edit">✎</button>
+      <button class="delete-btn" onclick="deleteReward(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Food Rewards ──────────────────────────────────────────────────────
+// Tiers: poor = [2.5, 5, 10], bad = [5, 10, 20]
+const FOOD_TIERS = {
+  poor: { label: 'Poor Food', tiers: [
+    { name: 'A Bit',    cost: 2.5 },
+    { name: 'A Serving',cost: 5   },
+    { name: 'Too Much', cost: 10  },
+  ]},
+  bad: { label: 'Bad Food', tiers: [
+    { name: 'A Bit',    cost: 5   },
+    { name: 'A Serving',cost: 10  },
+    { name: 'Too Much', cost: 20  },
+  ]},
+};
+
+function renderFood() {
+  const el = document.getElementById('list-food');
+  if (!state.food || !state.food.length) {
+    el.innerHTML = `
+      <p style="color:var(--muted);font-style:italic;font-size:14px;margin-bottom:16px">Track food indulgences. Add items then log how much you had — costs scale up the more you eat.</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <input class="task-name" id="food-name" type="text" placeholder="Food name…" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none" />
+        <select id="food-tier" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none">
+          <option value="poor">Poor Food</option>
+          <option value="bad">Bad Food</option>
+        </select>
+        <button class="btn-add" onclick="addFoodItem()">+ Add</button>
+      </div>
+      <div class="task-empty">No food items yet. Add one above.</div>`;
+    document.getElementById('food-name').addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
+    return;
+  }
+
+  const poor = state.food.filter(f => f.tier === 'poor');
+  const bad  = state.food.filter(f => f.tier === 'bad');
+
+  let html = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <input class="task-name" id="food-name" type="text" placeholder="Food name…" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none" />
+      <select id="food-tier" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none">
+        <option value="poor">Poor Food</option>
+        <option value="bad">Bad Food</option>
+      </select>
+      <button class="btn-add" onclick="addFoodItem()">+ Add</button>
+    </div>`;
+
+  ['poor','bad'].forEach(tier => {
+    const items = state.food.filter(f => f.tier === tier);
+    if (!items.length) return;
+    const tierDef = FOOD_TIERS[tier];
+    html += `<div class="food-group-title ${tier}">${tierDef.label}</div>`;
+    items.forEach(item => {
+      const idx = state.food.indexOf(item);
+      const spent = r2(item.todaySpend || 0);
+      const lastLog = (item.log && item.log.length) ? item.log[item.log.length - 1] : null;
+      const sametierItems = state.food.filter(f => f.tier === tier);
+      const tierIdx2 = sametierItems.indexOf(item);
+      html += `<div class="food-item ${tier}">
+        <div class="reorder-btns">
+          <button class="arrow-btn" onclick="moveFood(${idx},-1)" ${idx===0?'disabled':''}>▲</button>
+          <button class="arrow-btn" onclick="moveFood(${idx},+1)" ${idx===state.food.length-1?'disabled':''}>▼</button>
+        </div>
+        <div class="food-item-info">
+          <div class="food-item-name">${esc(item.name)}</div>
+          <div class="food-item-meta">Today: −${spent} pts</div>
+        </div>
+        <div class="food-tier-btns">
+          ${tierDef.tiers.map((t,ti) => `
+            <button class="food-tier-btn" onclick="logFood(${idx},${ti})">
+              <span class="tier-name">${t.name}</span>
+              <span class="tier-cost">−${t.cost}</span>
+            </button>`).join('')}
+        </div>
+        <button class="undo-btn" onclick="undoFood(${idx})" ${!lastLog?'disabled':''} title="Undo last entry" style="white-space:nowrap">↩ Undo</button>
+        <button class="delete-btn" onclick="deleteFoodItem(${idx})" title="Delete">✕</button>
+      </div>`;
+    });
+  });
+
+  el.innerHTML = html;
+  const nameInput = document.getElementById('food-name');
+  if (nameInput) nameInput.addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
+}
+
+function addFoodItem() {
+  const name = document.getElementById('food-name').value.trim();
+  const tier = document.getElementById('food-tier').value;
+  if (!name) return;
+  if (!state.food) state.food = [];
+  state.food.push({ name, tier, todaySpend: 0 });
+  document.getElementById('food-name').value = '';
+  save(); renderFood();
+}
+
+function logFood(idx, tierIdx) {
+  const item = state.food[idx];
+  const tierDef = FOOD_TIERS[item.tier];
+  const cost = tierDef.tiers[tierIdx].cost;
+  const tierName = tierDef.tiers[tierIdx].name;
+  if (!item.log) item.log = [];
+  item.log.push({ cost, tierName });
+  item.todaySpend = r2((item.todaySpend || 0) + cost);
+  state.points = r2(state.points - cost);
+  save(); renderFood(); updatePoints();
+  toast(`🍔 ${tierName} of ${item.name}: −${cost} pts`);
+}
+
+function moveFood(i, dir) {
+  const arr = state.food;
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  save(); renderFood();
+}
+
+function deleteFoodItem(idx) {
+  const item = state.food[idx];
+  // refund today's spend
+  state.points = r2(state.points + (item.todaySpend || 0));
+  state.food.splice(idx, 1);
+  save(); renderFood(); updatePoints();
+}
+
+function undoFood(idx) {
+  const item = state.food[idx];
+  if (!item.log || !item.log.length) return;
+  const last = item.log.pop();
+  item.todaySpend = r2(Math.max(0, (item.todaySpend || 0) - last.cost));
+  state.points = r2(state.points + last.cost);
+  save(); renderFood(); updatePoints();
+  toast(`↩ Undid ${last.tierName} of ${item.name}: +${last.cost} pts`);
+}
+
+// ── Task actions ──────────────────────────────────────────────────────
+function addOnetimeTask() {
+  const name = document.getElementById('onetime-name').value.trim();
+  const pts  = parseFloat(document.getElementById('onetime-pts').value) || 75;
+  if (!name) return;
+  state.tasks.onetime.push({ name, pts, done: false, completedDate: null });
+  document.getElementById('onetime-name').value = '';
+  save(); renderOnetimeTasks();
+}
+
+function completeOnetime(i) {
+  const t = state.tasks.onetime[i];
+  if (t.done) return;
+  t.done = true;
+  t.completedDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  state.points = r2(state.points + t.pts);
+  save(); renderOnetimeTasks(); updatePoints();
+  toast(`⚑ Quest complete! +${t.pts} pts`);
+}
+
+function undoOnetime(i) {
+  const t = state.tasks.onetime[i];
+  if (!t.done) return;
+  t.done = false;
+  t.completedDate = null;
+  state.points = r2(Math.max(0, state.points - t.pts));
+  save(); renderOnetimeTasks(); updatePoints();
+  toast('↩ Quest un-done.');
+}
+
+function addTask(type) {
+  const name = document.getElementById(`${type}-name`).value.trim();
+  const unit = document.getElementById(`${type}-unit`).value.trim() || 'completion';
+  const ptsPerUnit = parseFloat(document.getElementById(`${type}-pts`).value) || 10;
+  const step = Math.max(1, parseInt(document.getElementById(`${type}-step`).value) || 1);
+  if (!name) return;
+  state.tasks[type].push({ name, unit, ptsPerUnit, step, count: 0 });
+  document.getElementById(`${type}-name`).value = '';
+  document.getElementById(`${type}-unit`).value = '';
+  save(); renderTasks(type);
+}
+
+function updateStep(type, i, val) {
+  state.tasks[type][i].step = Math.max(1, parseInt(val) || 1);
+  save(); renderTasks(type);
+}
+
+function adjustCount(type, i, dir) {
+  const t = state.tasks[type][i];
+  const prev = earnedPts(t);
+  t.count = Math.max(0, (t.count || 0) + dir * (t.step || 1));
+  const diff = r2(earnedPts(t) - prev);
+  state.points = r2(Math.max(0, state.points + diff));
+  save(); renderTasks(type); updatePoints();
+  if (diff > 0) toast(`+${diff} pts`);
+  else if (diff < 0) toast(`${diff} pts`);
+}
+
+function deleteTask(type, i) {
+  const t = state.tasks[type][i];
+  if (type === 'onetime') {
+    if (t.done) state.points = r2(Math.max(0, state.points - t.pts));
+  } else {
+    state.points = r2(Math.max(0, state.points - earnedPts(t)));
+  }
+  state.tasks[type].splice(i, 1);
+  if (type === 'onetime') renderOnetimeTasks(); else renderTasks(type);
+  updatePoints(); save();
+}
+
+function moveTask(type, i, dir) {
+  const arr = state.tasks[type];
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  save(); renderTasks(type);
+}
+
+// ── Reward actions ────────────────────────────────────────────────────
+function addReward() {
+  const name = document.getElementById('reward-name').value.trim();
+  const cost = parseFloat(document.getElementById('reward-cost').value) || 50;
+  if (!name) return;
+  state.rewards.push({ name, cost, redeemed: 0 });
+  document.getElementById('reward-name').value = '';
+  save(); renderRewards();
+}
+
+function buyReward(i) {
+  const r = state.rewards[i];
+  state.points = r2(state.points - r.cost);
+  r.redeemed = (r.redeemed || 0) + 1;
+  save(); renderRewards(); updatePoints();
+  toast(`🎁 Redeemed: ${r.name}!`);
+}
+
+function undoReward(i) {
+  const r = state.rewards[i];
+  if (!r.redeemed) return;
+  r.redeemed -= 1;
+  state.points = r2(state.points + r.cost);
+  save(); renderRewards(); updatePoints();
+  toast(`↩ +${r.cost} pts returned`);
+}
+
+function deleteReward(i) { state.rewards.splice(i, 1); save(); renderRewards(); }
+
+// ── End of Day ────────────────────────────────────────────────────────
+let eodPending = false, eodTimer = null;
+let eoyPending = false, eoyTimer = null;
+
+function endOfDay() {
+  const btn = document.getElementById('eodBtn');
+  // cancel yesterday confirm if open
+  if (eoyPending) { clearTimeout(eoyTimer); eoyPending = false; document.getElementById('eoyBtn').textContent = '↩ Yesterday'; document.getElementById('eoyBtn').classList.remove('confirming'); }
+  if (!eodPending) {
+    eodPending = true;
+    btn.textContent = '⚑ Confirm?';
+    btn.classList.add('confirming');
+    eodTimer = setTimeout(() => { eodPending = false; btn.textContent = '✦ End of Day ✦'; btn.classList.remove('confirming'); }, 4000);
+  } else {
+    clearTimeout(eodTimer);
+    eodPending = false;
+    btn.textContent = '✦ End of Day ✦';
+    btn.classList.remove('confirming');
+    commitEndOfDay(0);
+  }
+}
+
+function endYesterday() {
+  const btn = document.getElementById('eoyBtn');
+  // cancel today confirm if open
+  if (eodPending) { clearTimeout(eodTimer); eodPending = false; document.getElementById('eodBtn').textContent = '✦ End of Day ✦'; document.getElementById('eodBtn').classList.remove('confirming'); }
+  if (!eoyPending) {
+    eoyPending = true;
+    btn.textContent = '⚑ Confirm Yesterday?';
+    btn.classList.add('confirming');
+    eoyTimer = setTimeout(() => { eoyPending = false; btn.textContent = '↩ Yesterday'; btn.classList.remove('confirming'); }, 4000);
+  } else {
+    clearTimeout(eoyTimer);
+    eoyPending = false;
+    btn.textContent = '↩ Yesterday';
+    btn.classList.remove('confirming');
+    commitEndOfDay(1);
+  }
+}
+
+function commitEndOfDay(daysAgo) {
+  const d = new Date();
+  d.setDate(d.getDate() - (daysAgo || 0));
+  const dateStr = d.toISOString().slice(0, 10);
+  const dow = d.getDay();
+
+  // Build snapshot
+  const taskSnap = {};
+  ['common','uncommon','rare'].forEach(type => {
+    state.tasks[type].forEach(t => {
+      taskSnap[t.name] = (taskSnap[t.name] || 0) + (t.count || 0);
+    });
+  });
+  // onetime: count completions done this session (not already snapshotted)
+  state.tasks.onetime.forEach(t => {
+    if (t.done && !t.snapshotted) taskSnap[t.name] = (taskSnap[t.name] || 0) + 1;
+  });
+  const rewardSnap = {};
+  state.rewards.forEach(r => { if (r.redeemed) rewardSnap[r.name] = r.redeemed; });
+
+  // food snapshot: { name, tier, spend, entries: [{tierName, cost}] }
+  const foodSnap = (state.food || [])
+    .filter(f => (f.todaySpend || 0) > 0)
+    .map(f => ({ name: f.name, tier: f.tier, spend: f.todaySpend || 0, entries: f.log || [] }));
+
+  let ptsEarned = 0;
+  ['common','uncommon','rare'].forEach(type => {
+    state.tasks[type].forEach(t => { ptsEarned = r2(ptsEarned + earnedPts(t)); });
+  });
+  state.tasks.onetime.forEach(t => { if (t.done && !t.snapshotted) ptsEarned = r2(ptsEarned + t.pts); });
+  let ptsSpent = 0;
+  state.rewards.forEach(r => { ptsSpent = r2(ptsSpent + (r.redeemed || 0) * r.cost); });
+  // include food spend in ptsSpent
+  const foodSpend = r2((state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0));
+  ptsSpent = r2(ptsSpent + foodSpend);
+  const netPts = r2(ptsEarned - ptsSpent);
+
+  if (!state.history) state.history = [];
+  state.history.push({ date: dateStr, dow, netPts, ptsEarned, ptsSpent, tasks: taskSnap, rewards: rewardSnap, food: foodSnap });
+  if (state.history.length > 60) state.history = state.history.slice(-60);
+
+  // Reset task counts and redeemed counts
+  ['common','uncommon','rare'].forEach(type => {
+    state.tasks[type].forEach(t => { t.count = 0; });
+  });
+  // onetime: keep completed state permanently
+  state.tasks.onetime.forEach(t => { if (t.done) t.snapshotted = true; });
+  // food: reset daily spend
+  if (state.food) state.food.forEach(f => { f.todaySpend = 0; f.log = []; });  state.rewards.forEach(r => { r.redeemed = 0; });
+
+  save(); renderAll();
+  setGreeting();
+  toast(daysAgo ? '↩ Yesterday logged. Stats updated.' : '✦ Day complete. Stats updated.');
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────
+let statsOpen = false;
+
+function toggleStats() {
+  statsOpen = !statsOpen;
+  document.getElementById('mainUI').style.display = statsOpen ? 'none' : 'block';
+  document.getElementById('section-stats').classList.toggle('active', statsOpen);
+  document.getElementById('statsNavBtn').classList.toggle('active', statsOpen);
+  document.getElementById('statsNavBtn').textContent = statsOpen ? '← Back' : '📊 Stats';
+  if (statsOpen) renderStats();
+}
+
+function renderStats() {
+  const el = document.getElementById('stats-content');
+  const hist = state.history || [];
+
+  if (!hist.length) {
+    el.innerHTML = `<div class="stats-empty">No data yet.<br>Complete your first End of Day to start tracking stats.</div>`;
+    return;
+  }
+
+  const DOW_LABELS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const totalDays = hist.length;
+
+  // ── Summary cards ──
+  const totalEarned  = r2(hist.reduce((s,d) => s + (d.ptsEarned||0), 0));
+  const totalSpent   = r2(hist.reduce((s,d) => s + (d.ptsSpent||0), 0));
+  const avgNet       = r2(hist.reduce((s,d) => s + (d.netPts||0), 0) / totalDays);
+  const bestDay      = hist.reduce((best, d) => best === null || d.netPts > best.netPts ? d : best, null);
+  const worstDay     = hist.reduce((worst, d) => worst === null || d.netPts < worst.netPts ? d : worst, null);
+
+  let html = `<div class="stat-cards">
+    <div class="stat-card"><div class="stat-card-label">DAYS TRACKED</div><div class="stat-card-value">${totalDays}</div></div>
+    <div class="stat-card"><div class="stat-card-label">AVG NET PTS/DAY</div><div class="stat-card-value ${avgNet>=0?'pos':'neg'}">${avgNet>=0?'+':''}${avgNet}</div></div>
+    <div class="stat-card"><div class="stat-card-label">TOTAL EARNED</div><div class="stat-card-value pos">+${totalEarned}</div></div>
+    <div class="stat-card"><div class="stat-card-label">TOTAL SPENT</div><div class="stat-card-value neg">−${totalSpent}</div></div>
+    ${bestDay ? `<div class="stat-card"><div class="stat-card-label">BEST DAY</div><div class="stat-card-value pos" style="font-size:14px">${bestDay.date}<br>+${r2(bestDay.netPts)}</div></div>` : ''}
+    ${worstDay ? `<div class="stat-card"><div class="stat-card-label">WORST DAY</div><div class="stat-card-value neg" style="font-size:14px">${worstDay.date}<br>${r2(worstDay.netPts)}</div></div>` : ''}
+  </div>`;
+
+  // ── Net pts last 30 days ──
+  const last30 = hist.slice(-30);
+  if (last30.length) {
+    const maxAbs = Math.max(...last30.map(d => Math.abs(d.netPts)), 1);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Net Points — Last ${last30.length} Days</div>
+      <div class="bar-chart">`;
+    last30.forEach(d => {
+      const pct = Math.min(100, Math.abs(d.netPts) / maxAbs * 100);
+      const pos = d.netPts >= 0;
+      const label = d.date.slice(5); // MM-DD
+      html += `<div class="bar-row">
+        <span class="bar-label">${label}</span>
+        <div class="bar-track"><div class="bar-fill ${pos?'pos':'neg'}" style="width:${pct}%"></div></div>
+        <span class="bar-val ${pos?'pos':'neg'}">${pos?'+':''}${r2(d.netPts)}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ── Net pts by day of week (all history) ──
+  {
+    const dowTotals = Array(7).fill(0);
+    const dowCounts = Array(7).fill(0);
+    hist.forEach(d => {
+      dowTotals[d.dow] = r2(dowTotals[d.dow] + (d.netPts || 0));
+      dowCounts[d.dow]++;
+    });
+    const dowAvgs = dowTotals.map((t, i) => dowCounts[i] ? r2(t / dowCounts[i]) : null);
+    const dowTotalsDisplay = dowTotals.map((t, i) => dowCounts[i] ? t : null);
+    const allVals = [...dowAvgs, ...dowTotalsDisplay].filter(x => x !== null).map(Math.abs);
+    const maxAbs = Math.max(...allVals, 1);
+
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Net Points by Day of Week</div>
+      <table class="stats-table" style="margin-bottom:14px">
+        <thead><tr><th>DAY</th><th style="text-align:right">DAYS</th><th style="text-align:right">TOTAL</th><th style="text-align:right">AVG</th></tr></thead>
+        <tbody>`;
+    DOW_LABELS.forEach((label, di) => {
+      const total = dowTotalsDisplay[di];
+      const avg   = dowAvgs[di];
+      const count = dowCounts[di];
+      if (total === null) {
+        html += `<tr><td style="color:var(--muted)">${label}</td><td class="num" style="color:var(--muted)">0</td><td class="num" style="color:var(--muted)">—</td><td class="num" style="color:var(--muted)">—</td></tr>`;
+      } else {
+        const tpos = total >= 0; const apos = avg >= 0;
+        html += `<tr>
+          <td>${label}</td>
+          <td class="num" style="color:var(--muted)">${count}</td>
+          <td class="num ${tpos?'pos':'neg'}">${tpos?'+':''}${total}</td>
+          <td class="num ${apos?'pos':'neg'}">${apos?'+':''}${avg}</td>
+        </tr>`;
+      }
+    });
+    html += `</tbody></table>`;
+
+    // Bar chart of averages
+    html += `<div class="bar-chart">`;
+    DOW_LABELS.forEach((label, di) => {
+      const avg = dowAvgs[di];
+      if (avg === null) {
+        html += `<div class="bar-row"><span class="bar-label">${label.slice(0,3)}</span><div class="bar-track"><div class="bar-fill neutral" style="width:3%"></div></div><span class="bar-val" style="color:var(--muted)">no data</span></div>`;
+        return;
+      }
+      const pct = Math.min(100, Math.abs(avg) / maxAbs * 100);
+      const pos = avg >= 0;
+      html += `<div class="bar-row">
+        <span class="bar-label">${label.slice(0,3)}</span>
+        <div class="bar-track"><div class="bar-fill ${pos?'pos':'neg'}" style="width:${pct}%"></div></div>
+        <span class="bar-val ${pos?'pos':'neg'}">${pos?'+':''}${avg}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+  // ── Task frequency table ──
+  const taskNames = new Set();
+  hist.forEach(d => Object.keys(d.tasks||{}).forEach(k => taskNames.add(k)));
+  if (taskNames.size) {
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Task Averages per Day</div>
+      <table class="stats-table">
+        <thead><tr><th>TASK</th><th style="text-align:right">TOTAL</th><th style="text-align:right">AVG/DAY</th></tr></thead>
+        <tbody>`;
+    [...taskNames].forEach(name => {
+      const total = hist.reduce((s,d) => s + (d.tasks?.[name]||0), 0);
+      const daysPresent = hist.filter(d => d.tasks?.[name] !== undefined).length || totalDays;
+      const avg = r2(total / daysPresent);
+      html += `<tr><td>${esc(name)}</td><td class="num">${total}</td><td class="num">${avg}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  // ── Reward frequency table ──
+  const rewardNames = new Set();
+  hist.forEach(d => Object.keys(d.rewards||{}).forEach(k => rewardNames.add(k)));
+  if (rewardNames.size) {
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Reward Redemptions per Day</div>
+      <table class="stats-table">
+        <thead><tr><th>REWARD</th><th style="text-align:right">TOTAL</th><th style="text-align:right">AVG/DAY</th></tr></thead>
+        <tbody>`;
+    [...rewardNames].forEach(name => {
+      const total = hist.reduce((s,d) => s + (d.rewards?.[name]||0), 0);
+      const avg = r2(total / totalDays);
+      html += `<tr><td>${esc(name)}</td><td class="num">${total}</td><td class="num">${avg}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  // ── Food log frequency ──
+  const foodNames = new Set();
+  hist.forEach(d => (d.food||[]).forEach(f => foodNames.add(f.name)));
+  if (foodNames.size) {
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Food Indulgences</div>
+      <table class="stats-table">
+        <thead><tr><th>FOOD</th><th style="text-align:right">DAYS</th><th style="text-align:right">TOTAL SPENT</th><th style="text-align:right">AVG/DAY</th></tr></thead>
+        <tbody>`;
+    [...foodNames].forEach(name => {
+      const days = hist.filter(d => (d.food||[]).some(f => f.name === name)).length;
+      const total = r2(hist.reduce((s,d) => s + ((d.food||[]).find(f=>f.name===name)?.spend||0), 0));
+      const avg = r2(total / totalDays);
+      html += `<tr><td>${esc(name)}</td><td class="num" style="color:var(--muted)">${days}</td><td class="num neg">−${total}</td><td class="num neg">−${avg}</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+  if (hist.length >= 2) {
+    let streak = 1;
+    for (let i = hist.length - 1; i > 0; i--) {
+      const prev = new Date(hist[i-1].date);
+      const curr = new Date(hist[i].date);
+      const diff = (curr - prev) / 86400000;
+      if (diff === 1) streak++;
+      else break;
+    }
+    html += `<div class="stat-cards" style="margin-top:0">
+      <div class="stat-card"><div class="stat-card-label">CURRENT STREAK</div><div class="stat-card-value" style="color:var(--onetime)">${streak} day${streak!==1?'s':''} 🔥</div></div>
+    </div>`;
+  }
+
+  // ── History log (editable) ──
+  html += `<div class="stats-group">
+    <div class="stats-group-title">History Log</div>
+    <table class="stats-table">
+      <thead><tr><th>#</th><th>DATE</th><th>DAY</th><th style="text-align:right">NET PTS</th><th></th></tr></thead>
+      <tbody>`;
+  hist.slice().reverse().forEach((d, ri) => {
+    const realIndex = hist.length - 1 - ri;
+    const dowName = DOW_LABELS[d.dow] || '—';
+    const foodList = (d.food || []);
+    const foodSummary = foodList.length
+      ? foodList.map(f => `${f.name} (−${f.spend})`).join(', ')
+      : '';
+    html += `<tr>
+      <td style="color:var(--muted);font-family:'Cinzel',serif;font-size:11px">${realIndex+1}</td>
+      <td style="font-family:'Cinzel',serif;font-size:12px">${d.date}</td>
+      <td style="font-family:'Cinzel',serif;font-size:12px;color:var(--muted)">${dowName}</td>
+      <td class="num ${d.netPts>=0?'pos':'neg'}">${d.netPts>=0?'+':''}${r2(d.netPts)}</td>
+      <td style="white-space:nowrap">
+        <button class="edit-btn" onclick="openEditHistory(${realIndex})" title="Edit date">📅</button>
+        <button class="edit-btn" onclick="openHistoryTaskModal(${realIndex})" title="Edit tasks">✎</button>
+      </td>
+    </tr>
+    ${foodSummary ? `<tr><td colspan="5" style="font-size:12px;color:var(--food);font-style:italic;padding:2px 10px 8px">🍔 ${esc(foodSummary)}</td></tr>` : ''}`;
+  });
+  html += `</tbody></table></div>`;
+
+  el.innerHTML = html;
+}
+
+// ── History Task Editor ───────────────────────────────────────────────
+let historyTaskCtx = null;
+
+function openHistoryTaskModal(histIndex) {
+  const entry = state.history[histIndex];
+  historyTaskCtx = { index: histIndex };
+  document.getElementById('historyTaskModalTitle').textContent = 'Edit Tasks — ' + entry.date;
+
+  const allTasks = {};
+  ['common','uncommon','rare'].forEach(type => {
+    state.tasks[type].forEach(t => {
+      allTasks[t.name] = { ptsPerUnit: t.ptsPerUnit, unit: t.unit || 'unit' };
+    });
+  });
+  Object.keys(entry.tasks || {}).forEach(name => {
+    if (!allTasks[name]) allTasks[name] = { ptsPerUnit: null, unit: 'unit' };
+  });
+  const rewardNames = Object.keys(entry.rewards || {});
+
+  let html = '';
+  const inputStyle = 'width:64px;background:var(--panel2);border:1px solid var(--border2);border-radius:5px;color:var(--accent2);font-family:"Cinzel",serif;font-size:14px;text-align:center;padding:5px;outline:none';
+  const rowStyle = 'display:flex;align-items:center;gap:8px';
+  const headerStyle = 'font-family:"Cinzel",serif;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px';
+
+  if (Object.keys(allTasks).length) {
+    html += '<div style="' + headerStyle + '">TASKS</div>';
+    Object.entries(allTasks).forEach(([name, info]) => {
+      const count = (entry.tasks || {})[name] || 0;
+      const ptsLabel = info.ptsPerUnit !== null ? info.ptsPerUnit + ' pts/' + info.unit : 'pts unknown';
+      html += '<div style="' + rowStyle + '">'
+        + '<div style="flex:1;font-size:14px;color:var(--text)">' + esc(name)
+        + '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + ptsLabel + '</span></div>'
+        + '<input type="number" min="0" step="1" value="' + count + '" data-task="' + esc(name) + '" data-kind="task" style="' + inputStyle + '" /></div>';
+    });
+  }
+
+  if (rewardNames.length) {
+    html += '<div style="' + headerStyle + ';margin-top:10px">REWARDS REDEEMED</div>';
+    rewardNames.forEach(name => {
+      const count = (entry.rewards || {})[name] || 0;
+      const reward = state.rewards.find(r => r.name === name);
+      const costLabel = reward ? reward.cost + ' pts each' : 'cost unknown';
+      const rewardInputStyle = inputStyle.replace('var(--accent2)', 'var(--reward)');
+      html += '<div style="' + rowStyle + '">'
+        + '<div style="flex:1;font-size:14px;color:var(--text)">' + esc(name)
+        + '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + costLabel + '</span></div>'
+        + '<input type="number" min="0" step="1" value="' + count + '" data-task="' + esc(name) + '" data-kind="reward" style="' + rewardInputStyle + '" /></div>';
+    });
+  }
+
+  if (!html) html = '<div style="color:var(--muted);font-style:italic;font-size:14px">No tasks recorded for this day.</div>';
+  document.getElementById('historyTaskList').innerHTML = html;
+  document.getElementById('historyTaskModal').classList.add('open');
+}
+
+function closeHistoryTaskModal() {
+  document.getElementById('historyTaskModal').classList.remove('open');
+  historyTaskCtx = null;
+}
+
+function saveHistoryTasks() {
+  if (!historyTaskCtx) return;
+  const entry = state.history[historyTaskCtx.index];
+  const inputs = document.querySelectorAll('#historyTaskList input');
+  const newTasks = {}, newRewards = {};
+  inputs.forEach(inp => {
+    const name = inp.dataset.task;
+    const val  = Math.max(0, parseInt(inp.value) || 0);
+    if (inp.dataset.kind === 'task')   { if (val > 0) newTasks[name]   = val; }
+    else                               { if (val > 0) newRewards[name] = val; }
+  });
+  let ptsEarned = 0;
+  Object.entries(newTasks).forEach(([name, count]) => {
+    let found = null;
+    ['common','uncommon','rare'].forEach(type => {
+      state.tasks[type].forEach(t => { if (t.name === name) found = t; });
+    });
+    if (found) ptsEarned = r2(ptsEarned + count * found.ptsPerUnit);
+  });
+  let ptsSpent = 0;
+  Object.entries(newRewards).forEach(([name, count]) => {
+    const reward = state.rewards.find(r => r.name === name);
+    if (reward) ptsSpent = r2(ptsSpent + count * reward.cost);
+  });
+  const oldNet = entry.netPts;
+  const newNet = r2(ptsEarned - ptsSpent);
+  const diff   = r2(newNet - oldNet);
+  entry.tasks = newTasks; entry.rewards = newRewards;
+  entry.ptsEarned = ptsEarned; entry.ptsSpent = ptsSpent; entry.netPts = newNet;
+  state.points = r2(state.points + diff);
+  save(); closeHistoryTaskModal(); renderStats(); updatePoints();
+  toast('History updated. Points ' + (diff >= 0 ? '+' : '') + diff + '.');
+}
+
+document.getElementById('historyTaskModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeHistoryTaskModal();
+});
+
+function moveReward(i, dir) {
+  const arr = state.rewards;
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  save(); renderRewards();
+}
+
+let resetStatsPending = false, resetStatsTimer = null;
+
+function resetStats() {
+  const btn = document.querySelector('.btn-reset-stats');
+  if (!resetStatsPending) {
+    resetStatsPending = true;
+    btn.textContent = '⚑ Confirm Reset?';
+    btn.style.color = 'var(--danger)';
+    btn.style.borderColor = 'var(--danger)';
+    resetStatsTimer = setTimeout(() => {
+      resetStatsPending = false;
+      btn.textContent = 'Reset Stats';
+      btn.style.color = '';
+      btn.style.borderColor = '';
+    }, 4000);
+  } else {
+    clearTimeout(resetStatsTimer);
+    resetStatsPending = false;
+    btn.textContent = 'Reset Stats';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    state.history = [];
+    save();
+    document.getElementById('stats-content').innerHTML = `<div class="stats-empty">Stats cleared.<br>Complete your next End of Day to start fresh.</div>`;
+    toast('Stats reset.');
+  }
+}
+
+// ── Edit Modal ────────────────────────────────────────────────────────
+let modalCtx = null; // { mode: 'task'|'onetime'|'reward', type, index }
+
+function openEditHistory(i) {
+  const d = state.history[i];
+  modalCtx = { mode: 'history', index: i };
+  document.getElementById('modalTitle').textContent = 'Edit History Entry';
+  document.getElementById('modalDate').value = d.date;
+  document.getElementById('modalDateField').style.display = '';
+  document.getElementById('modalNameField').style.display = 'none';
+  document.getElementById('modalUnitField').style.display = 'none';
+  document.getElementById('modalStepField').style.display = 'none';
+  document.getElementById('modalPtsField').style.display = 'none';
+  document.getElementById('modalSectionField').style.display = 'none';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function openEditTask(type, i) {
+  const t = state.tasks[type][i];
+  modalCtx = { mode: 'task', type, index: i };
+  document.getElementById('modalTitle').textContent = 'Edit Task';
+  document.getElementById('modalName').value  = t.name;
+  document.getElementById('modalUnit').value  = t.unit || '';
+  document.getElementById('modalStep').value  = t.step || 1;
+  document.getElementById('modalPts').value   = t.ptsPerUnit;
+  document.getElementById('modalPtsLabel').textContent = 'PTS / UNIT';
+  document.getElementById('modalDateField').style.display = 'none';
+  document.getElementById('modalNameField').style.display = '';
+  document.getElementById('modalUnitField').style.display = '';
+  document.getElementById('modalStepField').style.display = '';
+  document.getElementById('modalSectionField').style.display = '';
+  document.getElementById('modalSection').value = type;
+  document.getElementById('editModal').classList.add('open');
+}
+
+function openEditOnetime(i) {
+  const t = state.tasks.onetime[i];
+  modalCtx = { mode: 'onetime', index: i };
+  document.getElementById('modalTitle').textContent = 'Edit Quest';
+  document.getElementById('modalName').value = t.name;
+  document.getElementById('modalPts').value  = t.pts;
+  document.getElementById('modalPtsLabel').textContent = 'POINTS';
+  document.getElementById('modalDateField').style.display = 'none';
+  document.getElementById('modalNameField').style.display = '';
+  document.getElementById('modalUnitField').style.display = 'none';
+  document.getElementById('modalStepField').style.display = 'none';
+  document.getElementById('modalSectionField').style.display = 'none';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function openEditReward(i) {
+  const r = state.rewards[i];
+  modalCtx = { mode: 'reward', index: i };
+  document.getElementById('modalTitle').textContent = 'Edit Reward';
+  document.getElementById('modalName').value = r.name;
+  document.getElementById('modalPts').value  = r.cost;
+  document.getElementById('modalPtsLabel').textContent = 'COST (pts)';
+  document.getElementById('modalDateField').style.display = 'none';
+  document.getElementById('modalNameField').style.display = '';
+  document.getElementById('modalUnitField').style.display = 'none';
+  document.getElementById('modalStepField').style.display = 'none';
+  document.getElementById('modalSectionField').style.display = 'none';
+  document.getElementById('editModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('editModal').classList.remove('open');
+  modalCtx = null;
+}
+
+function saveModal() {
+  if (!modalCtx) return;
+
+  if (modalCtx.mode === 'history') {
+    const newDate = document.getElementById('modalDate').value;
+    if (!newDate) return;
+    const d = new Date(newDate + 'T12:00:00');
+    state.history[modalCtx.index].date = newDate;
+    state.history[modalCtx.index].dow  = d.getDay();
+    save(); closeModal();
+    renderStats();
+    toast('History entry updated.');
+    return;
+  }
+
+  const name = document.getElementById('modalName').value.trim();
+  const pts  = parseFloat(document.getElementById('modalPts').value) || 0;
+  if (!name) return;
+
+  if (modalCtx.mode === 'task') {
+    const fromType = modalCtx.type;
+    const toType   = document.getElementById('modalSection').value;
+    const t = state.tasks[fromType][modalCtx.index];
+    t.name = name;
+    t.unit = document.getElementById('modalUnit').value.trim() || t.unit;
+    t.step = Math.max(1, parseInt(document.getElementById('modalStep').value) || 1);
+    t.ptsPerUnit = pts;
+    if (toType !== fromType) {
+      state.points = r2(Math.max(0, state.points - earnedPts(t)));
+      state.tasks[fromType].splice(modalCtx.index, 1);
+      state.tasks[toType].push(t);
+      save(); renderTasks(fromType); renderTasks(toType); updatePoints();
+      closeModal(); toast(`Moved to ${toType}.`); return;
+    }
+    save(); renderTasks(fromType);
+  } else if (modalCtx.mode === 'onetime') {
+    const t = state.tasks.onetime[modalCtx.index];
+    t.name = name;
+    t.pts  = pts;
+    save(); renderOnetimeTasks();
+  } else if (modalCtx.mode === 'reward') {
+    const r = state.rewards[modalCtx.index];
+    r.name = name;
+    r.cost = pts;
+    save(); renderRewards();
+  }
+  closeModal();
+  toast('Saved.');
+}
+
+// Close modal on overlay click
+document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Tabs ──────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(`section-${btn.dataset.tab}`).classList.add('active');
+  });
+});
+
+['common','uncommon','rare'].forEach(t => {
+  document.getElementById(`${t}-name`).addEventListener('keydown', e => { if (e.key==='Enter') addTask(t); });
+});
+document.getElementById('onetime-name').addEventListener('keydown', e => { if (e.key==='Enter') addOnetimeTask(); });
+document.getElementById('reward-name').addEventListener('keydown', e => { if (e.key==='Enter') addReward(); });
+
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function setGreeting() {
+  const now = new Date();
+  const day = now.getDay();
+  const seed = now.getFullYear() * 10000 + (now.getMonth()+1) * 100 + now.getDate();
+  window._rng = (n) => { let x = Math.sin(seed + n) * 99999; return x - Math.floor(x); };
+  const rng = window._rng;
+
+  const headings = [
+    '✦ Rise & Grind ✦', '✦ New Day, New Loot ✦', '✦ What\'s up, Eli ✦',
+    '✦ Time to Level Up ✦', '✦ Let\'s Get It ✦', '✦ Hey Eli ✦',
+    '✦ Make It Count ✦', '✦ Quests Await ✦', '✦ Looking good, Eli ✦',
+    '✦ Ready? ✦', '✦ Another Day, Another XP ✦', '✦ Stay on Track ✦',
+    '✦ You got this, Eli ✦', '✦ Adventure Awaits ✦', '✦ Onwards ✦',
+    '✦ Focus Mode ✦', '✦ Eli, Let\'s Go ✦', '✦ Daily Grind ✦',
+    '✦ Points Don\'t Earn Themselves ✦', '✦ Keep the Streak ✦',
+    '✦ Back at It ✦', '✦ One More Day ✦', '✦ Show Up, Eli ✦',
+    '✦ The Work Continues ✦', '✦ Stack Those Points ✦',
+    '✦ Eyes Forward ✦', '✦ Get After It ✦', '✦ No Days Off ✦',
+    '✦ Level Up or Log Out ✦', '✦ Today\'s the Day ✦',
+    '✦ Build the Habit ✦', '✦ Eli Builds ✦', '✦ Momentum ✦',
+    '✦ Do the Work ✦', '✦ Still Here, Still Grinding ✦',
+    '✦ Win the Day ✦', '✦ Suit Up, Eli ✦', '✦ Progress Awaits ✦',
+    '✦ The Grind Is the Goal ✦', '✦ You Know the Drill ✦',
+    '✦ Push Forward ✦', '✦ Chase the XP ✦', '✦ Good Morning, Eli ✦',
+    '✦ Load Up Your Quests ✦', '✦ Never Skip a Day ✦',
+  ];
+
+  const subs = [
+    // Nutrition
+    'Protein first. Everything else after.',
+    'Hydrate before you caffeinate.',
+    'Eat slowly. Your brain needs 20 min to catch up.',
+    'Vegetables aren\'t optional. Make them the base.',
+    'If you\'re hungry two hours after eating, add more protein.',
+    'Processed food is designed to make you overeat. Cook more.',
+    'Meal prep once, eat well all week.',
+    'Your gut runs on fibre. Most people get half of what they need.',
+    'Hunger and thirst feel identical. Drink water first.',
+    'Eat mostly whole foods. The ingredient list should be short.',
+    'Calories don\'t lie. If you\'re not progressing, track for a week.',
+    'Don\'t drink your calories. Liquid sugar is the silent killer.',
+    'Eat before you\'re ravenous. Hunger makes bad decisions.',
+    'Omega-3s reduce inflammation. Fatty fish, walnuts, flaxseed.',
+    'Breakfast sets your blood sugar for the day. Make it count.',
+    'Sugar cravings peak mid-afternoon. Have a plan before they hit.',
+    'Creatine is the most evidence-backed supplement. Take it.',
+    'Eating out isn\'t the enemy. Portion size is.',
+    'A handful of nuts beats a bag of chips. Always.',
+    'Cook in bulk. Willpower is finite; having food ready isn\'t.',
+    // Exercise
+    'A bad workout beats no workout. Show up anyway.',
+    'Progressive overload. Add a little more each week.',
+    'Rest days are where the gains actually happen.',
+    'Compound movements first, isolation second.',
+    'Consistency over intensity. Every time.',
+    'Walking is underrated. 10,000 steps changes everything.',
+    'Stretch what you train. Mobility is strength too.',
+    'Sleep is the most anabolic thing you can do.',
+    'You don\'t need a perfect plan. You need to go.',
+    'Train hard, recover harder.',
+    'Cardio doesn\'t kill gains. Skipping it kills your heart.',
+    'The best exercise is the one you actually do.',
+    'Warm up properly. Injuries are expensive.',
+    'Track your lifts. Memory is not a training log.',
+    'Three full sessions a week beats seven half-hearted ones.',
+    'Grip strength predicts longevity. Train your hands.',
+    'Zone 2 cardio is boring and important. Do it.',
+    'Your weakest lift is your priority lift.',
+    'Form before weight. Always.',
+    'The gym is 30% training, 70% recovery.',
+    // Sleep & recovery
+    'Same bedtime every night. Your circadian rhythm rewards consistency.',
+    'Phone down 30 minutes before bed. Non-negotiable.',
+    'Cold room, dark room, better sleep.',
+    'Seven hours minimum. Eight is the target.',
+    'Naps under 20 minutes refresh. Longer ones backfire.',
+    'Alcohol destroys sleep quality. It\'s not rest.',
+    'Caffeine has a 6-hour half-life. Cut it off by 2pm.',
+    'Morning sunlight resets your body clock. Step outside early.',
+    'You cannot catch up on sleep debt. Consistency only.',
+    'Deep sleep is when memory consolidates. Protect it.',
+    // Mental wellbeing
+    'Boredom is productive. Let your mind wander sometimes.',
+    'Journaling for 5 minutes beats scrolling for 30.',
+    'Your mood follows your behaviour. Act first, feel later.',
+    'Comparison is the thief of progress. Eyes on your own lane.',
+    'Discipline is freedom. The structure creates the space.',
+    'Hard conversations now, easy life later.',
+    'You can\'t pour from an empty cup. Recovery is productive.',
+    'Gratitude rewires the brain. Name three things daily.',
+    'Anxiety is usually about the future. Redirect to the present.',
+    'The obstacle is the way. Resistance means you\'re growing.',
+    'You are the average of your five habits, not your five friends.',
+    'Don\'t negotiate with your alarm. Get up when it goes off.',
+    'Stress is information, not a verdict.',
+    'Identity drives behaviour. Become the person who does the work.',
+    'Momentum is real. One small win starts the chain.',
+    'Avoid decisions when hungry, angry, lonely, or tired.',
+    'Boredom resistance is a skill. Practice sitting with it.',
+    'Your environment shapes you more than your willpower does.',
+    'Every expert was once a beginner who refused to quit.',
+    'Done is better than perfect. Perfection is procrastination dressed up.',
+    // Self-improvement
+    'Read more than you scroll. The gap compounds.',
+    'Learn one new thing today. Doesn\'t matter how small.',
+    'Your future self will thank you for what you do today.',
+    'Spend money on experiences and tools, not status.',
+    'The compounding effect is real. Start before you\'re ready.',
+    'Say no more. It protects the things you said yes to.',
+    'Teach something today. Teaching is the deepest learning.',
+    'Get outside. Nature lowers cortisol faster than anything else.',
+    'Cold exposure builds mental toughness. Take the cold shower.',
+    'Sunscreen is the best anti-aging product. Wear it daily.',
+    'Posture affects mood. Sit up straight right now.',
+    'Time-block your priorities or someone else fills your calendar.',
+    'Digital minimalism isn\'t deprivation. It\'s clarity.',
+    'Your phone is attention rent. Pay less of it.',
+    'The people you spend time with set your standard.',
+    'A clean space is a clear mind. Tidy something today.',
+    'Spend 10 minutes in silence every day. It compounds.',
+    'Finish what you start. Completion builds identity.',
+    'Hard things first. Eat the frog before it eats your day.',
+    'Track your habits. What gets measured gets managed.',
+    // Day-of-week aware
+    ...(day === 1 ? ['Monday sets the tone for the whole week.', 'Start strong, Eli. Monday is the template.'] : []),
+    ...(day === 3 ? ['Midweek check-in: are you on track?', 'Wednesday. Half done. Finish what you started.'] : []),
+    ...(day === 5 ? ['Friday. Don\'t undo the week tonight.', 'End the week with something you\'re proud of.'] : []),
+    ...(day === 6 ? ['Saturday. Rest intentionally. It\'s part of the plan.', 'Use the weekend to recover, not to regress.'] : []),
+    ...(day === 0 ? ['Sunday sets up the week. Prep something.', 'Rest today. Attack tomorrow.'] : []),
+  ];
+
+  // ── Yesterday's star rating ──
+  const hist = state.history || [];
+  if (hist.length) {
+    const last = hist[hist.length - 1];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yStr = yesterday.toISOString().slice(0, 10);
+    if (last.date === yStr) {
+      const rated = rateYesterday(last);
+      renderStars(rated.stars);
+      document.getElementById('greeting').textContent = rated.heading;
+      document.getElementById('subgreeting').textContent = rated.detail;
+      return;
+    }
+  }
+
+  renderStars(0);
+  const hi = headings[Math.floor(rng(1) * headings.length)];
+  const sub = subs[Math.floor(rng(2) * subs.length)];
+  document.getElementById('greeting').textContent = hi;
+  document.getElementById('subgreeting').textContent = sub;
+}
+
+function renderStars(n) {
+  const el = document.getElementById('headerStars');
+  if (!el) return;
+  if (n === 0) { el.innerHTML = ''; return; }
+  let html = '';
+  for (let i = 1; i <= 5; i++) {
+    html += i <= n
+      ? '<span class="star-filled">★</span>'
+      : '<span class="star-empty">★</span>';
+  }
+  el.innerHTML = html;
+}
+
+function rateYesterday(d) {
+  const net       = d.netPts   || 0;
+  const earned    = d.ptsEarned || 0;
+  const taskCount = Object.values(d.tasks || {}).reduce((s, v) => s + v, 0);
+  const foodSpend = (d.food || []).reduce((s, f) => s + (f.spend || 0), 0);
+  const badFood   = (d.food || []).filter(f => f.tier === 'bad').reduce((s, f) => s + (f.spend || 0), 0);
+  const rewardCount = Object.values(d.rewards || {}).reduce((s, v) => s + v, 0);
+
+  // Zero day
+  if (earned === 0 && taskCount === 0) {
+    return {
+      stars: 1,
+      heading: '★ Yesterday: 1 / 5',
+      detail: `Nothing logged on ${d.date}. Zero tasks, zero points. Today is a different story — make it one.`
+    };
+  }
+
+  // Score: start from net points, penalize bad food and reward excess
+  let stars;
+  if      (net >= 60 && badFood === 0 && rewardCount <= 2) stars = 5;
+  else if (net >= 35 && badFood === 0)                     stars = 4;
+  else if (net >= 15 || (net >= 0 && badFood === 0))       stars = 3;
+  else if (net >= -15)                                     stars = 2;
+  else                                                     stars = 1;
+
+  // Build honest reason string
+  const facts = [];
+  if (taskCount === 0)        facts.push('no tasks completed');
+  else if (taskCount === 1)   facts.push('only 1 task done');
+  else if (taskCount <= 3)    facts.push(`${taskCount} tasks done`);
+  else                        facts.push(`${taskCount} tasks completed`);
+
+  if (badFood > 0)            facts.push(`${badFood} pts on bad food`);
+  else if (foodSpend > 0)     facts.push(`${foodSpend} pts on food`);
+  else if (earned > 0)        facts.push('clean eating');
+
+  if (rewardCount > 3)        facts.push(`${rewardCount} rewards redeemed`);
+
+  const sign = net >= 0 ? '+' : '';
+  facts.push(`net ${sign}${net} pts`);
+
+  const factLine = facts.join(' · ');
+
+  const verdicts = {
+    5: [`Yesterday was excellent. ${factLine}. That's what a good day looks like — repeat it.`,
+        `Strong day. ${factLine}. You earned that score. Keep the standard high.`],
+    4: [`Good day yesterday. ${factLine}. One step from excellent — you know what's holding you back.`,
+        `Solid effort. ${factLine}. There's still a gap between this and your best. Close it.`],
+    3: [`Average day. ${factLine}. You showed up, but average won't move the needle. Raise the bar.`,
+        `Decent but not great. ${factLine}. You're capable of better and you know it.`],
+    2: [`Below average. ${factLine}. That's not acceptable as a pattern. Today, do better.`,
+        `Rough day. ${factLine}. One bad day isn't the problem — making it a habit is.`],
+    1: [`Bad day. ${factLine}. That's the honest truth. Don't rationalize it — fix it today.`,
+        `Yesterday hurt you. ${factLine}. The only good response is a completely different day today.`],
+  };
+
+  const starLabels = { 5: '★★★★★', 4: '★★★★☆', 3: '★★★☆☆', 2: '★★☆☆☆', 1: '★☆☆☆☆' };
+  const rng = window._rng || ((n) => { let x = Math.sin(n) * 99999; return x - Math.floor(x); });
+  const options = verdicts[stars];
+  return {
+    stars,
+    heading: `${starLabels[stars]}  Yesterday: ${stars} / 5`,
+    detail: options[Math.floor(rng(3) * options.length)]
+  };
+}
+
+function editPoints() {
+  const current = r2(state.points);
+  const input = prompt(`Current points: ${current}\nEnter new total:`, current);
+  if (input === null) return;
+  const val = parseFloat(input);
+  if (isNaN(val)) { toast('⚠ Invalid number.'); return; }
+  state.points = r2(val);
+  save(); updatePoints();
+  toast(`Points set to ${r2(val)}.`);
+}
+
+// ── Export / Import Data ──────────────────────────────────────────────
+function exportData() {
+  const date = new Date().toISOString().slice(0, 10);
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `life-rpg-data-${date}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+  toast('✦ Data exported. Send this file to your other device.');
+}
+
+function importData(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      // Basic sanity check
+      if (!imported.tasks || !imported.hasOwnProperty('points')) {
+        toast('⚠ Invalid file. Make sure you\'re using a Life RPG export.');
+        return;
+      }
+      if (!imported.food)    imported.food = [];
+      if (!imported.history) imported.history = [];
+      if (!confirm(`Import data from ${file.name}?\n\nThis will replace everything currently on this device.`)) return;
+      state = imported;
+      save();
+      renderAll();
+      setGreeting();
+      toast('✦ Data imported successfully.');
+    } catch {
+      toast('⚠ Could not read file. Make sure it\'s a valid JSON export.');
+    }
+  };
+  reader.readAsText(file);
+  // Reset input so the same file can be re-imported if needed
+  e.target.value = '';
+}
+
+// ── Seed ─────────────────────────────────────────────────────────────
+function seed() {
+  if (Object.values(state.tasks).some(a => a.length) || state.rewards.length) return;
+  state.tasks.common   = [
+    { name: 'Pushups',  unit: '5 pushups',      ptsPerUnit: 10, step: 1, count: 0 },
+    { name: 'Read',     unit: '10 min',         ptsPerUnit: 5,  step: 1, count: 0 },
+  ];
+  state.tasks.uncommon = [
+    { name: 'Deep clean', unit: '1 room',       ptsPerUnit: 20, step: 1, count: 0 },
+    { name: 'Meal prep',  unit: '1 meal',       ptsPerUnit: 12, step: 1, count: 0 },
+  ];
+  state.tasks.rare     = [{ name: 'Course module', unit: '1 module', ptsPerUnit: 50, step: 1, count: 0 }];
+  state.tasks.onetime  = [{ name: 'Budget spreadsheet', pts: 100, done: false, completedDate: null }];
+  state.rewards        = [
+    { name: 'Movie night', cost: 30, redeemed: 0 },
+    { name: 'Order takeout', cost: 60, redeemed: 0 },
+    { name: 'New game / book', cost: 150, redeemed: 0 },
+  ];
+  save();
+}
+
+seed();
+setGreeting();
+renderAll();
+
+</script>
+</body>
+</html>
