@@ -56,12 +56,27 @@
   #app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 0 16px 100px; }
 
   /* ── Header ── */
-  header { text-align: center; padding: 32px 0 18px; }
-  .header-stars { font-size: clamp(28px, 6vw, 44px); letter-spacing: 6px; line-height: 1; margin-bottom: 8px; display: block; }
-  .star-filled  { color: #ffd642; text-shadow: 0 0 16px #ffd64299, 0 0 32px #ffd64255; }
-  .star-empty   { color: #3a3a5a; }
-  header h1 { font-family: 'Cinzel Decorative', serif; font-size: clamp(22px, 5vw, 38px); color: var(--accent2); text-shadow: 0 0 30px #d4a84388, 0 0 60px #d4a84344; letter-spacing: 4px; }
-  header p.tagline { font-family: 'Cinzel', serif; font-size: 12px; color: var(--muted); letter-spacing: 3px; text-transform: uppercase; margin-top: 6px; }
+  header { text-align: center; padding: 28px 0 14px; }
+  /* Compact history row: Yesterday / Last Week / Month as numbers */
+  .header-history { display: flex; justify-content: center; gap: 22px; margin-bottom: 14px; flex-wrap: wrap; align-items: flex-end; }
+  .hist-block { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .hist-label { font-family: 'Cinzel', serif; font-size: 8px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+  .hist-value { font-family: 'Cinzel', serif; font-size: 18px; color: var(--accent2); line-height: 1; }
+  .hist-value.no-data { font-size: 13px; color: #3a3a5a; }
+  /* Today stars as the main headline */
+  .today-stars { font-size: clamp(32px, 8vw, 52px); letter-spacing: 4px; line-height: 1; display: flex; justify-content: center; align-items: center; margin-bottom: 6px; min-height: 1.2em; }
+  .star-wrap { position: relative; display: inline-block; color: #3a3a5a; }
+  .star-wrap .star-fill { position: absolute; left: 0; top: 0; overflow: hidden; color: #ffd642; text-shadow: 0 0 14px #ffd64299, 0 0 28px #ffd64255; white-space: nowrap; }
+  .today-empty { font-family: 'Cinzel Decorative', serif; font-size: clamp(18px, 4vw, 30px); color: var(--accent2); text-shadow: 0 0 30px #d4a84388; letter-spacing: 4px; }
+  header p.tagline { font-family: 'Cinzel', serif; font-size: 12px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.6; }
+  .info-btn { background: transparent; border: 1px solid var(--border2); color: var(--muted); border-radius: 50%; width: 16px; height: 16px; font-size: 9px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; margin-left: 4px; vertical-align: middle; font-family: serif; transition: all 0.2s; flex-shrink: 0; }
+  .info-btn:hover { color: var(--accent2); border-color: var(--accent); }
+
+  /* ── Scoring info modal ── */
+  .score-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .score-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .score-table tr:last-child td { border-bottom: none; }
+  .score-table td:first-child { white-space: nowrap; color: #ffd642; font-family: 'Cinzel', serif; width: 90px; }
 
   .stats-nav-btn {
     border: none; color: #fff;
@@ -234,38 +249,29 @@
   .undo-btn:disabled { opacity: 0.2; cursor: not-allowed; }
 
   /* ── Food Rewards ── */
-  .food-group-title {
-    font-family: 'Cinzel', serif; font-size: 12px; letter-spacing: 2px;
-    text-transform: uppercase; margin: 18px 0 10px; padding-bottom: 5px;
+  .food-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .food-column-header {
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2px;
+    text-transform: uppercase; margin-bottom: 10px; padding-bottom: 5px;
     border-bottom: 1px solid var(--border);
   }
-  .food-group-title.poor { color: var(--uncommon); }
-  .food-group-title.bad  { color: var(--danger); }
+  .food-column-header.poor { color: var(--uncommon); }
+  .food-column-header.bad  { color: var(--danger); }
 
   .food-item {
     background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
     padding: 12px 14px; display: flex; align-items: center; gap: 10px;
-    margin-bottom: 8px; position: relative; overflow: hidden; transition: border-color 0.2s;
+    margin-bottom: 8px; position: relative; overflow: hidden; transition: all 0.2s;
+    cursor: pointer;
   }
   .food-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; border-radius: 8px 0 0 8px; }
   .food-item.poor::before { background: var(--uncommon); }
   .food-item.bad::before  { background: var(--danger); }
-  .food-item:hover { border-color: var(--border2); }
+  .food-item:hover { border-color: var(--border2); background: var(--panel2); }
 
   .food-item-info { flex: 1; min-width: 0; }
   .food-item-name { font-size: 15px; color: var(--text); }
-  .food-item-meta { font-size: 11px; color: var(--muted); font-family: 'Cinzel', serif; margin-top: 2px; letter-spacing: 0.5px; }
-
-  .food-tier-btns { display: flex; gap: 6px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end; }
-  .food-tier-btn {
-    border: 1px solid var(--border2); border-radius: 6px; background: transparent;
-    color: var(--muted); font-family: 'Cinzel', serif; font-size: 10px;
-    letter-spacing: 0.5px; padding: 5px 9px; cursor: pointer; transition: all 0.2s;
-    white-space: nowrap; display: flex; flex-direction: column; align-items: center; gap: 1px;
-  }
-  .food-tier-btn .tier-name { font-size: 10px; }
-  .food-tier-btn .tier-cost { font-size: 9px; color: var(--danger); }
-  .food-tier-btn:hover { border-color: var(--danger); color: var(--text); }
+  .food-item-pts  { font-size: 11px; color: var(--danger); font-family: 'Cinzel', serif; margin-top: 2px; letter-spacing: 0.5px; }
 
   .food-item-count {
     font-family: 'Cinzel', serif; font-size: 12px; color: var(--danger);
@@ -331,17 +337,17 @@
 <body>
 <div id="app">
   <header>
-    <span class="header-stars" id="headerStars"></span>
-    <h1 id="greeting">✦ Life RPG ✦</h1>
-    <p class="tagline" id="subgreeting">Your adventure awaits</p>
+    <div class="header-history" id="headerHistory"></div>
+    <div class="today-stars" id="todayStars"></div>
   </header>
 
   <div class="points-bar">
     <span class="points-label">POINTS</span>
-    <span class="points-value" id="pointsDisplay" onclick="editPoints()" title="Tap to adjust" style="cursor:pointer">0</span>
-    <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--muted);cursor:pointer" onclick="editPoints()" title="Tap to adjust">✎</span>
-    <button class="stats-nav-btn btn-export" onclick="exportData()" style="margin-left:auto" title="Download your data as a backup file">⬇ Export</button>
-    <button class="stats-nav-btn btn-import" onclick="document.getElementById('importInput').click()" title="Load a previously exported data file">⬆ Import</button>
+    <span class="points-value" id="pointsDisplay" onclick="editPoints()" style="cursor:pointer">0</span>
+    <span id="netDisplay" style="font-family:'Cinzel',serif;font-size:13px;color:var(--pos);margin-left:2px;transition:color 0.2s"></span>
+    <span style="font-family:'Cinzel',serif;font-size:10px;color:var(--muted);cursor:pointer" onclick="editPoints()">✎</span>
+    <button class="stats-nav-btn btn-export" onclick="exportData()" style="margin-left:auto">⬇ Export</button>
+    <button class="stats-nav-btn btn-import" onclick="document.getElementById('importInput').click()">⬆ Import</button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)" />
     <button class="stats-nav-btn btn-stats" id="statsNavBtn" onclick="toggleStats()">📊 Stats</button>
   </div>
@@ -360,13 +366,13 @@
     <!-- COMMON -->
     <div class="section active" id="section-common">
       <div class="section-header">
-        <div><div class="section-title common">Common Tasks</div><div class="section-meta">Daily habits & routines.</div></div>
+        <div><div class="section-title common">Common Tasks</div></div>
       </div>
       <div class="add-form">
-        <input class="task-name"  id="common-name"  type="text"   placeholder="Task name…" />
-        <input class="unit-label" id="common-unit"  type="text"   placeholder="Unit of measure" />
+        <input class="task-name"  id="common-name"  type="text"   placeholder="Name" />
+        <input class="unit-label" id="common-unit"  type="text"   placeholder="Unit" />
         <input class="num-input"  id="common-step"  type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input"  id="common-pts"   type="number" placeholder="Pts/unit" min="0.01" step="any" value="10" />
+        <input class="num-input"  id="common-pts"   type="number" placeholder="Pts" min="0.01" step="any" value="10" />
         <button class="btn-add" onclick="addTask('common')">+ Add</button>
       </div>
       <div class="task-list" id="list-common"></div>
@@ -375,13 +381,13 @@
     <!-- UNCOMMON -->
     <div class="section" id="section-uncommon">
       <div class="section-header">
-        <div><div class="section-title uncommon">Uncommon Tasks</div><div class="section-meta">Weekly or occasional goals.</div></div>
+        <div><div class="section-title uncommon">Uncommon Tasks</div></div>
       </div>
       <div class="add-form">
-        <input class="task-name"  id="uncommon-name" type="text"   placeholder="Task name…" />
-        <input class="unit-label" id="uncommon-unit" type="text"   placeholder="Unit of measure" />
+        <input class="task-name"  id="uncommon-name" type="text"   placeholder="Name" />
+        <input class="unit-label" id="uncommon-unit" type="text"   placeholder="Unit" />
         <input class="num-input"  id="uncommon-step" type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input"  id="uncommon-pts"  type="number" placeholder="Pts/unit" min="0.01" step="any" value="15" />
+        <input class="num-input"  id="uncommon-pts"  type="number" placeholder="Pts" min="0.01" step="any" value="15" />
         <button class="btn-add" onclick="addTask('uncommon')">+ Add</button>
       </div>
       <div class="task-list" id="list-uncommon"></div>
@@ -390,13 +396,13 @@
     <!-- RARE -->
     <div class="section" id="section-rare">
       <div class="section-header">
-        <div><div class="section-title rare">Rare Tasks</div><div class="section-meta">Monthly milestones & achievements.</div></div>
+        <div><div class="section-title rare">Rare Tasks</div></div>
       </div>
       <div class="add-form">
-        <input class="task-name"  id="rare-name" type="text"   placeholder="Task name…" />
-        <input class="unit-label" id="rare-unit" type="text"   placeholder="Unit of measure" />
+        <input class="task-name"  id="rare-name" type="text"   placeholder="Name" />
+        <input class="unit-label" id="rare-unit" type="text"   placeholder="Unit" />
         <input class="num-input"  id="rare-step" type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input"  id="rare-pts"  type="number" placeholder="Pts/unit" min="0.01" step="any" value="40" />
+        <input class="num-input"  id="rare-pts"  type="number" placeholder="Pts" min="0.01" step="any" value="40" />
         <button class="btn-add" onclick="addTask('rare')">+ Add</button>
       </div>
       <div class="task-list" id="list-rare"></div>
@@ -405,11 +411,11 @@
     <!-- ONE-TIME -->
     <div class="section" id="section-onetime">
       <div class="section-header">
-        <div><div class="section-title onetime">One-Time Quests</div><div class="section-meta">Complete once and it's done forever.</div></div>
+        <div><div class="section-title onetime">One-Time Quests</div></div>
       </div>
       <div class="add-form">
-        <input class="task-name" id="onetime-name" type="text"   placeholder="Quest name…" />
-        <input class="num-input" id="onetime-pts"  type="number" placeholder="Points" min="0.01" step="any" value="75" />
+        <input class="task-name" id="onetime-name" type="text"   placeholder="Name" />
+        <input class="num-input" id="onetime-pts"  type="number" placeholder="Pts" min="0.01" step="any" value="75" />
         <button class="btn-add" onclick="addOnetimeTask()">+ Add</button>
       </div>
       <div class="task-list" id="list-onetime"></div>
@@ -418,10 +424,10 @@
     <!-- REWARDS -->
     <div class="section" id="section-rewards">
       <div class="section-header">
-        <div><div class="section-title rewards">Reward Shop</div><div class="section-meta">Spend your points on things you love.</div></div>
+        <div><div class="section-title rewards">Reward Shop</div></div>
       </div>
       <div class="add-form">
-        <input class="task-name" id="reward-name" type="text"   placeholder="Reward name…" />
+        <input class="task-name" id="reward-name" type="text"   placeholder="Name" />
         <input class="num-input" id="reward-cost" type="number" placeholder="Cost" min="1" value="50" />
         <button class="btn-add" onclick="addReward()">+ Add</button>
       </div>
@@ -430,17 +436,32 @@
     <!-- FOOD REWARDS -->
     <div class="section" id="section-food">
       <div class="section-header">
-        <div><div class="section-title food">Food Rewards</div><div class="section-meta">Track indulgences. Costs scale with how much you have.</div></div>
+        <div><div class="section-title food">Food</div></div>
       </div>
       <div id="list-food"></div>
     </div>
   </div>
   <div id="section-stats">
     <div class="section-header">
-      <div><div class="section-title stats">Statistics</div><div class="section-meta">Updated each time you confirm End of Day.</div></div>
+      <div><div class="section-title stats">Statistics</div></div>
       <button class="btn-reset-stats" onclick="resetStats()">Reset Stats</button>
     </div>
     <div id="stats-content"></div>
+  </div>
+</div>
+
+<!-- Points Edit Modal -->
+<div class="modal-overlay" id="pointsModal">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title">Set Points</div>
+    <div class="modal-field">
+      <div class="modal-label">NEW TOTAL</div>
+      <input class="modal-input" id="pointsInput" type="number" step="any" />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closePointsModal()">Cancel</button>
+      <button class="modal-save" onclick="savePointsModal()">Save</button>
+    </div>
   </div>
 </div>
 
@@ -495,6 +516,52 @@
   </div>
 </div>
 
+<!-- Food portion prompt -->
+<div class="modal-overlay" id="foodPromptModal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-title" id="foodPromptTitle">How much?</div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin:8px 0 4px">
+      <button class="modal-save" id="foodPromptBit"    style="text-align:left;padding:12px 16px">A Bit <span id="foodPromptBitCost"  style="float:right;opacity:0.7"></span></button>
+      <button class="modal-save" id="foodPromptServ"   style="text-align:left;padding:12px 16px;background:linear-gradient(135deg,#c07010,#904a00)">A Serving <span id="foodPromptServCost" style="float:right;opacity:0.7"></span></button>
+      <button class="modal-save" id="foodPromptMuch"   style="text-align:left;padding:12px 16px;background:linear-gradient(135deg,#d03030,#a01010)">Too Much <span id="foodPromptMuchCost" style="float:right;opacity:0.7"></span></button>
+    </div>
+    <div class="modal-actions" style="margin-top:8px">
+      <button class="modal-cancel" onclick="closeFoodPrompt()">Cancel</button>
+      <button class="undo-btn" id="foodPromptUndo" onclick="undoFoodFromPrompt()" style="margin-right:auto">↩ Undo Last</button>
+    </div>
+  </div>
+</div>
+
+<!-- Scoring info modal -->
+<div class="modal-overlay" id="scoreInfoModal">
+  <div class="modal" style="max-width:480px;max-height:85vh;overflow-y:auto">
+    <div class="modal-title">How Scores Are Calculated</div>
+    <p style="font-size:13px;color:var(--muted);margin:4px 0 12px;line-height:1.6">Score is based on net points for the day. Break even (net 0) = 2 stars. Rewards don't affect your score. Food rules: 5★ requires zero food spend. 4★+ requires zero bad food. Below 4★, only net points matter.</p>
+    <table class="score-table">
+      <tr><td>★★★★★ (5)</td><td>Net +60 or more, no food spend at all.</td></tr>
+      <tr><td>4¾</td><td>Net +60 or more, but any food was eaten.</td></tr>
+      <tr><td>4½</td><td>Net +52, no bad food.</td></tr>
+      <tr><td>4¼</td><td>Net +45, no bad food.</td></tr>
+      <tr><td>★★★★ (4)</td><td>Net +35, no bad food.</td></tr>
+      <tr><td>3¾</td><td>Net +28. (Bad food caps score here or below.)</td></tr>
+      <tr><td>3½</td><td>Net +22.</td></tr>
+      <tr><td>3¼</td><td>Net +15.</td></tr>
+      <tr><td>★★★ (3)</td><td>Net +10.</td></tr>
+      <tr><td>2¾</td><td>Net +5.</td></tr>
+      <tr><td>2½</td><td>Net +1.</td></tr>
+      <tr><td>★★ (2)</td><td>Net 0 — break even. The neutral baseline.</td></tr>
+      <tr><td>1¾</td><td>Net −10 or better.</td></tr>
+      <tr><td>1½</td><td>Net −20 or better.</td></tr>
+      <tr><td>1¼</td><td>Net −35 or better.</td></tr>
+      <tr><td>★ (1)</td><td>Net below −35, or nothing logged.</td></tr>
+    </table>
+    <p style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.6"><strong style="color:var(--text)">Food costs — Poor:</strong> A Bit −1, A Serving −5, Too Much −25. <strong style="color:var(--text)">Bad:</strong> A Bit −5, A Serving −20, Too Much −40.</p>
+    <div class="modal-actions">
+      <button class="modal-save" onclick="document.getElementById('scoreInfoModal').classList.remove('open')">Got It</button>
+    </div>
+  </div>
+</div>
+
 <div class="eod-footer">
   <button class="eod-btn eod-yesterday" id="eoyBtn" onclick="endYesterday()">↩ Yesterday</button>
   <button class="eod-btn" id="eodBtn" onclick="endOfDay()">✦ End of Day ✦</button>
@@ -531,7 +598,30 @@ function save() {
 function markUnsaved() {}
 function markSaved() {}
 function r2(n) { return Math.round(n * 100) / 100; }
-function updatePoints() { document.getElementById('pointsDisplay').textContent = r2(state.points); }
+function updatePoints() {
+  document.getElementById('pointsDisplay').textContent = r2(state.points);
+  const netEl = document.getElementById('netDisplay');
+  if (!netEl) { setGreeting(); return; }
+
+  let earned = 0;
+  ['common','uncommon','rare'].forEach(type => {
+    (state.tasks[type] || []).forEach(t => { earned += earnedPts(t); });
+  });
+  (state.tasks.onetime || []).forEach(t => { if (t.done && !t.snapshotted) earned += t.pts; });
+  const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
+  const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
+  const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || state.manualPointsSet;
+
+  if (!somethingDone) {
+    netEl.textContent = '';
+  } else {
+    const net = r2(earned - foodSpend - rewardSpend);
+    const sign = net >= 0 ? '+' : '';
+    netEl.textContent = `(${sign}${net})`;
+    netEl.style.color = net >= 0 ? 'var(--pos)' : 'var(--neg)';
+  }
+  setGreeting();
+}
 
 // ── Render ────────────────────────────────────────────────────────────
 function renderAll() {
@@ -540,6 +630,7 @@ function renderAll() {
   renderRewards();
   renderFood();
   updatePoints();
+  setGreeting();
 }
 
 function earnedPts(t) { return r2((t.count || 0) * t.ptsPerUnit); }
@@ -547,7 +638,7 @@ function earnedPts(t) { return r2((t.count || 0) * t.ptsPerUnit); }
 function renderTasks(type) {
   const list = document.getElementById(`list-${type}`);
   const tasks = state.tasks[type];
-  if (!tasks.length) { list.innerHTML = `<div class="task-empty">No ${type} tasks yet. Add one above.</div>`; return; }
+  if (!tasks.length) { list.innerHTML = ''; return; }
   list.innerHTML = tasks.map((t, i) => {
     const count = t.count || 0;
     const step  = t.step  || 1;
@@ -568,7 +659,7 @@ function renderTasks(type) {
         <button class="ctr-btn plus"  onclick="adjustCount('${type}',${i},+1)">+</button>
       </div>
       <span class="task-earned">${earned>0?'+':''}${earned} pts</span>
-      <button class="edit-btn" onclick="openEditTask('${type}',${i})" title="Edit">✎</button>
+      <button class="edit-btn" onclick="openEditTask('${type}',${i})">✎</button>
       <button class="delete-btn" onclick="deleteTask('${type}',${i})">✕</button>
     </div>`;
   }).join('');
@@ -583,7 +674,7 @@ function renderOnetimeTasks() {
   let html = '';
 
   if (!pending.length && !completed.length) {
-    html = `<div class="task-empty">No one-time quests yet. Add one above.</div>`;
+    html = '';
   }
 
   // Pending quests
@@ -595,12 +686,12 @@ function renderOnetimeTasks() {
         <button class="arrow-btn" onclick="moveTask('onetime',${i},-1)" ${i===0?'disabled':''}>▲</button>
         <button class="arrow-btn" onclick="moveTask('onetime',${i},+1)" ${i===pending.length-1?'disabled':''}>▼</button>
       </div>
-      <button class="complete-onetime-btn" onclick="completeOnetime(${i})" title="Complete">✓</button>
+      <button class="complete-onetime-btn" onclick="completeOnetime(${i})">✓</button>
       <div class="task-info">
         <div class="task-name-text">${esc(t.name)}</div>
       </div>
       <span class="task-earned" style="color:var(--onetime);border-color:var(--onetime);background:#ff9d5c12">+${t.pts} pts</span>
-      <button class="edit-btn" onclick="openEditOnetime(${i})" title="Edit">✎</button>
+      <button class="edit-btn" onclick="openEditOnetime(${i})">✎</button>
       <button class="delete-btn" onclick="deleteTask('onetime',${i})">✕</button>
     </div>`;
   });
@@ -628,7 +719,7 @@ function renderOnetimeTasks() {
 
 function renderRewards() {
   const grid = document.getElementById('list-rewards');
-  if (!state.rewards.length) { grid.innerHTML = `<div class="task-empty">No rewards yet.</div>`; return; }
+  if (!state.rewards.length) { grid.innerHTML = ''; return; }
   grid.innerHTML = state.rewards.map((r, i) => {
     const redeemed = r.redeemed || 0;
     return `
@@ -646,7 +737,7 @@ function renderRewards() {
         <button class="buy-btn" onclick="buyReward(${i})">Redeem</button>
         <button class="undo-btn" ${redeemed===0?'disabled':''} onclick="undoReward(${i})">↩ Undo</button>
       </div>
-      <button class="edit-btn" onclick="openEditReward(${i})" title="Edit">✎</button>
+      <button class="edit-btn" onclick="openEditReward(${i})">✎</button>
       <button class="delete-btn" onclick="deleteReward(${i})">✕</button>
     </div>`;
   }).join('');
@@ -656,41 +747,22 @@ function renderRewards() {
 // Tiers: poor = [2.5, 5, 10], bad = [5, 10, 20]
 const FOOD_TIERS = {
   poor: { label: 'Poor Food', tiers: [
-    { name: 'A Bit',    cost: 2.5 },
-    { name: 'A Serving',cost: 5   },
-    { name: 'Too Much', cost: 10  },
+    { name: 'A Bit',     cost: 1  },
+    { name: 'A Serving', cost: 5  },
+    { name: 'Too Much',  cost: 25 },
   ]},
   bad: { label: 'Bad Food', tiers: [
-    { name: 'A Bit',    cost: 5   },
-    { name: 'A Serving',cost: 10  },
-    { name: 'Too Much', cost: 20  },
+    { name: 'A Bit',     cost: 5  },
+    { name: 'A Serving', cost: 20 },
+    { name: 'Too Much',  cost: 40 },
   ]},
 };
 
 function renderFood() {
   const el = document.getElementById('list-food');
-  if (!state.food || !state.food.length) {
-    el.innerHTML = `
-      <p style="color:var(--muted);font-style:italic;font-size:14px;margin-bottom:16px">Track food indulgences. Add items then log how much you had — costs scale up the more you eat.</p>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
-        <input class="task-name" id="food-name" type="text" placeholder="Food name…" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none" />
-        <select id="food-tier" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none">
-          <option value="poor">Poor Food</option>
-          <option value="bad">Bad Food</option>
-        </select>
-        <button class="btn-add" onclick="addFoodItem()">+ Add</button>
-      </div>
-      <div class="task-empty">No food items yet. Add one above.</div>`;
-    document.getElementById('food-name').addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
-    return;
-  }
-
-  const poor = state.food.filter(f => f.tier === 'poor');
-  const bad  = state.food.filter(f => f.tier === 'bad');
-
-  let html = `
+  const addForm = `
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
-      <input class="task-name" id="food-name" type="text" placeholder="Food name…" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none" />
+      <input class="task-name" id="food-name" type="text" placeholder="Name" style="flex:1;min-width:140px;background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none" />
       <select id="food-tier" style="background:var(--panel);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:9px 12px;font-family:'Crimson Pro',serif;font-size:15px;outline:none">
         <option value="poor">Poor Food</option>
         <option value="bad">Bad Food</option>
@@ -698,78 +770,99 @@ function renderFood() {
       <button class="btn-add" onclick="addFoodItem()">+ Add</button>
     </div>`;
 
-  ['poor','bad'].forEach(tier => {
-    const items = state.food.filter(f => f.tier === tier);
-    if (!items.length) return;
-    const tierDef = FOOD_TIERS[tier];
-    html += `<div class="food-group-title ${tier}">${tierDef.label}</div>`;
-    items.forEach(item => {
-      const idx = state.food.indexOf(item);
-      const spent = r2(item.todaySpend || 0);
-      const lastLog = (item.log && item.log.length) ? item.log[item.log.length - 1] : null;
-      const sametierItems = state.food.filter(f => f.tier === tier);
-      const tierIdx2 = sametierItems.indexOf(item);
-      html += `<div class="food-item ${tier}">
-        <div class="reorder-btns">
-          <button class="arrow-btn" onclick="moveFood(${idx},-1)" ${idx===0?'disabled':''}>▲</button>
-          <button class="arrow-btn" onclick="moveFood(${idx},+1)" ${idx===state.food.length-1?'disabled':''}>▼</button>
-        </div>
-        <div class="food-item-info">
-          <div class="food-item-name">${esc(item.name)}</div>
-          <div class="food-item-meta">Today: −${spent} pts</div>
-        </div>
-        <div class="food-tier-btns">
-          ${tierDef.tiers.map((t,ti) => `
-            <button class="food-tier-btn" onclick="logFood(${idx},${ti})">
-              <span class="tier-name">${t.name}</span>
-              <span class="tier-cost">−${t.cost}</span>
-            </button>`).join('')}
-        </div>
-        <button class="undo-btn" onclick="undoFood(${idx})" ${!lastLog?'disabled':''} title="Undo last entry" style="white-space:nowrap">↩ Undo</button>
-        <button class="delete-btn" onclick="deleteFoodItem(${idx})" title="Delete">✕</button>
-      </div>`;
-    });
-  });
+  if (!state.food || !state.food.length) {
+    el.innerHTML = addForm;
+    document.getElementById('food-name').addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
+    return;
+  }
 
-  el.innerHTML = html;
+  function foodItemHtml(item) {
+    const idx   = state.food.indexOf(item);
+    const spent = r2(item.todaySpend || 0);
+    return `<div class="food-item ${item.tier}" onclick="openFoodPrompt(${idx})">
+      <div class="food-item-info">
+        <div class="food-item-name">${esc(item.name)}</div>
+        <div class="food-item-pts">${spent > 0 ? `−${spent} pts today` : 'Tap to log'}</div>
+      </div>
+      <button class="delete-btn" onclick="event.stopPropagation();deleteFoodItem(${idx})">✕</button>
+    </div>`;
+  }
+
+  const poor = state.food.filter(f => f.tier === 'poor');
+  const bad  = state.food.filter(f => f.tier === 'bad');
+
+  const poorCol = `<div>
+    <div class="food-column-header poor">⚠ Poor Foods</div>
+    ${poor.length ? poor.map(foodItemHtml).join('') : ''}
+  </div>`;
+
+  const badCol = `<div>
+    <div class="food-column-header bad">✕ Bad Foods</div>
+    ${bad.length ? bad.map(foodItemHtml).join('') : ''}
+  </div>`;
+
+  el.innerHTML = addForm + `<div class="food-columns">${poorCol}${badCol}</div>`;
   const nameInput = document.getElementById('food-name');
   if (nameInput) nameInput.addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
 }
+
+let _foodPromptIdx = null;
+
+function openFoodPrompt(idx) {
+  const item    = state.food[idx];
+  const tierDef = FOOD_TIERS[item.tier];
+  _foodPromptIdx = idx;
+  document.getElementById('foodPromptTitle').textContent = item.name;
+  document.getElementById('foodPromptBitCost').textContent  = `−${tierDef.tiers[0].cost} pts`;
+  document.getElementById('foodPromptServCost').textContent = `−${tierDef.tiers[1].cost} pts`;
+  document.getElementById('foodPromptMuchCost').textContent = `−${tierDef.tiers[2].cost} pts`;
+  document.getElementById('foodPromptUndo').disabled = !(item.log && item.log.length);
+  document.getElementById('foodPromptBit').onclick  = () => { logFood(idx, 0); closeFoodPrompt(); };
+  document.getElementById('foodPromptServ').onclick = () => { logFood(idx, 1); closeFoodPrompt(); };
+  document.getElementById('foodPromptMuch').onclick = () => { logFood(idx, 2); closeFoodPrompt(); };
+  document.getElementById('foodPromptModal').classList.add('open');
+}
+
+function closeFoodPrompt() {
+  document.getElementById('foodPromptModal').classList.remove('open');
+  _foodPromptIdx = null;
+}
+
+function undoFoodFromPrompt() {
+  if (_foodPromptIdx === null) return;
+  undoFood(_foodPromptIdx);
+  closeFoodPrompt();
+}
+
+document.addEventListener('click', e => {
+  if (e.target === document.getElementById('foodPromptModal')) closeFoodPrompt();
+});
 
 function addFoodItem() {
   const name = document.getElementById('food-name').value.trim();
   const tier = document.getElementById('food-tier').value;
   if (!name) return;
   if (!state.food) state.food = [];
-  state.food.push({ name, tier, todaySpend: 0 });
+  state.food.push({ name, tier, todaySpend: 0, log: [] });
   document.getElementById('food-name').value = '';
   save(); renderFood();
 }
 
 function logFood(idx, tierIdx) {
-  const item = state.food[idx];
+  const item    = state.food[idx];
   const tierDef = FOOD_TIERS[item.tier];
-  const cost = tierDef.tiers[tierIdx].cost;
+  const cost     = tierDef.tiers[tierIdx].cost;
   const tierName = tierDef.tiers[tierIdx].name;
   if (!item.log) item.log = [];
   item.log.push({ cost, tierName });
   item.todaySpend = r2((item.todaySpend || 0) + cost);
-  state.points = r2(state.points - cost);
+  state.points    = r2(state.points - cost);
   save(); renderFood(); updatePoints();
-  toast(`🍔 ${tierName} of ${item.name}: −${cost} pts`);
-}
-
-function moveFood(i, dir) {
-  const arr = state.food;
-  const j = i + dir;
-  if (j < 0 || j >= arr.length) return;
-  [arr[i], arr[j]] = [arr[j], arr[i]];
-  save(); renderFood();
+  toast(`${tierName} of ${item.name}: −${cost} pts`);
 }
 
 function deleteFoodItem(idx) {
   const item = state.food[idx];
-  // refund today's spend
   state.points = r2(state.points + (item.todaySpend || 0));
   state.food.splice(idx, 1);
   save(); renderFood(); updatePoints();
@@ -780,7 +873,7 @@ function undoFood(idx) {
   if (!item.log || !item.log.length) return;
   const last = item.log.pop();
   item.todaySpend = r2(Math.max(0, (item.todaySpend || 0) - last.cost));
-  state.points = r2(state.points + last.cost);
+  state.points    = r2(state.points + last.cost);
   save(); renderFood(); updatePoints();
   toast(`↩ Undid ${last.tierName} of ${item.name}: +${last.cost} pts`);
 }
@@ -969,6 +1062,12 @@ function commitEndOfDay(daysAgo) {
   ptsSpent = r2(ptsSpent + foodSpend);
   const netPts = r2(ptsEarned - ptsSpent);
 
+  // Prevent duplicate entries for the same date
+  if (state.history.find(h => h.date === dateStr)) {
+    toast(`⚠ ${dateStr} already logged.`);
+    return;
+  }
+
   if (!state.history) state.history = [];
   state.history.push({ date: dateStr, dow, netPts, ptsEarned, ptsSpent, tasks: taskSnap, rewards: rewardSnap, food: foodSnap });
   if (state.history.length > 60) state.history = state.history.slice(-60);
@@ -980,7 +1079,9 @@ function commitEndOfDay(daysAgo) {
   // onetime: keep completed state permanently
   state.tasks.onetime.forEach(t => { if (t.done) t.snapshotted = true; });
   // food: reset daily spend
-  if (state.food) state.food.forEach(f => { f.todaySpend = 0; f.log = []; });  state.rewards.forEach(r => { r.redeemed = 0; });
+  if (state.food) state.food.forEach(f => { f.todaySpend = 0; f.log = []; });
+  state.rewards.forEach(r => { r.redeemed = 0; });
+  state.manualPointsSet = false;
 
   save(); renderAll();
   setGreeting();
@@ -1004,7 +1105,7 @@ function renderStats() {
   const hist = state.history || [];
 
   if (!hist.length) {
-    el.innerHTML = `<div class="stats-empty">No data yet.<br>Complete your first End of Day to start tracking stats.</div>`;
+    el.innerHTML = '';
     return;
   }
 
@@ -1187,8 +1288,8 @@ function renderStats() {
       <td style="font-family:'Cinzel',serif;font-size:12px;color:var(--muted)">${dowName}</td>
       <td class="num ${d.netPts>=0?'pos':'neg'}">${d.netPts>=0?'+':''}${r2(d.netPts)}</td>
       <td style="white-space:nowrap">
-        <button class="edit-btn" onclick="openEditHistory(${realIndex})" title="Edit date">📅</button>
-        <button class="edit-btn" onclick="openHistoryTaskModal(${realIndex})" title="Edit tasks">✎</button>
+        <button class="edit-btn" onclick="openEditHistory(${realIndex})">📅</button>
+        <button class="edit-btn" onclick="openHistoryTaskModal(${realIndex})">✎</button>
       </td>
     </tr>
     ${foodSummary ? `<tr><td colspan="5" style="font-size:12px;color:var(--food);font-style:italic;padding:2px 10px 8px">🍔 ${esc(foodSummary)}</td></tr>` : ''}`;
@@ -1248,7 +1349,7 @@ function openHistoryTaskModal(histIndex) {
     });
   }
 
-  if (!html) html = '<div style="color:var(--muted);font-style:italic;font-size:14px">No tasks recorded for this day.</div>';
+  if (!html) html = '';
   document.getElementById('historyTaskList').innerHTML = html;
   document.getElementById('historyTaskModal').classList.add('open');
 }
@@ -1269,19 +1370,32 @@ function saveHistoryTasks() {
     if (inp.dataset.kind === 'task')   { if (val > 0) newTasks[name]   = val; }
     else                               { if (val > 0) newRewards[name] = val; }
   });
+
   let ptsEarned = 0;
   Object.entries(newTasks).forEach(([name, count]) => {
+    // Check regular tasks first
     let found = null;
     ['common','uncommon','rare'].forEach(type => {
       state.tasks[type].forEach(t => { if (t.name === name) found = t; });
     });
-    if (found) ptsEarned = r2(ptsEarned + count * found.ptsPerUnit);
+    if (found) {
+      ptsEarned = r2(ptsEarned + count * found.ptsPerUnit);
+    } else {
+      // May be a onetime task — check onetime list
+      const ot = state.tasks.onetime.find(t => t.name === name);
+      if (ot) ptsEarned = r2(ptsEarned + count * ot.pts);
+    }
   });
+
   let ptsSpent = 0;
   Object.entries(newRewards).forEach(([name, count]) => {
     const reward = state.rewards.find(r => r.name === name);
     if (reward) ptsSpent = r2(ptsSpent + count * reward.cost);
   });
+  // Preserve food spend from the original entry
+  const foodSpend = r2((entry.food || []).reduce((s, f) => s + (f.spend || 0), 0));
+  ptsSpent = r2(ptsSpent + foodSpend);
+
   const oldNet = entry.netPts;
   const newNet = r2(ptsEarned - ptsSpent);
   const diff   = r2(newNet - oldNet);
@@ -1327,7 +1441,7 @@ function resetStats() {
     btn.style.borderColor = '';
     state.history = [];
     save();
-    document.getElementById('stats-content').innerHTML = `<div class="stats-empty">Stats cleared.<br>Complete your next End of Day to start fresh.</div>`;
+    document.getElementById('stats-content').innerHTML = '';
     toast('Stats reset.');
   }
 }
@@ -1482,171 +1596,154 @@ function toast(msg) {
 
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+function netToStars(net, badFood, poorFood) {
+  // Score is purely based on net points.
+  // Exception: 5★ requires no food spend at all (poor or bad).
+  //            4★ and above requires no bad food.
+  let s;
+  if      (net >= 60)  s = 5.00;
+  else if (net >= 52)  s = 4.75;
+  else if (net >= 45)  s = 4.50;
+  else if (net >= 40)  s = 4.25;
+  else if (net >= 35)  s = 4.00;
+  else if (net >= 28)  s = 3.75;
+  else if (net >= 22)  s = 3.50;
+  else if (net >= 15)  s = 3.25;
+  else if (net >= 10)  s = 3.00;
+  else if (net >= 5)   s = 2.75;
+  else if (net >= 1)   s = 2.50;
+  else if (net === 0)  s = 2.00;
+  else if (net >= -10) s = 1.75;
+  else if (net >= -20) s = 1.50;
+  else if (net >= -35) s = 1.25;
+  else                 s = 1.00;
+
+  // Cap at 3.75 if any bad food was eaten (can't reach 4+)
+  if (badFood > 0) s = Math.min(s, 3.75);
+  // Cap at 4.75 if any food at all was eaten (can't reach 5)
+  if ((badFood > 0 || poorFood > 0) && s >= 5) s = 4.75;
+
+  return Math.max(1, Math.min(5, Math.round(s * 4) / 4));
+}
+
 function setGreeting() {
   const now = new Date();
-  const day = now.getDay();
   const seed = now.getFullYear() * 10000 + (now.getMonth()+1) * 100 + now.getDate();
   window._rng = (n) => { let x = Math.sin(seed + n) * 99999; return x - Math.floor(x); };
-  const rng = window._rng;
 
-  const headings = [
-    '✦ Rise & Grind ✦', '✦ New Day, New Loot ✦', '✦ What\'s up, Eli ✦',
-    '✦ Time to Level Up ✦', '✦ Let\'s Get It ✦', '✦ Hey Eli ✦',
-    '✦ Make It Count ✦', '✦ Quests Await ✦', '✦ Looking good, Eli ✦',
-    '✦ Ready? ✦', '✦ Another Day, Another XP ✦', '✦ Stay on Track ✦',
-    '✦ You got this, Eli ✦', '✦ Adventure Awaits ✦', '✦ Onwards ✦',
-    '✦ Focus Mode ✦', '✦ Eli, Let\'s Go ✦', '✦ Daily Grind ✦',
-    '✦ Points Don\'t Earn Themselves ✦', '✦ Keep the Streak ✦',
-    '✦ Back at It ✦', '✦ One More Day ✦', '✦ Show Up, Eli ✦',
-    '✦ The Work Continues ✦', '✦ Stack Those Points ✦',
-    '✦ Eyes Forward ✦', '✦ Get After It ✦', '✦ No Days Off ✦',
-    '✦ Level Up or Log Out ✦', '✦ Today\'s the Day ✦',
-    '✦ Build the Habit ✦', '✦ Eli Builds ✦', '✦ Momentum ✦',
-    '✦ Do the Work ✦', '✦ Still Here, Still Grinding ✦',
-    '✦ Win the Day ✦', '✦ Suit Up, Eli ✦', '✦ Progress Awaits ✦',
-    '✦ The Grind Is the Goal ✦', '✦ You Know the Drill ✦',
-    '✦ Push Forward ✦', '✦ Chase the XP ✦', '✦ Good Morning, Eli ✦',
-    '✦ Load Up Your Quests ✦', '✦ Never Skip a Day ✦',
-  ];
-
-  const subs = [
-    // Nutrition
-    'Protein first. Everything else after.',
-    'Hydrate before you caffeinate.',
-    'Eat slowly. Your brain needs 20 min to catch up.',
-    'Vegetables aren\'t optional. Make them the base.',
-    'If you\'re hungry two hours after eating, add more protein.',
-    'Processed food is designed to make you overeat. Cook more.',
-    'Meal prep once, eat well all week.',
-    'Your gut runs on fibre. Most people get half of what they need.',
-    'Hunger and thirst feel identical. Drink water first.',
-    'Eat mostly whole foods. The ingredient list should be short.',
-    'Calories don\'t lie. If you\'re not progressing, track for a week.',
-    'Don\'t drink your calories. Liquid sugar is the silent killer.',
-    'Eat before you\'re ravenous. Hunger makes bad decisions.',
-    'Omega-3s reduce inflammation. Fatty fish, walnuts, flaxseed.',
-    'Breakfast sets your blood sugar for the day. Make it count.',
-    'Sugar cravings peak mid-afternoon. Have a plan before they hit.',
-    'Creatine is the most evidence-backed supplement. Take it.',
-    'Eating out isn\'t the enemy. Portion size is.',
-    'A handful of nuts beats a bag of chips. Always.',
-    'Cook in bulk. Willpower is finite; having food ready isn\'t.',
-    // Exercise
-    'A bad workout beats no workout. Show up anyway.',
-    'Progressive overload. Add a little more each week.',
-    'Rest days are where the gains actually happen.',
-    'Compound movements first, isolation second.',
-    'Consistency over intensity. Every time.',
-    'Walking is underrated. 10,000 steps changes everything.',
-    'Stretch what you train. Mobility is strength too.',
-    'Sleep is the most anabolic thing you can do.',
-    'You don\'t need a perfect plan. You need to go.',
-    'Train hard, recover harder.',
-    'Cardio doesn\'t kill gains. Skipping it kills your heart.',
-    'The best exercise is the one you actually do.',
-    'Warm up properly. Injuries are expensive.',
-    'Track your lifts. Memory is not a training log.',
-    'Three full sessions a week beats seven half-hearted ones.',
-    'Grip strength predicts longevity. Train your hands.',
-    'Zone 2 cardio is boring and important. Do it.',
-    'Your weakest lift is your priority lift.',
-    'Form before weight. Always.',
-    'The gym is 30% training, 70% recovery.',
-    // Sleep & recovery
-    'Same bedtime every night. Your circadian rhythm rewards consistency.',
-    'Phone down 30 minutes before bed. Non-negotiable.',
-    'Cold room, dark room, better sleep.',
-    'Seven hours minimum. Eight is the target.',
-    'Naps under 20 minutes refresh. Longer ones backfire.',
-    'Alcohol destroys sleep quality. It\'s not rest.',
-    'Caffeine has a 6-hour half-life. Cut it off by 2pm.',
-    'Morning sunlight resets your body clock. Step outside early.',
-    'You cannot catch up on sleep debt. Consistency only.',
-    'Deep sleep is when memory consolidates. Protect it.',
-    // Mental wellbeing
-    'Boredom is productive. Let your mind wander sometimes.',
-    'Journaling for 5 minutes beats scrolling for 30.',
-    'Your mood follows your behaviour. Act first, feel later.',
-    'Comparison is the thief of progress. Eyes on your own lane.',
-    'Discipline is freedom. The structure creates the space.',
-    'Hard conversations now, easy life later.',
-    'You can\'t pour from an empty cup. Recovery is productive.',
-    'Gratitude rewires the brain. Name three things daily.',
-    'Anxiety is usually about the future. Redirect to the present.',
-    'The obstacle is the way. Resistance means you\'re growing.',
-    'You are the average of your five habits, not your five friends.',
-    'Don\'t negotiate with your alarm. Get up when it goes off.',
-    'Stress is information, not a verdict.',
-    'Identity drives behaviour. Become the person who does the work.',
-    'Momentum is real. One small win starts the chain.',
-    'Avoid decisions when hungry, angry, lonely, or tired.',
-    'Boredom resistance is a skill. Practice sitting with it.',
-    'Your environment shapes you more than your willpower does.',
-    'Every expert was once a beginner who refused to quit.',
-    'Done is better than perfect. Perfection is procrastination dressed up.',
-    // Self-improvement
-    'Read more than you scroll. The gap compounds.',
-    'Learn one new thing today. Doesn\'t matter how small.',
-    'Your future self will thank you for what you do today.',
-    'Spend money on experiences and tools, not status.',
-    'The compounding effect is real. Start before you\'re ready.',
-    'Say no more. It protects the things you said yes to.',
-    'Teach something today. Teaching is the deepest learning.',
-    'Get outside. Nature lowers cortisol faster than anything else.',
-    'Cold exposure builds mental toughness. Take the cold shower.',
-    'Sunscreen is the best anti-aging product. Wear it daily.',
-    'Posture affects mood. Sit up straight right now.',
-    'Time-block your priorities or someone else fills your calendar.',
-    'Digital minimalism isn\'t deprivation. It\'s clarity.',
-    'Your phone is attention rent. Pay less of it.',
-    'The people you spend time with set your standard.',
-    'A clean space is a clear mind. Tidy something today.',
-    'Spend 10 minutes in silence every day. It compounds.',
-    'Finish what you start. Completion builds identity.',
-    'Hard things first. Eat the frog before it eats your day.',
-    'Track your habits. What gets measured gets managed.',
-    // Day-of-week aware
-    ...(day === 1 ? ['Monday sets the tone for the whole week.', 'Start strong, Eli. Monday is the template.'] : []),
-    ...(day === 3 ? ['Midweek check-in: are you on track?', 'Wednesday. Half done. Finish what you started.'] : []),
-    ...(day === 5 ? ['Friday. Don\'t undo the week tonight.', 'End the week with something you\'re proud of.'] : []),
-    ...(day === 6 ? ['Saturday. Rest intentionally. It\'s part of the plan.', 'Use the weekend to recover, not to regress.'] : []),
-    ...(day === 0 ? ['Sunday sets up the week. Prep something.', 'Rest today. Attack tomorrow.'] : []),
-  ];
-
-  // ── Yesterday's star rating ──
+  // ── Star ratings ──
   const hist = state.history || [];
-  if (hist.length) {
-    const last = hist[hist.length - 1];
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yStr = yesterday.toISOString().slice(0, 10);
-    if (last.date === yStr) {
-      const rated = rateYesterday(last);
-      renderStars(rated.stars);
-      document.getElementById('greeting').textContent = rated.heading;
-      document.getElementById('subgreeting').textContent = rated.detail;
-      return;
+
+  function scoreDay(d) {
+    if (!d) return null;
+    const net       = d.netPts || 0;
+    const earned    = d.ptsEarned || 0;
+    const taskCount = Object.values(d.tasks || {}).reduce((s, v) => s + v, 0);
+    const badFood   = (d.food || []).filter(f => f.tier === 'bad').reduce((s, f) => s + (f.spend || 0), 0);
+    const poorFood  = (d.food || []).filter(f => f.tier === 'poor').reduce((s, f) => s + (f.spend || 0), 0);
+    if (earned === 0 && taskCount === 0) return 1;
+    return netToStars(net, badFood, poorFood);
+  }
+
+  function scoreTodayLive() {
+    let earned = 0;
+    ['common','uncommon','rare'].forEach(type => {
+      (state.tasks[type] || []).forEach(t => { earned += earnedPts(t); });
+    });
+    (state.tasks.onetime || []).forEach(t => { if (t.done && !t.snapshotted) earned += t.pts; });
+    const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
+    const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
+    const badFood     = (state.food || []).filter(f => f.tier === 'bad').reduce((s, f) => s + (f.todaySpend || 0), 0);
+    const poorFood    = (state.food || []).filter(f => f.tier === 'poor').reduce((s, f) => s + (f.todaySpend || 0), 0);
+    const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || state.manualPointsSet;
+    if (!somethingDone) return null;
+    const net = state.manualPointsSet ? r2(state.points) : r2(earned - foodSpend - rewardSpend);
+    return netToStars(net, badFood, poorFood);
+  }
+
+  // avgScore returns exact float for fractional display
+  function avgScore(days) {
+    const scores = days.map(scoreDay).filter(s => s !== null);
+    if (!scores.length) return null;
+    // round to nearest 0.25
+    const raw = scores.reduce((a, b) => a + b, 0) / scores.length;
+    return Math.round(raw * 4) / 4;
+  }
+
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const yest = new Date(today); yest.setDate(yest.getDate() - 1);
+  const yestStr = yest.toISOString().slice(0, 10);
+
+  // Calendar week: Monday through Sunday of LAST week
+  const dayOfWeek = today.getDay();
+  const daysFromMon = (dayOfWeek + 6) % 7;
+  const thisMonStart = new Date(today); thisMonStart.setDate(today.getDate() - daysFromMon);
+  const lastMonStart = new Date(thisMonStart); lastMonStart.setDate(thisMonStart.getDate() - 7);
+  const lastWeekStartStr = lastMonStart.toISOString().slice(0, 10);
+  const lastWeekEndStr   = thisMonStart.toISOString().slice(0, 10);
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const thisMonth = today.getMonth();
+  const thisYear  = today.getFullYear();
+  const monthStartStr = `${thisYear}-${String(thisMonth + 1).padStart(2,'0')}-01`;
+
+  const yesterdayEntry = hist.find(d => d.date === yestStr) || null;
+  const lastWeekDays   = hist.filter(d => d.date >= lastWeekStartStr && d.date < lastWeekEndStr);
+  const thisMonthDays  = hist.filter(d => d.date >= monthStartStr && d.date < todayStr);
+
+  const todayScore  = scoreTodayLive();
+  const yScore      = yesterdayEntry ? scoreDay(yesterdayEntry) : null;
+  const weekScore   = avgScore(lastWeekDays);
+  const monthScore  = avgScore(thisMonthDays);
+
+  const weekLabel  = 'Last Week';
+  const monthLabel = MONTH_NAMES[thisMonth];
+
+  const infoBtn = `<button class="info-btn" onclick="document.getElementById('scoreInfoModal').classList.add('open')" title="How scores work">ⓘ</button>`;
+
+  // Format a fractional score as a readable number string e.g. 4¼, 3½, 2¾
+  function fmtScore(n) {
+    if (n === null) return null;
+    const whole = Math.floor(n);
+    const frac  = Math.round((n - whole) * 4); // quarters
+    const fracStr = ['', '¼', '½', '¾'][frac] || '';
+    return `${whole}${fracStr}`;
+  }
+
+  // Big fractional star display for Today
+  function bigStarsHtml(n) {
+    let h = '';
+    for (let i = 1; i <= 5; i++) {
+      const fill = Math.min(1, Math.max(0, n - (i - 1)));
+      const pct  = Math.round(fill * 100);
+      h += `<span class="star-wrap">★<span class="star-fill" style="width:${pct}%">★</span></span>`;
+    }
+    return h;
+  }
+
+  // Today stars — replaces the h1 greeting
+  const todayEl = document.getElementById('todayStars');
+  if (todayEl) {
+    if (todayScore === null) {
+      todayEl.innerHTML = `<span class="today-empty">✦ Life RPG ✦</span>`;
+    } else {
+      todayEl.innerHTML = bigStarsHtml(todayScore);
     }
   }
 
-  renderStars(0);
-  const hi = headings[Math.floor(rng(1) * headings.length)];
-  const sub = subs[Math.floor(rng(2) * subs.length)];
-  document.getElementById('greeting').textContent = hi;
-  document.getElementById('subgreeting').textContent = sub;
-}
-
-function renderStars(n) {
-  const el = document.getElementById('headerStars');
-  if (!el) return;
-  if (n === 0) { el.innerHTML = ''; return; }
-  let html = '';
-  for (let i = 1; i <= 5; i++) {
-    html += i <= n
-      ? '<span class="star-filled">★</span>'
-      : '<span class="star-empty">★</span>';
+  // Compact history row
+  function histBlock(label, score, extra) {
+    const val = score !== null ? `<span class="hist-value">${fmtScore(score)}</span>` : `<span class="hist-value no-data">—</span>`;
+    return `<div class="hist-block"><div class="hist-label">${label}${extra||''}</div>${val}</div>`;
   }
-  el.innerHTML = html;
+
+  const histEl = document.getElementById('headerHistory');
+  if (histEl) {
+    histEl.innerHTML =
+      histBlock('Yesterday', yScore) +
+      histBlock(weekLabel, weekScore) +
+      histBlock(monthLabel, monthScore, infoBtn);
+  }
 }
 
 function rateYesterday(d) {
@@ -1661,7 +1758,7 @@ function rateYesterday(d) {
   if (earned === 0 && taskCount === 0) {
     return {
       stars: 1,
-      heading: '★ Yesterday: 1 / 5',
+      heading: 'Bad Day',
       detail: `Nothing logged on ${d.date}. Zero tasks, zero points. Today is a different story — make it one.`
     };
   }
@@ -1705,26 +1802,36 @@ function rateYesterday(d) {
         `Yesterday hurt you. ${factLine}. The only good response is a completely different day today.`],
   };
 
-  const starLabels = { 5: '★★★★★', 4: '★★★★☆', 3: '★★★☆☆', 2: '★★☆☆☆', 1: '★☆☆☆☆' };
+  const starLabels = { 5: 'Excellent Day', 4: 'Good Day', 3: 'Average Day', 2: 'Below Average', 1: 'Bad Day' };
   const rng = window._rng || ((n) => { let x = Math.sin(n) * 99999; return x - Math.floor(x); });
   const options = verdicts[stars];
   return {
     stars,
-    heading: `${starLabels[stars]}  Yesterday: ${stars} / 5`,
+    heading: starLabels[stars],
     detail: options[Math.floor(rng(3) * options.length)]
   };
 }
 
 function editPoints() {
-  const current = r2(state.points);
-  const input = prompt(`Current points: ${current}\nEnter new total:`, current);
-  if (input === null) return;
-  const val = parseFloat(input);
+  document.getElementById('pointsInput').value = r2(state.points);
+  document.getElementById('pointsModal').classList.add('open');
+  setTimeout(() => document.getElementById('pointsInput').select(), 50);
+}
+function closePointsModal() {
+  document.getElementById('pointsModal').classList.remove('open');
+}
+function savePointsModal() {
+  const val = parseFloat(document.getElementById('pointsInput').value);
   if (isNaN(val)) { toast('⚠ Invalid number.'); return; }
   state.points = r2(val);
+  state.manualPointsSet = true;
   save(); updatePoints();
+  closePointsModal();
   toast(`Points set to ${r2(val)}.`);
 }
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('pointsModal').classList.contains('open')) savePointsModal();
+});
 
 // ── Export / Import Data ──────────────────────────────────────────────
 function exportData() {
