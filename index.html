@@ -410,10 +410,10 @@
       <button class="tab-btn" data-tab="onetime"><span class="tab-dot" style="background:var(--onetime)"></span>One-Time</button>
       <button class="tab-btn" data-tab="rewards"><span class="tab-dot" style="background:var(--reward)"></span>Rewards</button>
       <button class="tab-btn" data-tab="food"><span class="tab-dot" style="background:var(--food)"></span>Food</button>
+      <button class="tab-btn" data-tab="drink"><span class="tab-dot" style="background:var(--drink)"></span>Drink</button>
     </div>
     <div class="tabs" style="margin-top:-12px">
       <button class="tab-btn" data-tab="grocery"><span class="tab-dot" style="background:var(--grocery)"></span>Grocery</button>
-      <button class="tab-btn" data-tab="drink"><span class="tab-dot" style="background:var(--drink)"></span>Drink</button>
       <button class="tab-btn" data-tab="clean"><span class="tab-dot" style="background:var(--clean)"></span>Deep Clean</button>
       <button class="tab-btn" data-tab="gym"><span class="tab-dot" style="background:var(--gym)"></span>Gym</button>
       <button class="tab-btn" data-tab="stats"><span class="tab-dot" style="background:#9b4dff"></span>Stats</button>
@@ -588,6 +588,18 @@
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeChallengeLog()">Cancel</button>
       <button class="modal-save" onclick="saveChallengeLog()">Log It</button>
+    </div>
+  </div>
+</div>
+
+<!-- Vacation Confirm Modal -->
+<div class="modal-overlay" id="vacationModal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-title">🏖 Take a Vacation Day?</div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-top:4px">Today will be marked <strong style="color:#38bdf8">V</strong> and excluded from all stats. Your points stay exactly as they are.</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('vacationModal').classList.remove('open')">Cancel</button>
+      <button class="modal-save" style="background:linear-gradient(135deg,#0ea5e9,#0369a1)" onclick="confirmVacationDay()">Yes, Take Vacation</button>
     </div>
   </div>
 </div>
@@ -1318,23 +1330,28 @@ function commitEndOfDay(daysAgo) {
 
 
 function takeVacationDay() {
-  // Log today as a vacation day — fills the gap so it's not counted as missed
-  // and excludes it from all stats calculations
-  const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10);
-  const dow = today.getDay();
   if (!state.history) state.history = [];
+  const dateStr = new Date().toISOString().slice(0, 10);
   if (state.history.find(h => h.date === dateStr)) {
     toast('⚠ Today is already logged.');
     return;
   }
+  document.getElementById('vacationModal').classList.add('open');
+}
+
+function confirmVacationDay() {
+  document.getElementById('vacationModal').classList.remove('open');
+  const today = new Date();
+  const dateStr = today.toISOString().slice(0, 10);
+  const dow = today.getDay();
+  if (!state.history) state.history = [];
   state.history.push({
     date: dateStr, dow, netPts: 0, ptsEarned: 0, ptsSpent: 0,
     tasks: {}, rewards: {}, food: [], drinks: 0,
     gradeOverride: 'V', vacation: true
   });
   state.history.sort((a, b) => a.date < b.date ? -1 : 1);
-  // Reset today's counts just like end of day so the next day starts clean
+  // Reset today like End of Day so next day starts clean
   ['common','uncommon','rare'].forEach(type => {
     state.tasks[type].forEach(t => { t.count = 0; });
   });
@@ -1937,6 +1954,7 @@ function saveModal() {
 // Close modal on overlay click
 document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('challengeLogModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeChallengeLog(); });
+document.getElementById('vacationModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('vacationModal').classList.remove('open'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 // ── Tabs ──────────────────────────────────────────────────────────────
@@ -2058,9 +2076,10 @@ function setGreeting() {
     (state.gymTasks || []).forEach(t => { earned += r2((t.count||0)*t.ptsPerUnit); });
     const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
     const drinkSpend  = (state.drink || {}).todaySpend || 0;
-    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || state.manualPointsSet;
+    const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
+    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || state.manualPointsSet;
     if (!somethingDone) return null;
-    const net = state.manualPointsSet ? r2(state.points) : r2(earned - rewardSpend - drinkSpend);
+    const net = state.manualPointsSet ? r2(state.points) : r2(earned - rewardSpend - drinkSpend - foodSpend);
     return netToGrade(net);
   }
 
