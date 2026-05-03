@@ -408,7 +408,7 @@
       <button class="tab-btn" data-tab="rare"><span class="tab-dot" style="background:var(--rare)"></span>Rare</button>
       <button class="tab-btn" data-tab="onetime"><span class="tab-dot" style="background:var(--onetime)"></span>One-Time</button>
       <button class="tab-btn" data-tab="rewards"><span class="tab-dot" style="background:var(--reward)"></span>Rewards</button>
-      <button class="tab-btn" data-tab="food"><span class="tab-dot" style="background:var(--food)"></span>Food</button>
+      <button class="tab-btn" data-tab="food"><span class="tab-dot" style="background:var(--food)"></span>Diet</button>
       <button class="tab-btn" data-tab="drink"><span class="tab-dot" style="background:var(--drink)"></span>Drink</button>
     </div>
     <div class="tabs" style="margin-top:-12px">
@@ -491,14 +491,14 @@
     <!-- FOOD -->
     <div class="section" id="section-food">
       <div class="section-header">
-        <div><div class="section-title food">Food</div></div>
+        <div><div class="section-title food">Diet</div></div>
       </div>
-      <div class="add-form">
-        <input class="task-name" id="food-name" type="text" placeholder="Food name" />
-        <input class="task-name" id="food-qty" type="text" placeholder="Quantity label (e.g. a slice)" style="max-width:160px" />
-        <input class="num-input" id="food-pts" type="number" placeholder="Pts" min="1" value="5" />
+      <div class="add-form" style="flex-wrap:wrap;row-gap:6px">
+        <input class="task-name" id="food-name" type="text" placeholder="Food name" style="flex:2;min-width:120px" />
+        <input class="num-input" id="food-yuka" type="number" placeholder="Yuka (0-100)" min="0" max="100" step="1" style="max-width:110px" oninput="previewYukaPts()" title="Yuka score" />
         <button class="btn-add" onclick="addFoodItem()">+ Add</button>
       </div>
+      <div id="yuka-preview" style="font-size:11px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:1px;padding:2px 4px 8px;min-height:18px"></div>
       <div id="list-food"></div>
     </div>
     <!-- GROCERY -->
@@ -680,7 +680,21 @@
   </div>
 </div>
 
-<!-- food prompt modal removed -->
+<!-- Food portion modal -->
+<div class="modal-overlay" id="foodPromptModal">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title" id="foodPromptTitle">How much?</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin:12px 0 8px">
+      <button class="modal-save" id="foodBtnLittle" style="text-align:left;padding:12px 16px;background:linear-gradient(135deg,#22c97a,#19a862)" onclick="logFood('little')">A little <span id="foodCostLittle" style="float:right;opacity:0.75"></span></button>
+      <button class="modal-save" id="foodBtnMedium" style="text-align:left;padding:12px 16px;background:linear-gradient(135deg,#d4a843,#a87820)" onclick="logFood('medium')">Medium <span id="foodCostMedium" style="float:right;opacity:0.75"></span></button>
+      <button class="modal-save" id="foodBtnLot" style="text-align:left;padding:12px 16px;background:linear-gradient(135deg,#e05030,#b03010)" onclick="logFood('lot')">A lot <span id="foodCostLot" style="float:right;opacity:0.75"></span></button>
+    </div>
+    <div class="modal-actions" style="margin-top:4px">
+      <button class="modal-cancel" onclick="closeFoodPrompt()">Cancel</button>
+      <button class="undo-btn" id="foodPromptUndo" onclick="undoFoodFromPrompt()" style="display:none">↩ Undo Last</button>
+    </div>
+  </div>
+</div>
 
 <!-- Scoring info modal -->
 <div class="modal-overlay" id="scoreInfoModal">
@@ -903,33 +917,83 @@ function renderRewards() {
   }).join('');
 }
 
-// ── Food Rewards ──────────────────────────────────────────────────────
-// Portions: Tiny=1 unit, Small=2, Medium=4, Large=8, XL=16
-// ── Food ──────────────────────────────────────────────────────────────
-// Each food item: { name, qty, pts, todaySpend, log: [{date}] }
-// qty is the label set at creation (e.g. "a slice"). One tap = log once.
+// ── Diet ──────────────────────────────────────────────────────────────
+// Each item: { name, yuka, ptsLittle, ptsMedium, ptsLot, todaySpend, log:[{portion,pts,date}] }
+// Yuka 0-49: smallPts = (50-rating)*0.2. Medium = small*2.5. Lot = small*6.25. 50+ = free.
+
+function yukaTopts(yuka) {
+  const rating = Math.min(100, Math.max(0, yuka));
+  if (rating >= 50) return { little: 0, medium: 0, lot: 0 };
+  const small  = r2((50 - rating) * 0.2);
+  return { little: small, medium: r2(small * 2.5), lot: r2(small * 6.25) };
+}
+
+function previewYukaPts() {
+  const raw = document.getElementById('food-yuka').value;
+  const el  = document.getElementById('yuka-preview');
+  if (raw === '' || isNaN(raw)) { el.textContent = ''; return; }
+  const pts = yukaTopts(parseFloat(raw));
+  el.innerHTML = pts.little === 0
+    ? '<span style="color:var(--pos)">Free (50+ Yuka)</span>'
+    : `A little: −${pts.little} &nbsp;·&nbsp; Medium: −${pts.medium} &nbsp;·&nbsp; A lot: −${pts.lot}`;
+}
 
 function addFoodItem() {
   const name = document.getElementById('food-name').value.trim();
-  const qty  = document.getElementById('food-qty').value.trim() || '1';
-  const pts  = parseFloat(document.getElementById('food-pts').value) || 5;
+  const yuka = parseFloat(document.getElementById('food-yuka').value);
   if (!name) return;
+  const pts = isNaN(yuka) ? { little: 5, medium: 12.5, lot: 31.25 } : yukaTopts(yuka);
   if (!state.food) state.food = [];
-  state.food.push({ name, qty, pts, todaySpend: 0, log: [] });
+  state.food.push({ name, yuka: isNaN(yuka) ? null : yuka,
+    ptsLittle: pts.little, ptsMedium: pts.medium, ptsLot: pts.lot,
+    todaySpend: 0, log: [] });
   document.getElementById('food-name').value = '';
-  document.getElementById('food-qty').value  = '';
+  document.getElementById('food-yuka').value = '';
+  document.getElementById('yuka-preview').textContent = '';
   save(); renderFood();
 }
 
-function logFood(idx) {
+let _foodPromptIdx = null;
+
+function openFoodPrompt(idx) {
+  _foodPromptIdx = idx;
   const item = state.food[idx];
-  const date = new Date().toLocaleDateString('en-CA');
+  const yukaStr = item.yuka !== null && item.yuka !== undefined ? ` · Yuka ${item.yuka}` : '';
+  document.getElementById('foodPromptTitle').textContent = item.name + yukaStr;
+  document.getElementById('foodCostLittle').textContent = item.ptsLittle > 0 ? `−${item.ptsLittle} pts` : 'free';
+  document.getElementById('foodCostMedium').textContent = item.ptsMedium > 0 ? `−${item.ptsMedium} pts` : 'free';
+  document.getElementById('foodCostLot').textContent    = item.ptsLot    > 0 ? `−${item.ptsLot} pts`    : 'free';
+  const today = new Date().toLocaleDateString('en-CA');
+  const hasToday = (item.log||[]).some(e => e.date === today);
+  document.getElementById('foodPromptUndo').style.display = hasToday ? '' : 'none';
+  document.getElementById('foodPromptModal').classList.add('open');
+}
+
+function closeFoodPrompt() {
+  document.getElementById('foodPromptModal').classList.remove('open');
+  _foodPromptIdx = null;
+}
+
+function logFood(portion) {
+  if (_foodPromptIdx === null) return;
+  const item   = state.food[_foodPromptIdx];
+  const ptsMap = { little: item.ptsLittle, medium: item.ptsMedium, lot: item.ptsLot };
+  const pts    = ptsMap[portion] || 0;
+  const date   = new Date().toLocaleDateString('en-CA');
   item.log = item.log || [];
-  item.log.push({ date });
-  item.todaySpend = r2((item.todaySpend || 0) + item.pts);
-  state.points    = r2(state.points - item.pts);
-  save(); renderFood(); updatePoints();
-  toast(`−${item.pts} pts — ${item.name} (${item.qty})`);
+  item.log.push({ portion, pts, date });
+  item.todaySpend = r2((item.todaySpend || 0) + pts);
+  state.points    = r2(state.points - pts);
+  save(); renderFood(); updatePoints(); closeFoodPrompt();
+  const label = { little: 'A little', medium: 'Medium', lot: 'A lot' }[portion];
+  const cost  = pts > 0 ? `−${pts} pts` : 'free';
+  toast(`${cost} — ${item.name} (${label})`);
+}
+
+function undoFoodFromPrompt() {
+  if (_foodPromptIdx === null) return;
+  undoFood(_foodPromptIdx);
+  closeFoodPrompt();
 }
 
 function undoFood(idx) {
@@ -937,9 +1001,10 @@ function undoFood(idx) {
   const today = new Date().toLocaleDateString('en-CA');
   const ti    = [...(item.log||[])].map((e,i)=>({e,i})).reverse().find(({e}) => e.date === today);
   if (!ti) return;
+  const pts = ti.e.pts || 0;
   item.log.splice(ti.i, 1);
-  item.todaySpend = r2(Math.max(0, (item.todaySpend || 0) - item.pts));
-  state.points    = r2(state.points + item.pts);
+  item.todaySpend = r2(Math.max(0, (item.todaySpend || 0) - pts));
+  state.points    = r2(state.points + pts);
   save(); renderFood(); updatePoints();
   toast(`↩ Undid ${item.name}`);
 }
@@ -956,23 +1021,33 @@ function renderFood() {
   if (!el) return;
   if (!state.food || !state.food.length) { el.innerHTML = ''; return; }
   const today = new Date().toLocaleDateString('en-CA');
-  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">` + state.food.map((item, idx) => {
-    const todayCount = (item.log || []).filter(e => e.date === today).length;
-    const sub = todayCount
-      ? `${todayCount}× ${item.qty} — −${item.todaySpend} pts today`
-      : `${item.qty} · −${item.pts} pts`;
-    return `<div class="food-item" style="cursor:pointer" onclick="logFood(${idx})">
-      <div class="food-item-info">
-        <div class="food-item-name">${esc(item.name)}</div>
-        <div class="food-item-pts" style="color:${todayCount ? 'var(--food)' : 'var(--muted)'}">${sub}</div>
-      </div>
-      ${todayCount ? `<button class="undo-btn" onclick="event.stopPropagation();undoFood(${idx})" style="margin-right:4px">↩</button>` : ''}
-      <button class="delete-btn" onclick="event.stopPropagation();deleteFoodItem(${idx})">✕</button>
-    </div>`;
-  }).join('') + `</div>`;
+  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">` +
+    state.food.map((item, idx) => {
+      const todayLogs  = (item.log || []).filter(e => e.date === today);
+      const todaySpend = item.todaySpend || 0;
+      const isFree     = item.ptsLittle === 0 && item.ptsMedium === 0 && item.ptsLot === 0;
+      const summary    = todayLogs.length
+        ? todayLogs.map(e => ({little:'A little',medium:'Medium',lot:'A lot'}[e.portion]||e.portion)).join(', ')
+        : null;
+      const yukaTag    = item.yuka !== null && item.yuka !== undefined
+        ? `<span style="font-size:10px;color:var(--muted);font-family:'Cinzel',serif;margin-left:4px">Y${item.yuka}</span>` : '';
+      const sub = summary
+        ? `${summary}${todaySpend > 0 ? ` — −${todaySpend} pts` : ' (free)'}`
+        : isFree ? 'free · tap to log' : `−${item.ptsLittle} / ${item.ptsMedium} / ${item.ptsLot} pts`;
+      return `<div class="food-item" style="cursor:pointer" onclick="openFoodPrompt(${idx})">
+        <div class="food-item-info">
+          <div class="food-item-name">${esc(item.name)}${yukaTag}</div>
+          <div class="food-item-pts" style="color:${summary ? 'var(--food)' : 'var(--muted)'}">${sub}</div>
+        </div>
+        ${todayLogs.length ? `<button class="undo-btn" onclick="event.stopPropagation();undoFood(${idx})" style="margin-right:4px">↩</button>` : ''}
+        <button class="delete-btn" onclick="event.stopPropagation();deleteFoodItem(${idx})">✕</button>
+      </div>`;
+    }).join('') + `</div>`;
 }
 
 document.getElementById('food-name').addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
+document.getElementById('food-yuka').addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
+document.getElementById('foodPromptModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeFoodPrompt(); });
 
 // ── Task actions ──────────────────────────────────────────────────────
 function addOnetimeTask() {
@@ -1116,12 +1191,13 @@ function commitEndOfDay(daysAgo) {
   const rewardSnap = {};
   state.rewards.forEach(r => { if (r.redeemed) rewardSnap[r.name] = r.redeemed; });
 
-  // food snapshot: { name, qty, pts, spend, count }
+  // food snapshot: { name, spend, count, entries:[{portion,pts}] }
   const today = new Date().toLocaleDateString('en-CA');
   const foodSnap = (state.food || [])
     .map(f => {
       const todayLogs = (f.log || []).filter(e => e.date === today);
-      return { name: f.name, qty: f.qty || '', pts: f.pts || 0, spend: f.todaySpend || 0, count: todayLogs.length };
+      return { name: f.name, spend: f.todaySpend || 0, count: todayLogs.length,
+               entries: todayLogs.map(e => ({ portion: e.portion, pts: e.pts })) };
     })
     .filter(f => f.count > 0);
 
@@ -1442,7 +1518,7 @@ function renderStats() {
   if (foodNames.size) {
     // Per-food frequency and spend table
     html += `<div class="stats-group">
-      <div class="stats-group-title">Food Log — All Time</div>
+      <div class="stats-group-title">Diet Log — All Time</div>
       <table class="stats-table">
         <thead><tr><th>FOOD</th><th style="text-align:right">TIMES</th><th style="text-align:right">DAYS</th><th style="text-align:right">TOTAL PTS</th><th style="text-align:right">AVG/DAY</th></tr></thead>
         <tbody>`;
@@ -1451,13 +1527,19 @@ function renderStats() {
       const days  = hist.filter(d => (d.food||[]).some(f => f.name === name));
       const times = days.reduce((s,d) => s + ((d.food||[]).find(f=>f.name===name)?.count||0), 0);
       const total = r2(days.reduce((s,d) => s + ((d.food||[]).find(f=>f.name===name)?.spend||0), 0));
-      const qty   = (hist.flatMap(d => d.food||[]).find(f => f.name === name) || {}).qty || '';
-      return { name, qty, times, days: days.length, total };
+      // Count how many little/medium/lot
+      const allEntries = days.flatMap(d => ((d.food||[]).find(f=>f.name===name)?.entries||[]));
+      const tiny   = allEntries.filter(e=>e.portion==='tiny').length;
+      const little = allEntries.filter(e=>e.portion==='little').length;
+      const medium = allEntries.filter(e=>e.portion==='medium').length;
+      const lot    = allEntries.filter(e=>e.portion==='lot').length;
+      return { name, times, days: days.length, total, tiny, little, medium, lot };
     }).sort((a,b) => b.times - a.times);
     foodStats.forEach(f => {
       const avg = r2(f.total / totalDays);
+      const breakdown = [f.tiny&&`${f.tiny}× tiny`, f.little&&`${f.little}× little`, f.medium&&`${f.medium}× med`, f.lot&&`${f.lot}× lot`].filter(Boolean).join(', ');
       html += `<tr>
-        <td>${esc(f.name)}${f.qty ? ` <span style="color:var(--muted);font-size:11px">(${esc(f.qty)})</span>` : ''}</td>
+        <td>${esc(f.name)}${breakdown?`<span style="color:var(--muted);font-size:10px;display:block">${breakdown}</span>`:''}  </td>
         <td class="num" style="color:var(--food)">${f.times}</td>
         <td class="num" style="color:var(--muted)">${f.days}</td>
         <td class="num neg">−${f.total}</td>
@@ -1476,7 +1558,7 @@ function renderStats() {
     const maxFood = Math.max(...foodByDay.map(d => d.spend), 1);
     if (foodByDay.some(d => d.spend > 0)) {
       html += `<div class="stats-group">
-        <div class="stats-group-title">Food Spend — Last 14 Days</div>
+        <div class="stats-group-title">Diet Spend — Last 14 Days</div>
         <div class="bar-chart">`;
       foodByDay.forEach(d => {
         const pct = Math.round(d.spend / maxFood * 100);
@@ -1569,9 +1651,10 @@ function renderStats() {
     const foodList = (d.food || []);
     const foodSummary = foodList.length
       ? foodList.map(f => {
-          const countStr = f.count > 1 ? ` ×${f.count}` : '';
-          const qtyStr   = f.qty ? ` (${f.qty})` : '';
-          return `${f.name}${qtyStr}${countStr} −${f.spend}pts`;
+          const portionStr = f.entries
+            ? f.entries.map(e => ({tiny:'Tiny',little:'A little',medium:'Medium',lot:'A lot'}[e.portion]||e.portion)).join(', ')
+            : '';
+          return `${f.name}${portionStr ? ' ('+portionStr+')' : ''} −${f.spend}pts`;
         }).join(' · ')
       : '';
     html += `<tr>
