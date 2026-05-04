@@ -1174,7 +1174,8 @@ function endYesterday() { _eodConfirm(EOY, EOD); }
 function commitEndOfDay(daysAgo) {
   const d = new Date();
   d.setDate(d.getDate() - (daysAgo || 0));
-  const dateStr = d.toISOString().slice(0, 10);
+  // Use local date string consistently (not ISO which can be off by timezone)
+  const dateStr = d.toLocaleDateString('en-CA');
   const dow = d.getDay();
 
   // Build snapshot
@@ -1184,20 +1185,18 @@ function commitEndOfDay(daysAgo) {
       taskSnap[t.name] = (taskSnap[t.name] || 0) + (t.count || 0);
     });
   });
-  // onetime: count completions done this session (not already snapshotted)
   state.tasks.onetime.forEach(t => {
     if (t.done && !t.snapshotted) taskSnap[t.name] = (taskSnap[t.name] || 0) + 1;
   });
   const rewardSnap = {};
   state.rewards.forEach(r => { if (r.redeemed) rewardSnap[r.name] = r.redeemed; });
 
-  // food snapshot: { name, spend, count, entries:[{portion,pts}] }
-  const today = new Date().toLocaleDateString('en-CA');
+  // food snapshot — filter by the date being logged, not always "today"
   const foodSnap = (state.food || [])
     .map(f => {
-      const todayLogs = (f.log || []).filter(e => e.date === today);
-      return { name: f.name, spend: f.todaySpend || 0, count: todayLogs.length,
-               entries: todayLogs.map(e => ({ portion: e.portion, pts: e.pts })) };
+      const dayLogs = (f.log || []).filter(e => e.date === dateStr);
+      return { name: f.name, spend: f.todaySpend || 0, count: dayLogs.length,
+               entries: dayLogs.map(e => ({ portion: e.portion, pts: e.pts })) };
     })
     .filter(f => f.count > 0);
 
@@ -1210,39 +1209,44 @@ function commitEndOfDay(daysAgo) {
   (state.gymTasks || []).forEach(t => { ptsEarned = r2(ptsEarned + (t.count||0)*t.ptsPerUnit); });
   let ptsSpent = 0;
   state.rewards.forEach(r => { ptsSpent = r2(ptsSpent + (r.redeemed || 0) * r.cost); });
-  // include food spend in ptsSpent
   const foodSpend = r2((state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0));
   ptsSpent = r2(ptsSpent + foodSpend);
   const netPts = r2(ptsEarned - ptsSpent);
 
   if (!state.history) state.history = [];
 
-  // Prevent duplicate entries for the same date
-  if (state.history.find(h => h.date === dateStr)) {
-    toast(`⚠ ${dateStr} already logged.`);
-    return;
+  // If this date is already logged, remove the old entry and reopen it
+  const existingIdx = state.history.findIndex(h => h.date === dateStr);
+  if (existingIdx !== -1) {
+    // Ask for confirmation before overwriting
+    if (!commitEndOfDay._reopenConfirmed) {
+      commitEndOfDay._reopenConfirmed = true;
+      toast(`⚠ ${dateStr} already logged — confirm again to overwrite.`);
+      setTimeout(() => { commitEndOfDay._reopenConfirmed = false; }, 5000);
+      return;
+    }
+    commitEndOfDay._reopenConfirmed = false;
+    state.history.splice(existingIdx, 1);
   }
 
   const drinksToday = (state.drink || {}).todayCount || 0;
   state.history.push({ date: dateStr, dow, netPts, ptsEarned, ptsSpent, tasks: taskSnap, rewards: rewardSnap, food: foodSnap, drinks: drinksToday });
-  // Keep history sorted by date so Yesterday entries land in the right order
   state.history.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
   if (state.history.length > 60) state.history = state.history.slice(-60);
 
-  // Reset task counts and redeemed counts
+  // Reset task counts
   ['common','uncommon','rare'].forEach(type => {
     state.tasks[type].forEach(t => { t.count = 0; });
   });
-  // onetime: keep completed state permanently
   state.tasks.onetime.forEach(t => { if (t.done) t.snapshotted = true; });
-  // clean: keep completed state permanently, mark snapshotted
   (state.clean || []).forEach(t => { if (t.isLog) t.snapshotted = true; });
-  // gym tasks: reset daily counts
   (state.gymTasks || []).forEach(t => { t.count = 0; });
-  // food: reset daily spend
-  if (state.food) state.food.forEach(f => { f.todaySpend = 0; f.todayUnits = 0; f.log = []; });
+  // Only reset food logs that match the date being logged
+  if (state.food) state.food.forEach(f => {
+    f.log = (f.log || []).filter(e => e.date !== dateStr);
+    f.todaySpend = r2((f.log).reduce((s, e) => s + (e.pts || 0), 0));
+  });
   state.rewards.forEach(r => { r.redeemed = 0; });
-  // drink: decrement cost by 10 (min 10), reset today count
   if (state.drink) {
     state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 10);
     state.drink.todayCount = 0;
@@ -1258,7 +1262,7 @@ function commitEndOfDay(daysAgo) {
 
 function takeVacationDay() {
   if (!state.history) state.history = [];
-  const dateStr = new Date().toISOString().slice(0, 10);
+  const dateStr = new Date().toLocaleDateString('en-CA');
   if (state.history.find(h => h.date === dateStr)) {
     toast('⚠ Today is already logged.');
     return;
@@ -1269,7 +1273,7 @@ function takeVacationDay() {
 function confirmVacationDay() {
   document.getElementById('vacationModal').classList.remove('open');
   const today = new Date();
-  const dateStr = today.toISOString().slice(0, 10);
+  const dateStr = today.toLocaleDateString('en-CA');
   const dow = today.getDay();
   if (!state.history) state.history = [];
   state.history.push({
@@ -1299,12 +1303,12 @@ function getMissedDays() {
   if (!hist.length) return [];
   const lastLogged = hist[hist.length - 1].date;
   const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().slice(0, 10);
+  const yesterdayStr = yesterday.toLocaleDateString('en-CA');
   const missed = [];
   const cursor = new Date(lastLogged + 'T12:00:00');
   cursor.setDate(cursor.getDate() + 1);
-  while (cursor.toISOString().slice(0,10) <= yesterdayStr) {
-    const ds = cursor.toISOString().slice(0,10);
+  while (cursor.toLocaleDateString('en-CA') <= yesterdayStr) {
+    const ds = cursor.toLocaleDateString('en-CA');
     if (!hist.find(h => h.date === ds)) missed.push(ds);
     // vacation days are in history already, so they are naturally skipped
     cursor.setDate(cursor.getDate() + 1);
@@ -2068,17 +2072,17 @@ function setGreeting() {
   }
 
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = today.toLocaleDateString('en-CA');
   const yest = new Date(today); yest.setDate(yest.getDate() - 1);
-  const yestStr = yest.toISOString().slice(0, 10);
+  const yestStr = yest.toLocaleDateString('en-CA');
 
   // Calendar week: Monday through Sunday of LAST week
   const dayOfWeek = today.getDay();
   const daysFromMon = (dayOfWeek + 6) % 7;
   const thisMonStart = new Date(today); thisMonStart.setDate(today.getDate() - daysFromMon);
   const lastMonStart = new Date(thisMonStart); lastMonStart.setDate(thisMonStart.getDate() - 7);
-  const lastWeekStartStr = lastMonStart.toISOString().slice(0, 10);
-  const lastWeekEndStr   = thisMonStart.toISOString().slice(0, 10);
+  const lastWeekStartStr = lastMonStart.toLocaleDateString('en-CA');
+  const lastWeekEndStr   = thisMonStart.toLocaleDateString('en-CA');
   const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const thisMonth = today.getMonth();
   const thisYear  = today.getFullYear();
@@ -2205,7 +2209,7 @@ document.addEventListener('keydown', e => {
 
 // ── Export / Import Data ──────────────────────────────────────────────
 function exportData() {
-  const date = new Date().toISOString().slice(0, 10);
+  const date = new Date().toLocaleDateString('en-CA');
   const json = JSON.stringify(state, null, 2);
   const blob = new Blob([json], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
