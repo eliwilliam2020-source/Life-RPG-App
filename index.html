@@ -788,10 +788,12 @@ function updatePoints() {
   const drinkSpend  = (state.drink || {}).todaySpend || 0;
   const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || drinkSpend > 0 || state.manualPointsSet;
 
-  if (!somethingDone) {
+  if (!somethingDone && state.dailyNetOverride === undefined) {
     netEl.textContent = '';
   } else {
-    const net = r2(earned - foodSpend - rewardSpend - drinkSpend);
+    const net = state.dailyNetOverride !== undefined
+      ? state.dailyNetOverride
+      : r2(earned - foodSpend - rewardSpend - drinkSpend);
     const sign = net >= 0 ? '+' : '';
     netEl.textContent = `(${sign}${net})`;
     netEl.style.color = net >= 0 ? 'var(--pos)' : 'var(--neg)';
@@ -1254,8 +1256,7 @@ function commitEndOfDay(daysAgo) {
     state.drink.lastDate = dateStr;
   }
   state.manualPointsSet = false;
-
-  save(); renderAll(); checkAndApplyMisses();
+  delete state.dailyNetOverride;
   toast(daysAgo ? '↩ Yesterday logged. Stats updated.' : '✦ Day complete. Stats updated.');
 }
 
@@ -2056,9 +2057,11 @@ function setGreeting() {
     const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
     const drinkSpend  = (state.drink || {}).todaySpend || 0;
     const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
-    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || state.manualPointsSet;
+    const net = state.dailyNetOverride !== undefined
+      ? state.dailyNetOverride
+      : r2(earned - rewardSpend - drinkSpend - foodSpend);
+    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || state.dailyNetOverride !== undefined;
     if (!somethingDone) return null;
-    const net = state.manualPointsSet ? r2(state.points) : r2(earned - rewardSpend - drinkSpend - foodSpend);
     return netToGrade(net);
   }
 
@@ -2182,23 +2185,15 @@ function savePointsModal() {
   if (dailyField.style.display !== 'none') {
     const dailyVal = parseFloat(document.getElementById('pointsDailyInput').value);
     if (!isNaN(dailyVal)) {
-      let earned = 0;
-      ['common','uncommon','rare'].forEach(type => {
-        (state.tasks[type] || []).forEach(t => { earned += earnedPts(t); });
-      });
-      (state.tasks.onetime || []).forEach(t => { if (t.done && !t.snapshotted) earned += t.pts; });
-      (state.clean || []).forEach(t => { if (t.isLog && !t.snapshotted) earned += t.pts; });
-      (state.gymTasks || []).forEach(t => { earned += r2((t.count||0)*t.ptsPerUnit); });
-      const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
-      const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
-      const drinkSpend  = (state.drink || {}).todaySpend || 0;
-      const currentNet  = r2(earned - foodSpend - rewardSpend - drinkSpend);
-      state.points = r2(state.points + (dailyVal - currentNet));
-      state.manualPointsSet = true;
+      // Store as an override — doesn't touch the bank balance at all
+      state.dailyNetOverride = r2(dailyVal);
     }
   } else {
     const val = parseFloat(document.getElementById('pointsInput').value);
-    if (!isNaN(val)) { state.points = r2(val); state.manualPointsSet = true; }
+    if (!isNaN(val)) {
+      state.points = r2(val);
+      // Clear any daily override since user explicitly set total
+    }
   }
 
   save(); updatePoints(); closePointsModal();
