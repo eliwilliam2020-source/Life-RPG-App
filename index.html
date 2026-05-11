@@ -771,6 +771,9 @@ function save() {
 }
 
 function r2(n) { return Math.round(n * 100) / 100; }
+function applyPoints(diff) {
+  state.points = r2(state.points + diff);
+}
 function updatePoints() {
   document.getElementById('pointsDisplay').textContent = r2(state.points);
   const netEl = document.getElementById('netDisplay');
@@ -786,14 +789,14 @@ function updatePoints() {
   const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
   const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
   const drinkSpend  = (state.drink || {}).todaySpend || 0;
-  const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || drinkSpend > 0 || state.manualPointsSet;
+  const calcNet = r2(earned - foodSpend - rewardSpend - drinkSpend);
+  const adjust = state.dailyAdjust || 0;
+  const net = r2(calcNet + adjust);
+  const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || drinkSpend > 0 || adjust !== 0;
 
-  if (!somethingDone && state.dailyNetOverride === undefined) {
+  if (!somethingDone) {
     netEl.textContent = '';
   } else {
-    const net = state.dailyNetOverride !== undefined
-      ? state.dailyNetOverride
-      : r2(earned - foodSpend - rewardSpend - drinkSpend);
     const sign = net >= 0 ? '+' : '';
     netEl.textContent = `(${sign}${net})`;
     netEl.style.color = net >= 0 ? 'var(--pos)' : 'var(--neg)';
@@ -985,7 +988,7 @@ function logFood(portion) {
   item.log = item.log || [];
   item.log.push({ portion, pts, date });
   item.todaySpend = r2((item.todaySpend || 0) + pts);
-  state.points    = r2(state.points - pts);
+  applyPoints(-pts);
   save(); renderFood(); updatePoints(); closeFoodPrompt();
   const label = { little: 'A little', medium: 'Medium', lot: 'A lot' }[portion];
   const cost  = pts > 0 ? `−${pts} pts` : 'free';
@@ -1006,14 +1009,14 @@ function undoFood(idx) {
   const pts = ti.e.pts || 0;
   item.log.splice(ti.i, 1);
   item.todaySpend = r2(Math.max(0, (item.todaySpend || 0) - pts));
-  state.points    = r2(state.points + pts);
+  applyPoints(pts);
   save(); renderFood(); updatePoints();
   toast(`↩ Undid ${item.name}`);
 }
 
 function deleteFoodItem(idx) {
   const item = state.food[idx];
-  state.points = r2(state.points + (item.todaySpend || 0));
+  applyPoints(item.todaySpend || 0);
   state.food.splice(idx, 1);
   save(); renderFood(); updatePoints();
 }
@@ -1066,7 +1069,7 @@ function completeOnetime(i) {
   if (t.done) return;
   t.done = true;
   t.completedDate = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-  state.points = r2(state.points + t.pts);
+  applyPoints(t.pts);
   save(); renderOnetimeTasks(); updatePoints();
   toast(`⚑ Quest complete! +${t.pts} pts`);
 }
@@ -1076,7 +1079,7 @@ function undoOnetime(i) {
   if (!t.done) return;
   t.done = false;
   t.completedDate = null;
-  state.points = r2(state.points - t.pts);
+  applyPoints(-t.pts);
   save(); renderOnetimeTasks(); updatePoints();
   toast('↩ Quest un-done.');
 }
@@ -1099,7 +1102,7 @@ function adjustCount(type, i, dir) {
   const prev = earnedPts(t);
   t.count = Math.max(0, (t.count || 0) + dir * (t.step || 1));
   const diff = r2(earnedPts(t) - prev);
-  state.points = r2(state.points + diff);
+  applyPoints(diff);
   save(); renderTasks(type); updatePoints();
   if (diff > 0) toast(`+${diff} pts`);
   else if (diff < 0) toast(`${diff} pts`);
@@ -1108,9 +1111,9 @@ function adjustCount(type, i, dir) {
 function deleteTask(type, i) {
   const t = state.tasks[type][i];
   if (type === 'onetime') {
-    if (t.done) state.points = r2(state.points - t.pts);
+    if (t.done) applyPoints(-t.pts);
   } else {
-    state.points = r2(state.points - earnedPts(t));
+    applyPoints(-earnedPts(t));
   }
   state.tasks[type].splice(i, 1);
   if (type === 'onetime') renderOnetimeTasks(); else renderTasks(type);
@@ -1137,7 +1140,7 @@ function addReward() {
 
 function buyReward(i) {
   const r = state.rewards[i];
-  state.points = r2(state.points - r.cost);
+  applyPoints(-r.cost);
   r.redeemed = (r.redeemed || 0) + 1;
   save(); renderRewards(); updatePoints();
   toast(`🎁 Redeemed: ${r.name}!`);
@@ -1147,7 +1150,7 @@ function undoReward(i) {
   const r = state.rewards[i];
   if (!r.redeemed) return;
   r.redeemed -= 1;
-  state.points = r2(state.points + r.cost);
+  applyPoints(r.cost);
   save(); renderRewards(); updatePoints();
   toast(`↩ +${r.cost} pts returned`);
 }
@@ -1256,7 +1259,7 @@ function commitEndOfDay(daysAgo) {
     state.drink.lastDate = dateStr;
   }
   state.manualPointsSet = false;
-  delete state.dailyNetOverride;
+  state.dailyAdjust = 0;
   toast(daysAgo ? '↩ Yesterday logged. Stats updated.' : '✦ Day complete. Stats updated.');
 }
 
@@ -1781,7 +1784,7 @@ function saveHistoryTasks() {
   const diff   = r2(newNet - oldNet);
   entry.tasks = newTasks; entry.rewards = newRewards;
   entry.ptsEarned = ptsEarned; entry.ptsSpent = ptsSpent; entry.netPts = newNet;
-  state.points = r2(state.points + diff);
+  applyPoints(diff);
   save(); closeHistoryTaskModal(); renderStats(); updatePoints();
   toast('History updated. Points ' + (diff >= 0 ? '+' : '') + diff + '.');
 }
@@ -1820,9 +1823,10 @@ function resetStats() {
     btn.style.color = '';
     btn.style.borderColor = '';
     state.history = [];
+    // preserve challenges so records/best times are not lost
     save();
     document.getElementById('stats-content').innerHTML = '';
-    toast('Stats reset.');
+    toast('Stats reset. Challenges preserved.');
   }
 }
 
@@ -1909,7 +1913,7 @@ function saveModal() {
     t.step = Math.max(1, parseInt(document.getElementById('modalStep').value) || 1);
     t.ptsPerUnit = pts;
     if (toType !== fromType) {
-      state.points = r2(state.points - earnedPts(t));
+      applyPoints(-earnedPts(t));
       state.tasks[fromType].splice(modalCtx.index, 1);
       state.tasks[toType].push(t);
       save(); renderTasks(fromType); renderTasks(toType); updatePoints();
@@ -2057,10 +2061,10 @@ function setGreeting() {
     const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
     const drinkSpend  = (state.drink || {}).todaySpend || 0;
     const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
-    const net = state.dailyNetOverride !== undefined
-      ? state.dailyNetOverride
-      : r2(earned - rewardSpend - drinkSpend - foodSpend);
-    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || state.dailyNetOverride !== undefined;
+    const calcNet = r2(earned - rewardSpend - drinkSpend - foodSpend);
+    const adjust = state.dailyAdjust || 0;
+    const net = r2(calcNet + adjust);
+    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || adjust !== 0;
     if (!somethingDone) return null;
     return netToGrade(net);
   }
@@ -2185,15 +2189,23 @@ function savePointsModal() {
   if (dailyField.style.display !== 'none') {
     const dailyVal = parseFloat(document.getElementById('pointsDailyInput').value);
     if (!isNaN(dailyVal)) {
-      // Store as an override — doesn't touch the bank balance at all
-      state.dailyNetOverride = r2(dailyVal);
+      // Compute current net and set adjust so tasks still add on top
+      let earned = 0;
+      ['common','uncommon','rare'].forEach(type => {
+        (state.tasks[type] || []).forEach(t => { earned += earnedPts(t); });
+      });
+      (state.tasks.onetime || []).forEach(t => { if (t.done && !t.snapshotted) earned += t.pts; });
+      (state.clean || []).forEach(t => { if (t.isLog && !t.snapshotted) earned += t.pts; });
+      (state.gymTasks || []).forEach(t => { earned += r2((t.count||0)*t.ptsPerUnit); });
+      const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
+      const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
+      const drinkSpend  = (state.drink || {}).todaySpend || 0;
+      const currentNet  = r2(earned - foodSpend - rewardSpend - drinkSpend);
+      state.dailyAdjust = r2(dailyVal - currentNet);
     }
   } else {
     const val = parseFloat(document.getElementById('pointsInput').value);
-    if (!isNaN(val)) {
-      state.points = r2(val);
-      // Clear any daily override since user explicitly set total
-    }
+    if (!isNaN(val)) state.points = r2(val);
   }
 
   save(); updatePoints(); closePointsModal();
@@ -2272,7 +2284,7 @@ function seed() {
 function haveDrink() {
   if (!state.drink) state.drink = { todayCount: 0, nextCost: 10, totalCount: 0, todaySpend: 0, lastDate: null };
   const cost = state.drink.nextCost;
-  state.points = r2(state.points - cost);
+  applyPoints(-cost);
   state.drink.todayCount = (state.drink.todayCount || 0) + 1;
   state.drink.totalCount = (state.drink.totalCount || 0) + 1;
   state.drink.todaySpend = r2((state.drink.todaySpend || 0) + cost);
@@ -2288,7 +2300,7 @@ function undoDrink() {
   state.drink.todayCount = Math.max(0, state.drink.todayCount - 1);
   state.drink.totalCount = Math.max(0, (state.drink.totalCount || 1) - 1);
   state.drink.todaySpend = r2(Math.max(0, (state.drink.todaySpend || 0) - refund));
-  state.points = r2(state.points + refund);
+  applyPoints(refund);
   save(); renderDrink(); updatePoints();
   toast(`↩ Drink undone. +${refund} pts returned.`);
 }
@@ -2329,7 +2341,7 @@ function adjustGymCount(i, dir) {
   const prev = r2((t.count||0) * t.ptsPerUnit);
   t.count = Math.max(0, (t.count||0) + dir * (t.step||1));
   const diff = r2(r2(t.count * t.ptsPerUnit) - prev);
-  state.points = r2(state.points + diff);
+  applyPoints(diff);
   save(); renderGymTasks(); updatePoints();
   if (diff > 0) toast(`+${diff} pts`);
   else if (diff < 0) toast(`${diff} pts`);
@@ -2337,7 +2349,7 @@ function adjustGymCount(i, dir) {
 
 function deleteGymTask(i) {
   const t = state.gymTasks[i];
-  state.points = r2(state.points - r2((t.count||0)*t.ptsPerUnit));
+  applyPoints(-r2((t.count||0)*t.ptsPerUnit));
   state.gymTasks.splice(i, 1);
   save(); renderGymTasks(); updatePoints();
 }
@@ -2498,7 +2510,7 @@ function completeClean(i) {
   const entry = { name: t.name, pts: t.pts, done: true, isLog: true,
                   parentId: t.id, completedDate: new Date().toLocaleDateString('en-CA') };
   state.clean.push(entry);
-  state.points = r2(state.points + t.pts);
+  applyPoints(t.pts);
   save(); renderClean(); updatePoints();
   toast(`✦ Deep clean complete! +${t.pts} pts`);
 }
@@ -2506,7 +2518,7 @@ function completeClean(i) {
 function undoClean(i) {
   const t = state.clean[i];
   if (!t.isLog) return;
-  if (!t.snapshotted) state.points = r2(state.points - t.pts);
+  if (!t.snapshotted) applyPoints(-t.pts);
   state.clean.splice(i, 1);
   save(); renderClean(); updatePoints();
   toast('↩ Deep clean un-done.');
@@ -2516,14 +2528,14 @@ function deleteClean(i) {
   const t = state.clean[i];
   if (t.isLog) {
     // deleting a log entry
-    if (!t.snapshotted) state.points = r2(state.points - t.pts);
+    if (!t.snapshotted) applyPoints(-t.pts);
     state.clean.splice(i, 1);
   } else {
     // deleting a template — remove it and all its log entries
     state.clean = state.clean.filter((c, ci) => {
       if (ci === i) return false;
       if (c.isLog && c.parentId === t.id) {
-        if (!c.snapshotted) state.points = r2(state.points - c.pts);
+        if (!c.snapshotted) applyPoints(-c.pts);
         return false;
       }
       return true;
