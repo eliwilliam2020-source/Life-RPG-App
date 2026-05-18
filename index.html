@@ -609,10 +609,6 @@
         <button class="btn-add" onclick="addFoodItem()">+ Add</button>
       </div>
       <div id="yuka-preview" style="font-size:11px;color:var(--muted);font-family:'Cinzel',serif;letter-spacing:1px;padding:2px 4px 8px;min-height:18px"></div>
-      <div id="diet-summary" style="font-family:'Cinzel',serif;font-size:12px;letter-spacing:1px;padding:6px 4px 10px;display:none">
-        <span id="diet-total-label" style="color:var(--food)"></span>
-        <span id="diet-mult-label" style="color:var(--muted);margin-left:12px"></span>
-      </div>
       <div id="list-food"></div>
     </div>
     <!-- GROCERY -->
@@ -1062,18 +1058,7 @@ function yukaTopts(yuka) {
   return { little: small, medium: r2(small * 2.5), lot: r2(small * 6.25) };
 }
 
-// Compute today's base diet spend (sum of raw log pts) and multiplier
-function dietStats() {
-  const today = new Date().toLocaleDateString('en-CA');
-  let base = 0;
-  (state.food || []).forEach(item => {
-    (item.log || []).filter(e => e.date === today).forEach(e => { base = r2(base + (e.pts || 0)); });
-  });
-  const tiers = Math.floor(base / 10);
-  const multiplier = r2(1 + tiers * 0.1);
-  const actual = r2(base * multiplier);
-  return { base, multiplier, actual, tiers };
-}
+
 
 function previewYukaPts() {
   const raw = document.getElementById('food-yuka').value;
@@ -1100,45 +1085,18 @@ function addFoodItem() {
   save(); renderFood();
 }
 
-// Recompute all todaySpend values using retroactive multiplier, then sync state.points
-function recalcDietSpend() {
-  const today = new Date().toLocaleDateString('en-CA');
-  // Get old total actual spend (to refund from points)
-  const oldActual = r2((state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0));
 
-  // Sum base pts across all today logs
-  let base = 0;
-  (state.food || []).forEach(item => {
-    (item.log || []).filter(e => e.date === today).forEach(e => { base = r2(base + (e.pts || 0)); });
-  });
-  const tiers = Math.floor(base / 10);
-  const mult  = r2(1 + tiers * 0.1);
-  const newActual = r2(base * mult);
-
-  // Distribute actual spend proportionally across items
-  (state.food || []).forEach(item => {
-    const itemBase = r2((item.log || []).filter(e => e.date === today).reduce((s, e) => s + (e.pts || 0), 0));
-    item.todaySpend = base > 0 ? r2(itemBase / base * newActual) : 0;
-  });
-
-  // Sync points: refund old, deduct new
-  state.points = r2(state.points + oldActual - newActual);
-}
 
 let _foodPromptIdx = null;
 
 function openFoodPrompt(idx) {
   _foodPromptIdx = idx;
-  const item  = state.food[idx];
-  const stats = dietStats();
-  const mult  = stats.multiplier;
+  const item = state.food[idx];
   const yukaStr = item.yuka !== null && item.yuka !== undefined ? ` · Yuka ${item.yuka}` : '';
-  const multStr = mult > 1 ? ` (${mult}×)` : '';
-  document.getElementById('foodPromptTitle').textContent = item.name + yukaStr + multStr;
-  const fmt = (base) => base > 0 ? `−${r2(base * mult)} pts${mult > 1 ? ` (base ${base})` : ''}` : 'free';
-  document.getElementById('foodCostLittle').textContent = fmt(item.ptsLittle);
-  document.getElementById('foodCostMedium').textContent = fmt(item.ptsMedium);
-  document.getElementById('foodCostLot').textContent    = fmt(item.ptsLot);
+  document.getElementById('foodPromptTitle').textContent = item.name + yukaStr;
+  document.getElementById('foodCostLittle').textContent = item.ptsLittle > 0 ? `−${item.ptsLittle} pts` : 'free';
+  document.getElementById('foodCostMedium').textContent = item.ptsMedium > 0 ? `−${item.ptsMedium} pts` : 'free';
+  document.getElementById('foodCostLot').textContent    = item.ptsLot    > 0 ? `−${item.ptsLot} pts`    : 'free';
   const today = new Date().toLocaleDateString('en-CA');
   const hasToday = (item.log||[]).some(e => e.date === today);
   document.getElementById('foodPromptUndo').style.display = hasToday ? '' : 'none';
@@ -1154,18 +1112,15 @@ function logFood(portion) {
   if (_foodPromptIdx === null) return;
   const item   = state.food[_foodPromptIdx];
   const ptsMap = { little: item.ptsLittle, medium: item.ptsMedium, lot: item.ptsLot };
-  const basePts = ptsMap[portion] || 0;
-  const date    = new Date().toLocaleDateString('en-CA');
+  const pts    = ptsMap[portion] || 0;
+  const date   = new Date().toLocaleDateString('en-CA');
   item.log = item.log || [];
-  item.log.push({ portion, pts: basePts, date });
-
-  // Recalculate all food actual spend with retroactive multiplier
-  recalcDietSpend();
-
+  item.log.push({ portion, pts, date });
+  item.todaySpend = r2((item.todaySpend || 0) + pts);
+  applyPoints(-pts);
   save(); renderFood(); updatePoints(); closeFoodPrompt();
   const label = { little: 'A little', medium: 'Medium', lot: 'A lot' }[portion];
-  const stats = dietStats();
-  const cost  = basePts > 0 ? `−${basePts} base (${stats.multiplier}× = −${stats.actual} total)` : 'free';
+  const cost  = pts > 0 ? `−${pts} pts` : 'free';
   toast(`${item.name} (${label}) · ${cost}`);
 }
 
@@ -1180,24 +1135,18 @@ function undoFood(idx) {
   const today = new Date().toLocaleDateString('en-CA');
   const ti    = [...(item.log||[])].map((e,i)=>({e,i})).reverse().find(({e}) => e.date === today);
   if (!ti) return;
+  const pts = ti.e.pts || 0;
   item.log.splice(ti.i, 1);
-  recalcDietSpend();
+  item.todaySpend = r2(Math.max(0, (item.todaySpend || 0) - pts));
+  applyPoints(pts);
   save(); renderFood(); updatePoints();
   toast(`↩ Undid ${item.name}`);
 }
 
 function deleteFoodItem(idx) {
-  // Refund this item's todaySpend before removing it, then recalc the rest
   const item = state.food[idx];
-  const refund = item.todaySpend || 0;
+  applyPoints(item.todaySpend || 0);
   state.food.splice(idx, 1);
-  // Recalc without this item (recalcDietSpend uses remaining items)
-  recalcDietSpend();
-  // recalcDietSpend already adjusts state.points based on old vs new actual
-  // but old actual included the deleted item's spend — compensate
-  // Actually recalcDietSpend computes oldActual from remaining items (post-splice),
-  // so we need to manually refund the deleted item's contribution
-  state.points = r2(state.points + refund);
   save(); renderFood(); updatePoints();
 }
 
@@ -1205,23 +1154,6 @@ function renderFood() {
   const el = document.getElementById('list-food');
   if (!el) return;
   const today = new Date().toLocaleDateString('en-CA');
-
-  // Update diet summary bar
-  const stats = dietStats();
-  const summaryEl = document.getElementById('diet-summary');
-  const totalEl   = document.getElementById('diet-total-label');
-  const multEl    = document.getElementById('diet-mult-label');
-  if (summaryEl) {
-    if (stats.base > 0) {
-      summaryEl.style.display = '';
-      totalEl.textContent = `Diet today: −${stats.actual} pts`;
-      multEl.textContent  = stats.multiplier > 1
-        ? `${stats.multiplier}× multiplier (base ${stats.base} pts)`
-        : `No multiplier yet`;
-    } else {
-      summaryEl.style.display = 'none';
-    }
-  }
 
   if (!state.food || !state.food.length) { el.innerHTML = ''; return; }
   el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">` +
