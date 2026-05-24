@@ -1249,7 +1249,7 @@ function adjustCount(type, i, dir) {
 function deleteTask(type, i) {
   const t = state.tasks[type][i];
   if (type === 'onetime') {
-    if (t.done) applyPoints(-t.pts);
+    if (t.done && !t.snapshotted) applyPoints(-t.pts);
   } else {
     applyPoints(-earnedPts(t));
   }
@@ -1367,9 +1367,11 @@ function commitEndOfDay(daysAgo) {
   (state.gymTasks || []).forEach(t => { ptsEarned = r2(ptsEarned + (t.count||0)*t.ptsPerUnit); });
   let ptsSpent = 0;
   state.rewards.forEach(r => { ptsSpent = r2(ptsSpent + (r.redeemed || 0) * r.cost); });
-  const foodSpend = r2((state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0));
-  ptsSpent = r2(ptsSpent + foodSpend);
-  const netPts = r2(ptsEarned - ptsSpent);
+  const foodSpend  = r2((state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0));
+  const drinkSpend = r2((state.drink || {}).todaySpend || 0);
+  ptsSpent = r2(ptsSpent + foodSpend + drinkSpend);
+  const adjust = state.dailyAdjust || 0;
+  const netPts = r2(ptsEarned - ptsSpent + adjust);
 
   if (!state.history) state.history = [];
 
@@ -1448,7 +1450,8 @@ function confirmVacationDay() {
   });
   state.tasks.onetime.forEach(t => { if (t.done) t.snapshotted = true; });
   (state.clean || []).forEach(t => { if (t.isLog) t.snapshotted = true; });
-  if (state.food) state.food.forEach(f => { f.todaySpend = 0; f.todayUnits = 0; f.log = []; });
+  const _vdate = new Date().toLocaleDateString('en-CA');
+  if (state.food) state.food.forEach(f => { f.log = (f.log||[]).filter(e => e.date !== _vdate); f.todaySpend = 0; });
   state.rewards.forEach(r => { r.redeemed = 0; });
   if (state.drink) { state.drink.todayCount = 0; state.drink.todaySpend = 0; }
   state.manualPointsSet = false;
@@ -1506,8 +1509,8 @@ function checkAndApplyMisses() {
     state.history = hist;
     // Only apply point penalty if we haven't already (pendingRecover tracks this)
     if (!state.pendingRecover) {
+      state.pendingRecover = { n, grade, originalPoints: state.points };
       state.points = pointsTarget;
-      state.pendingRecover = { n, grade };
     }
     save(); updatePoints(); setGreeting();
   }
@@ -1522,8 +1525,10 @@ function recoverFromMiss() {
   const unrecovered = hist.filter(h => h.missed && !h.recovered);
   if (!unrecovered.length) return;
   const n = unrecovered.length;
+  const origPts = (state.pendingRecover && state.pendingRecover.originalPoints != null)
+    ? state.pendingRecover.originalPoints : state.points;
   let newGrade, newPoints;
-  if (n === 1)      { newGrade = 'X+'; newPoints = Math.floor(state.points / 2); }
+  if (n === 1)      { newGrade = 'X+'; newPoints = Math.floor(origPts / 2); }
   else if (n === 2) { newGrade = 'X';  newPoints = 0; }
   else              { newGrade = 'X−'; newPoints = -24; }
 
@@ -1740,17 +1745,17 @@ function renderStats() {
       html += `</div></div>`;
     }
   }
-  if (hist.length >= 2) {
-    let streak = 1;
-    for (let i = hist.length - 1; i > 0; i--) {
-      const prev = new Date(hist[i-1].date);
-      const curr = new Date(hist[i].date);
-      const diff = (curr - prev) / 86400000;
-      if (diff === 1) streak++;
-      else break;
-    }
+  // Streak: consecutive days ending yesterday with B or better (net >= 33)
+  const STREAK_GRADES = new Set(['S+','S','A+','A','A−','B+','B']);
+  const qualifies = d => !d.vacation && !d.missed && STREAK_GRADES.has(scoreDay(d));
+  let streak = 0;
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (qualifies(hist[i])) streak++;
+    else break;
+  }
+  if (streak > 0) {
     html += `<div class="stat-cards" style="margin-top:0">
-      <div class="stat-card"><div class="stat-card-label">CURRENT STREAK</div><div class="stat-card-value" style="color:var(--onetime)">${streak} day${streak!==1?'s':''} 🔥</div></div>
+      <div class="stat-card"><div class="stat-card-label">CURRENT STREAK (B+)</div><div class="stat-card-value" style="color:var(--onetime)">${streak} day${streak!==1?'s':''} 🔥</div></div>
     </div>`;
   }
 
@@ -1863,9 +1868,9 @@ function openHistoryTaskModal(histIndex) {
   const rewardNames = Object.keys(entry.rewards || {});
 
   let html = '';
-  const inputStyle = 'width:64px;background:var(--panel2);border:1px solid var(--border2);border-radius:5px;color:var(--accent2);font-family:"Cinzel",serif;font-size:14px;text-align:center;padding:5px;outline:none';
-  const rowStyle = 'display:flex;align-items:center;gap:8px';
-  const headerStyle = 'font-family:"Cinzel",serif;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px';
+  const inputStyle = 'width:64px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-family:"Cinzel",serif;font-size:14px;text-align:center;padding:5px;outline:none';
+  const rowStyle = 'display:flex;align-items:center;gap:8px;margin-bottom:6px';
+  const headerStyle = 'font-family:"Cinzel",serif;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)';
 
   if (Object.keys(allTasks).length) {
     html += '<div style="' + headerStyle + '">TASKS</div>';
@@ -2118,7 +2123,6 @@ document.getElementById('challengeLogModal').addEventListener('click', e => { if
 document.getElementById('vacationModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('vacationModal').classList.remove('open'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-// ── Tabs ──────────────────────────────────────────────────────────────
 // ── Tab system ───────────────────────────────────────────────────────
 const TAB_LABELS = {
   common:'Common', uncommon:'Uncommon', rare:'Rare', onetime:'One-Time',
@@ -2138,6 +2142,9 @@ const SWATCHES = [
 
 let _activeTab = 'common';
 let _dragSrc = null;
+let _dragBtn = null;
+let _touchDragging = false;
+let _touchDragTimer = null;
 let _colorPickerTab = null;
 
 function tabColor(tab) {
@@ -2169,8 +2176,7 @@ function renderTabs() {
       const btn = document.createElement('button');
       btn.className = 'tab-btn' + (tab === _activeTab ? ' active' : '');
       btn.dataset.tab = tab;
-      btn.draggable = true;
-      btn.style.cursor = 'grab';
+      btn.style.cursor = 'pointer';
       if (tab === _activeTab) {
         btn.style.borderColor = col;
         btn.style.color = col;
@@ -2181,34 +2187,42 @@ function renderTabs() {
       // Click to switch
       btn.addEventListener('click', () => switchTab(tab));
 
-      // Drag to reorder
-      btn.addEventListener('dragstart', e => {
+      // Touch-based drag to reorder
+      btn.addEventListener('touchstart', e => {
         _dragSrc = tab;
+        _dragBtn = btn;
         btn.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-      });
-      btn.addEventListener('dragend', () => {
+        _touchDragTimer = setTimeout(() => { _touchDragging = true; }, 200);
+      }, { passive: true });
+      btn.addEventListener('touchmove', e => {
+        if (!_touchDragging) return;
+        e.preventDefault();
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const target = el && el.closest('.tab-btn');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drag-over'));
+        if (target && target !== btn) target.classList.add('drag-over');
+      }, { passive: false });
+      btn.addEventListener('touchend', e => {
+        clearTimeout(_touchDragTimer);
         btn.classList.remove('dragging');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drag-over'));
-      });
-      btn.addEventListener('dragover', e => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drag-over'));
-        if (tab !== _dragSrc) btn.classList.add('drag-over');
-      });
-      btn.addEventListener('drop', e => {
-        e.preventDefault();
-        btn.classList.remove('drag-over');
-        if (!_dragSrc || _dragSrc === tab) return;
-        const order = state.tabOrder;
-        const from = order.indexOf(_dragSrc);
-        const to   = order.indexOf(tab);
-        if (from < 0 || to < 0) return;
-        order.splice(from, 1);
-        order.splice(to, 0, _dragSrc);
-        _dragSrc = null;
-        save(); renderTabs();
+        if (!_touchDragging) { _dragSrc = null; _touchDragging = false; return; }
+        const touch = e.changedTouches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const target = el && el.closest('.tab-btn');
+        const targetTab = target && target.dataset.tab;
+        if (targetTab && targetTab !== _dragSrc) {
+          const order = state.tabOrder;
+          const from = order.indexOf(_dragSrc);
+          const to   = order.indexOf(targetTab);
+          if (from >= 0 && to >= 0) {
+            order.splice(from, 1);
+            order.splice(to, 0, _dragSrc);
+            save();
+          }
+        }
+        _dragSrc = null; _touchDragging = false; renderTabs();
       });
 
       // Long-press to open color picker
