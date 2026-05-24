@@ -139,6 +139,24 @@
     text-align: center;
   }
   .tab-btn:hover { color: var(--text2); border-color: var(--border2); background: var(--surface2); }
+  .tab-btn.dragging { opacity: 0.4; cursor: grabbing; }
+  .tab-btn.drag-over { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tab-color-dot {
+    width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border2);
+    cursor: pointer; flex-shrink: 0; display: inline-block; vertical-align: middle;
+    margin-left: 4px; transition: border-color 0.15s;
+  }
+  .tab-color-dot:hover { border-color: var(--border2); transform: scale(1.2); }
+  .color-picker-popup {
+    position: absolute; background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px; display: flex; flex-wrap: wrap; gap: 5px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 300; width: 132px;
+  }
+  .color-swatch {
+    width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
+    transition: all 0.15s; flex-shrink: 0;
+  }
+  .color-swatch:hover, .color-swatch.selected { border-color: #555; transform: scale(1.15); }
   .tab-dot { display: block; width: 5px; height: 5px; border-radius: 50%; margin: 0 auto 4px; opacity: 0.7; }
 
   .tab-btn[data-tab="common"].active    { border-color: var(--common);   color: var(--common);   background: #e8f7fc; }
@@ -380,8 +398,7 @@
   .food-item-count { font-family: 'Cinzel', serif; font-size: 12px; color: var(--danger); min-width: 56px; text-align: right; flex-shrink: 0; }
 
   /* ── Stats ── */
-  #section-stats { display: none; }
-  #section-stats.active { display: block; animation: fadeIn 0.2s ease; }
+
   .btn-reset-stats {
     background: transparent; border: 1px solid var(--border); color: var(--muted);
     font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px;
@@ -512,24 +529,10 @@
 
   <!-- Main tabs (hidden when stats open) -->
   <div id="mainUI">
-    <div class="tabs">
-      <button class="tab-btn active" data-tab="common"><span class="tab-dot" style="background:var(--common)"></span>Common</button>
-      <button class="tab-btn" data-tab="uncommon"><span class="tab-dot" style="background:var(--uncommon)"></span>Uncommon</button>
-      <button class="tab-btn" data-tab="rare"><span class="tab-dot" style="background:var(--rare)"></span>Rare</button>
-      <button class="tab-btn" data-tab="onetime"><span class="tab-dot" style="background:var(--onetime)"></span>One-Time</button>
-      <button class="tab-btn" data-tab="rewards"><span class="tab-dot" style="background:var(--reward)"></span>Rewards</button>
-      <button class="tab-btn" data-tab="food"><span class="tab-dot" style="background:var(--food)"></span>Diet</button>
-      <button class="tab-btn" data-tab="drink"><span class="tab-dot" style="background:var(--drink)"></span>Drink</button>
-    </div>
-    <div class="tabs" style="margin-top:-12px">
-      <button class="tab-btn" data-tab="grocery"><span class="tab-dot" style="background:var(--grocery)"></span>Grocery</button>
-      <button class="tab-btn" data-tab="clean"><span class="tab-dot" style="background:var(--clean)"></span>Deep Clean</button>
-      <button class="tab-btn" data-tab="gym"><span class="tab-dot" style="background:var(--gym)"></span>Gym</button>
-      <button class="tab-btn" data-tab="stats"><span class="tab-dot" style="background:#9b4dff"></span>Stats</button>
-    </div>
+    <div id="tab-container"></div>
 
     <!-- COMMON -->
-    <div class="section active" id="section-common">
+    <div class="section" id="section-common">
       <div class="section-header">
         <div><div class="section-title common">Common Tasks</div></div>
       </div>
@@ -873,6 +876,11 @@ function load() {
     if (!s.clean)      s.clean = [];
     if (!s.gymTasks)   s.gymTasks = [];
     if (!s.challenges) s.challenges = [];
+    if (!s.tabOrder)   s.tabOrder = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats'];
+    if (!s.tabColors)  s.tabColors = {};
+    // Ensure all tabs are present (add any missing)
+    const allTabs = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats'];
+    allTabs.forEach(t => { if (!s.tabOrder.includes(t)) s.tabOrder.push(t); });
     // Migrate food items to Yuka format if needed
     s.food = (s.food || []).map(f => {
       if (f.ptsLittle === undefined) {
@@ -1977,8 +1985,23 @@ function resetStats() {
     state.history = [];
     state.points = 0;
     state.dailyAdjust = 0;
+    // Reset all task counts
+    ['common','uncommon','rare'].forEach(type => {
+      (state.tasks[type] || []).forEach(t => { t.count = 0; });
+    });
+    (state.gymTasks || []).forEach(t => { t.count = 0; });
+    // Reset onetime and clean snapshotted flags
+    (state.tasks.onetime || []).forEach(t => { t.done = false; t.snapshotted = false; t.completedDate = null; });
+    // Remove completed clean log entries (keep templates)
+    state.clean = (state.clean || []).filter(t => !t.isLog);
+    // Reset food
+    (state.food || []).forEach(f => { f.todaySpend = 0; f.log = []; });
+    // Reset rewards
+    (state.rewards || []).forEach(r => { r.redeemed = 0; });
+    // Reset drink daily
+    if (state.drink) { state.drink.todayCount = 0; state.drink.todaySpend = 0; state.drink.nextCost = 10; state.drink.totalCount = 0; }
     // preserve challenges so records/best times are not lost
-    save(); updatePoints();
+    save(); renderAll(); updatePoints();
     document.getElementById('stats-content').innerHTML = '';
     toast('Stats and points reset. Challenges preserved.');
   }
@@ -2096,15 +2119,172 @@ document.getElementById('vacationModal').addEventListener('click', e => { if (e.
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 // ── Tabs ──────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(`section-${btn.dataset.tab}`).classList.add('active');
-    if (btn.dataset.tab === 'stats') renderStats();
+// ── Tab system ───────────────────────────────────────────────────────
+const TAB_LABELS = {
+  common:'Common', uncommon:'Uncommon', rare:'Rare', onetime:'One-Time',
+  rewards:'Rewards', food:'Diet', drink:'Drink', grocery:'Grocery',
+  clean:'Deep Clean', gym:'Gym', stats:'Stats'
+};
+const TAB_DEFAULT_COLORS = {
+  common:'#0ea5c8', uncommon:'#16a34a', rare:'#9333ea', onetime:'#ea6c00',
+  rewards:'#b59a00', food:'#e05020', drink:'#7c3aed', grocery:'#2a9060',
+  clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea'
+};
+const SWATCHES = [
+  '#0ea5c8','#16a34a','#9333ea','#ea6c00','#b59a00','#e05020',
+  '#7c3aed','#2a9060','#dc2626','#0369a1','#be185d','#0891b2',
+  '#65a30d','#c2410c','#6d28d9','#0f766e','#4f46e5','#1a1a1a'
+];
+
+let _activeTab = 'common';
+let _dragSrc = null;
+let _colorPickerTab = null;
+
+function tabColor(tab) {
+  return (state.tabColors && state.tabColors[tab]) || TAB_DEFAULT_COLORS[tab] || '#999';
+}
+
+function hex2rgba(hex, a) {
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+function renderTabs() {
+  const container = document.getElementById('tab-container');
+  if (!container) return;
+  const order = state.tabOrder || Object.keys(TAB_LABELS);
+
+  // Split into rows of 7
+  const row1 = order.slice(0, 7);
+  const row2 = order.slice(7);
+
+  function makeRow(tabs, mt) {
+    const row = document.createElement('div');
+    row.className = 'tabs';
+    if (mt) row.style.marginTop = '-12px';
+    tabs.forEach(tab => {
+      const col = tabColor(tab);
+      const btn = document.createElement('button');
+      btn.className = 'tab-btn' + (tab === _activeTab ? ' active' : '');
+      btn.dataset.tab = tab;
+      btn.draggable = true;
+      btn.style.cursor = 'grab';
+      if (tab === _activeTab) {
+        btn.style.borderColor = col;
+        btn.style.color = col;
+        btn.style.background = hex2rgba(col, 0.08);
+      }
+      btn.innerHTML = `<span class="tab-dot" style="background:${col}"></span>${TAB_LABELS[tab]}`;
+
+      // Click to switch
+      btn.addEventListener('click', () => switchTab(tab));
+
+      // Drag to reorder
+      btn.addEventListener('dragstart', e => {
+        _dragSrc = tab;
+        btn.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+      });
+      btn.addEventListener('dragend', () => {
+        btn.classList.remove('dragging');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drag-over'));
+      });
+      btn.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drag-over'));
+        if (tab !== _dragSrc) btn.classList.add('drag-over');
+      });
+      btn.addEventListener('drop', e => {
+        e.preventDefault();
+        btn.classList.remove('drag-over');
+        if (!_dragSrc || _dragSrc === tab) return;
+        const order = state.tabOrder;
+        const from = order.indexOf(_dragSrc);
+        const to   = order.indexOf(tab);
+        if (from < 0 || to < 0) return;
+        order.splice(from, 1);
+        order.splice(to, 0, _dragSrc);
+        _dragSrc = null;
+        save(); renderTabs();
+      });
+
+      // Long-press to open color picker
+      let pressTimer;
+      btn.addEventListener('pointerdown', () => {
+        pressTimer = setTimeout(() => openColorPicker(tab, btn), 500);
+      });
+      btn.addEventListener('pointerup',   () => clearTimeout(pressTimer));
+      btn.addEventListener('pointerleave',() => clearTimeout(pressTimer));
+
+      row.appendChild(btn);
+    });
+    return row;
+  }
+
+  container.innerHTML = '';
+  container.appendChild(makeRow(row1, false));
+  if (row2.length) container.appendChild(makeRow(row2, true));
+}
+
+function switchTab(tab) {
+  _activeTab = tab;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  const sec = document.getElementById(`section-${tab}`);
+  if (sec) sec.classList.add('active');
+  if (tab === 'stats') renderStats();
+  renderTabs();
+}
+
+function openColorPicker(tab, btn) {
+  closeColorPicker();
+  _colorPickerTab = tab;
+  const popup = document.createElement('div');
+  popup.className = 'color-picker-popup';
+  popup.id = 'color-picker-popup';
+  const current = tabColor(tab);
+  SWATCHES.forEach(hex => {
+    const sw = document.createElement('div');
+    sw.className = 'color-swatch' + (hex === current ? ' selected' : '');
+    sw.style.background = hex;
+    sw.addEventListener('click', e => {
+      e.stopPropagation();
+      if (!state.tabColors) state.tabColors = {};
+      state.tabColors[tab] = hex;
+      save(); renderTabs(); closeColorPicker();
+    });
+    popup.appendChild(sw);
   });
-});
+  // Reset option
+  const reset = document.createElement('div');
+  reset.className = 'color-swatch';
+  reset.style.background = '#fff';
+  reset.style.border = '2px solid #ccc';
+  reset.title = 'Reset to default';
+  reset.innerHTML = '<span style="font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;height:100%;color:#999">↺</span>';
+  reset.addEventListener('click', e => {
+    e.stopPropagation();
+    if (state.tabColors) delete state.tabColors[tab];
+    save(); renderTabs(); closeColorPicker();
+  });
+  popup.appendChild(reset);
+
+  const rect = btn.getBoundingClientRect();
+  popup.style.position = 'fixed';
+  popup.style.top = (rect.bottom + 6) + 'px';
+  popup.style.left = Math.min(rect.left, window.innerWidth - 148) + 'px';
+  document.body.appendChild(popup);
+  setTimeout(() => document.addEventListener('click', closeColorPicker, { once: true }), 10);
+}
+
+function closeColorPicker() {
+  const p = document.getElementById('color-picker-popup');
+  if (p) p.remove();
+  _colorPickerTab = null;
+}
+
 
 ['common','uncommon','rare'].forEach(t => {
   document.getElementById(`${t}-name`).addEventListener('keydown', e => { if (e.key==='Enter') addTask(t); });
@@ -2796,6 +2976,8 @@ seed();
 setGreeting();
 renderAll();
 checkAndApplyMisses();
+renderTabs();
+switchTab(_activeTab || 'common');
 
 </script>
 </body>
