@@ -397,6 +397,22 @@
   .food-item-pts  { font-size: 11px; color: var(--muted); font-family: 'Cinzel', serif; margin-top: 1px; letter-spacing: 0.5px; }
   .food-item-count { font-family: 'Cinzel', serif; font-size: 12px; color: var(--danger); min-width: 56px; text-align: right; flex-shrink: 0; }
 
+  /* ── Log / Journal ── */
+  .section-title.log    { color: #0f766e; }
+  .log-group-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+  .log-field-label { font-family: 'Cinzel', serif; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 5px; margin-top: 12px; }
+  .log-textarea { width: 100%; min-height: 90px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Crimson Pro', serif; font-size: 16px; padding: 10px 12px; outline: none; resize: vertical; transition: border-color 0.15s; line-height: 1.6; }
+  .log-textarea:focus { border-color: var(--border2); }
+  .mood-btn { padding: 7px 11px; border: 1px solid var(--border); border-radius: 20px; background: var(--surface); font-family: 'Crimson Pro', serif; font-size: 13px; cursor: pointer; transition: all 0.15s; color: var(--text2); white-space: nowrap; }
+  .mood-btn:hover { border-color: var(--border2); background: var(--surface2); }
+  .mood-btn.selected { border-color: #0f766e; background: #e6f7f5; color: #0f766e; font-weight: 600; }
+  .log-past-entry { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+  .log-past-date { font-family: 'Cinzel', serif; font-size: 10px; color: var(--muted); letter-spacing: 1px; margin-bottom: 6px; }
+  .log-past-mood { display: inline-block; font-size: 13px; color: #0f766e; font-family: 'Cinzel', serif; margin-bottom: 6px; }
+  .log-past-text { font-size: 15px; color: var(--text); line-height: 1.6; white-space: pre-wrap; }
+  .log-past-plans { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+  .log-past-plan-label { font-family: 'Cinzel', serif; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 2px; }
+
   /* ── Stats ── */
 
   .btn-reset-stats {
@@ -513,7 +529,10 @@
   <header>
     <div class="day-corner" id="dayCorner"></div>
     <div class="header-history" id="headerHistory"></div>
-    <div class="today-stars" id="todayStars"></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;min-height:1.2em">
+      <button id="plans-btn" onclick="openPlansModal()" style="display:none;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:7px 12px;border-radius:7px;cursor:pointer;transition:all 0.15s;line-height:1" title="View current plans">📋 Plans</button>
+      <div class="today-stars" id="todayStars"></div>
+    </div>
   </header>
 
   <div class="points-bar">
@@ -681,6 +700,60 @@
       </div>
     </div>
   </div>
+<!-- Plans Modal -->
+<div class="modal-overlay" id="plansModal">
+  <div class="modal" style="max-width:480px;max-height:85vh;overflow-y:auto">
+    <div class="modal-title">📋 Current Plans</div>
+    <div id="plans-modal-content" style="display:flex;flex-direction:column;gap:16px;margin-top:4px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('plansModal').classList.remove('open')">Close</button>
+      <button class="modal-save" onclick="document.getElementById('plansModal').classList.remove('open');switchTab('log')" style="background:#0f766e">Write in Log</button>
+    </div>
+  </div>
+</div>
+
+  <!-- LOG -->
+  <div class="section" id="section-log">
+    <div class="section-header">
+      <div><div class="section-title log">Log</div></div>
+      <div id="log-date-label" style="font-family:'Cinzel',serif;font-size:11px;color:var(--muted);letter-spacing:1px"></div>
+    </div>
+
+    <!-- Reflections -->
+    <div class="log-group-title">Reflections</div>
+
+    <div class="log-field-label">How are you feeling today?</div>
+    <div id="mood-picker" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px"></div>
+
+    <div class="log-field-label">Reflection</div>
+    <textarea id="log-reflection" class="log-textarea" placeholder="How did today go? What stood out?"></textarea>
+
+    <!-- Plans -->
+    <div class="log-group-title" style="margin-top:20px">Plans</div>
+
+    <div id="log-plan-tomorrow-wrap">
+      <div class="log-field-label">Tomorrow</div>
+      <textarea id="log-plan-tomorrow" class="log-textarea" placeholder="What do you want to accomplish tomorrow?"></textarea>
+    </div>
+    <div id="log-plan-week-wrap" style="display:none">
+      <div class="log-field-label">Next Week</div>
+      <textarea id="log-plan-week" class="log-textarea" placeholder="Goals and intentions for next week…"></textarea>
+    </div>
+    <div id="log-plan-month-wrap" style="display:none">
+      <div class="log-field-label">Next Month</div>
+      <textarea id="log-plan-month" class="log-textarea" placeholder="What do you want this next month to look like?"></textarea>
+    </div>
+    <div id="log-plan-season-wrap" style="display:none">
+      <div class="log-field-label">Next Season</div>
+      <textarea id="log-plan-season" class="log-textarea" placeholder="Intentions for the coming season…"></textarea>
+    </div>
+    <div id="log-plan-year-wrap" style="display:none">
+      <div class="log-field-label">Next Year</div>
+      <textarea id="log-plan-year" class="log-textarea" placeholder="Your vision for the year ahead…"></textarea>
+    </div>
+
+    <button class="btn-add" onclick="saveLog()" style="margin-top:16px;background:var(--text)">Save Entry</button>
+  </div>
   <!-- STATS (now a real tab section) -->
   <div class="section" id="section-stats">
     <div class="section-header">
@@ -815,21 +888,21 @@
     <div class="modal-title">How Grades Are Calculated</div>
     <p style="font-size:13px;color:var(--muted);margin:4px 0 12px;line-height:1.6">Grade is based on net points for the day. Food costs subtract from your daily net.</p>
     <table class="score-table">
-      <tr><td style="color:#ff8c3a">S+</td><td>100+ pts</td></tr>
-      <tr><td style="color:#ff8c3a">S</td><td>80–99 pts</td></tr>
-      <tr><td style="color:#50e898">A+</td><td>60–79 pts</td></tr>
-      <tr><td style="color:#50e898">A</td><td>52–59 pts</td></tr>
-      <tr><td style="color:#50e898">A−</td><td>49–51 pts</td></tr>
-      <tr><td style="color:#4dd4f4">B+</td><td>41–48 pts</td></tr>
-      <tr><td style="color:#4dd4f4">B</td><td>33–40 pts</td></tr>
-      <tr><td style="color:#4dd4f4">B−</td><td>25–32 pts</td></tr>
-      <tr><td style="color:#f0d470">C+</td><td>21–24 pts</td></tr>
-      <tr><td style="color:#f0d470">C</td><td>17–20 pts</td></tr>
-      <tr><td style="color:#f0d470">C−</td><td>13–16 pts</td></tr>
-      <tr><td style="color:#9090c0">D+</td><td>9–12 pts</td></tr>
-      <tr><td style="color:#9090c0">D</td><td>5–8 pts</td></tr>
-      <tr><td style="color:#9090c0">D−</td><td>1–4 pts</td></tr>
-      <tr><td style="color:#ff4f4f">F</td><td>0 or negative pts</td></tr>
+      <tr><td style="color:#c2410c">S+</td><td>100+ pts</td></tr>
+      <tr><td style="color:#c2410c">S</td><td>80–99 pts</td></tr>
+      <tr><td style="color:#15803d">A+</td><td>60–79 pts</td></tr>
+      <tr><td style="color:#15803d">A</td><td>52–59 pts</td></tr>
+      <tr><td style="color:#15803d">A−</td><td>49–51 pts</td></tr>
+      <tr><td style="color:#0369a1">B+</td><td>41–48 pts</td></tr>
+      <tr><td style="color:#0369a1">B</td><td>33–40 pts</td></tr>
+      <tr><td style="color:#0369a1">B−</td><td>25–32 pts</td></tr>
+      <tr><td style="color:#a16207">C+</td><td>21–24 pts</td></tr>
+      <tr><td style="color:#a16207">C</td><td>17–20 pts</td></tr>
+      <tr><td style="color:#a16207">C−</td><td>13–16 pts</td></tr>
+      <tr><td style="color:#6d28d9">D+</td><td>9–12 pts</td></tr>
+      <tr><td style="color:#6d28d9">D</td><td>5–8 pts</td></tr>
+      <tr><td style="color:#6d28d9">D−</td><td>1–4 pts</td></tr>
+      <tr><td style="color:#dc2626">F</td><td>0 or negative pts</td></tr>
     </table>
     <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">Week and month grades show the average grade across those days.</p>
     <div class="modal-actions">
@@ -841,7 +914,7 @@
 <div class="eod-footer">
   <button class="eod-btn eod-yesterday" id="eoyBtn" onclick="endYesterday()">↩ Yesterday</button>
   <button class="eod-btn" id="eodBtn" onclick="endOfDay()">✦ End of Day ✦</button>
-  <button class="eod-btn" id="recoverBtn" onclick="recoverFromMiss()" style="display:none;background:linear-gradient(135deg,#7c3aed,#a78bfa);box-shadow:0 3px 18px #a78bfa55">⟳ Recover</button>
+  <button class="eod-btn" id="recoverBtn" onclick="recoverFromMiss()" style="display:none;background:#7c3aed">⟳ Recover</button>
 </div>
 
 <div id="toast"></div>
@@ -858,10 +931,13 @@ function defaultState() {
     food: [],
     history: [],
     grocery: [],
-    drink: { todayCount: 0, nextCost: 10, totalCount: 0, lastDate: null },
+    drink: { todayCount: 0, nextCost: 10, totalCount: 0, todaySpend: 0, lastDate: null },
     clean: [],
     gymTasks: [],
-    challenges: []
+    challenges: [],
+    logEntries: [],
+    tabOrder: ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log'],
+    tabColors: {}
   };
 }
 function load() {
@@ -875,11 +951,14 @@ function load() {
     if (!s.drink.todaySpend) s.drink.todaySpend = 0;
     if (!s.clean)      s.clean = [];
     if (!s.gymTasks)   s.gymTasks = [];
-    if (!s.challenges) s.challenges = [];
-    if (!s.tabOrder)   s.tabOrder = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats'];
+    if (!s.challenges)  s.challenges = [];
+    if (!s.logEntries)  s.logEntries = [];
+    if (s.dailyAdjust === undefined) s.dailyAdjust = 0;
+    if (!s.drink.todaySpend) s.drink.todaySpend = 0;
+    if (!s.tabOrder)   s.tabOrder = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log'];
     if (!s.tabColors)  s.tabColors = {};
     // Ensure all tabs are present (add any missing)
-    const allTabs = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats'];
+    const allTabs = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log'];
     allTabs.forEach(t => { if (!s.tabOrder.includes(t)) s.tabOrder.push(t); });
     // Migrate food items to Yuka format if needed
     s.food = (s.food || []).map(f => {
@@ -932,6 +1011,7 @@ function updatePoints() {
     netEl.style.color = net >= 0 ? 'var(--pos)' : 'var(--neg)';
   }
   setGreeting();
+  updatePlansBtn();
 }
 
 // ── Render ────────────────────────────────────────────────────────────
@@ -1313,15 +1393,20 @@ function _eodConfirm(a, b) {
 
 function endOfDay()   { _eodConfirm(EOD, EOY); }
 function endYesterday() {
-  // Warn if today's tasks have already been started
+  // Warn if today already has any logged activity (tasks, food, drink, rewards)
+  const todayStr = new Date().toLocaleDateString('en-CA');
   let todayProgress = 0;
   ['common','uncommon','rare'].forEach(type => {
     (state.tasks[type]||[]).forEach(t => { todayProgress += (t.count||0); });
   });
   (state.tasks.onetime||[]).forEach(t => { if (t.done && !t.snapshotted) todayProgress++; });
+  (state.food||[]).forEach(f => { (f.log||[]).forEach(e => { if (e.date === todayStr) todayProgress++; }); });
+  (state.rewards||[]).forEach(r => { todayProgress += (r.redeemed || 0); });
+  if ((state.drink||{}).todayCount) todayProgress += state.drink.todayCount;
+
   if (todayProgress > 0 && !endYesterday._warned) {
     endYesterday._warned = true;
-    toast("⚠ You've started today's tasks — Yesterday will snapshot current counts. Confirm again to proceed.");
+    toast("⚠ You've already done things today. Yesterday will log only date-matched activity. Confirm again.");
     setTimeout(() => { endYesterday._warned = false; }, 5000);
     return;
   }
@@ -1349,11 +1434,12 @@ function commitEndOfDay(daysAgo) {
   const rewardSnap = {};
   state.rewards.forEach(r => { if (r.redeemed) rewardSnap[r.name] = r.redeemed; });
 
-  // food snapshot — filter by the date being logged, not always "today"
+  // food snapshot — filter by the date being logged, recalculate spend from those logs
   const foodSnap = (state.food || [])
     .map(f => {
       const dayLogs = (f.log || []).filter(e => e.date === dateStr);
-      return { name: f.name, spend: f.todaySpend || 0, count: dayLogs.length,
+      const daySpend = r2(dayLogs.reduce((s, e) => s + (e.pts || 0), 0));
+      return { name: f.name, spend: daySpend, count: dayLogs.length,
                entries: dayLogs.map(e => ({ portion: e.portion, pts: e.pts })) };
     })
     .filter(f => f.count > 0);
@@ -1367,10 +1453,12 @@ function commitEndOfDay(daysAgo) {
   (state.gymTasks || []).forEach(t => { ptsEarned = r2(ptsEarned + (t.count||0)*t.ptsPerUnit); });
   let ptsSpent = 0;
   state.rewards.forEach(r => { ptsSpent = r2(ptsSpent + (r.redeemed || 0) * r.cost); });
-  const foodSpend  = r2((state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0));
-  const drinkSpend = r2((state.drink || {}).todaySpend || 0);
+  const foodSpend  = r2(foodSnap.reduce((s, f) => s + (f.spend || 0), 0));
+  // drink: drinkSpend reflects current state; only use it if logging today
+  const drinkSpend = (daysAgo === 0 || !daysAgo) ? r2((state.drink || {}).todaySpend || 0) : 0;
+  const drinksRecorded = (daysAgo === 0 || !daysAgo) ? ((state.drink || {}).todayCount || 0) : 0;
   ptsSpent = r2(ptsSpent + foodSpend + drinkSpend);
-  const adjust = state.dailyAdjust || 0;
+  const adjust = (daysAgo === 0 || !daysAgo) ? (state.dailyAdjust || 0) : 0;
   const netPts = r2(ptsEarned - ptsSpent + adjust);
 
   if (!state.history) state.history = [];
@@ -1389,34 +1477,43 @@ function commitEndOfDay(daysAgo) {
     state.history.splice(existingIdx, 1);
   }
 
-  const drinksToday = (state.drink || {}).todayCount || 0;
-  state.history.push({ date: dateStr, dow, netPts, ptsEarned, ptsSpent, tasks: taskSnap, rewards: rewardSnap, food: foodSnap, drinks: drinksToday });
+  state.history.push({ date: dateStr, dow, netPts, ptsEarned, ptsSpent, tasks: taskSnap, rewards: rewardSnap, food: foodSnap, drinks: drinksRecorded });
   state.history.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
   if (state.history.length > 365) state.history = state.history.slice(-365);
 
-  // ── Reset daily state — do NOT touch state.points (already reflects the day) ──
-  ['common','uncommon','rare'].forEach(type => {
-    state.tasks[type].forEach(t => { t.count = 0; });
-  });
-  state.tasks.onetime.forEach(t => { if (t.done) t.snapshotted = true; });
-  (state.clean || []).forEach(t => { if (t.isLog) t.snapshotted = true; });
-  (state.gymTasks || []).forEach(t => { t.count = 0; });
-  // Zero all food logs and spend for today
-  if (state.food) state.food.forEach(f => {
-    f.log = (f.log || []).filter(e => e.date !== dateStr);
-    f.todaySpend = 0;
-  });
-  // Zero rewards
-  state.rewards.forEach(r => { r.redeemed = 0; });
-  // Drink: decrement next cost, reset daily counters only
-  if (state.drink) {
-    state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 10);
-    state.drink.todayCount = 0;
-    state.drink.todaySpend = 0;
-    state.drink.lastDate = dateStr;
+  // ── Reset daily state ── Only reset today's counters when logging today.
+  // When logging yesterday, just snapshot — leave today's progress alone.
+  if (daysAgo === 0 || !daysAgo) {
+    ['common','uncommon','rare'].forEach(type => {
+      state.tasks[type].forEach(t => { t.count = 0; });
+    });
+    state.tasks.onetime.forEach(t => { if (t.done) t.snapshotted = true; });
+    (state.clean || []).forEach(t => { if (t.isLog) t.snapshotted = true; });
+    (state.gymTasks || []).forEach(t => { t.count = 0; });
+    if (state.food) state.food.forEach(f => {
+      f.log = (f.log || []).filter(e => e.date !== dateStr);
+      const recalc = (f.log || []).reduce((s, e) => s + (e.pts || 0), 0);
+      f.todaySpend = r2(recalc);
+    });
+    state.rewards.forEach(r => { r.redeemed = 0; });
+    if (state.drink) {
+      state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 10);
+      state.drink.todayCount = 0;
+      state.drink.todaySpend = 0;
+      state.drink.lastDate = dateStr;
+    }
+    state.manualPointsSet = false;
+    state.dailyAdjust = 0;
+  } else {
+    // Logging a past day — just clear those date's food logs so they don't double-count today's view
+    if (state.food) state.food.forEach(f => {
+      f.log = (f.log || []).filter(e => e.date !== dateStr);
+    });
+    // Reduce drink nextCost as if a day passed
+    if (state.drink) {
+      state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 10);
+    }
   }
-  state.manualPointsSet = false;
-  state.dailyAdjust = 0;
   save(); renderAll(); checkAndApplyMisses();
   toast(daysAgo ? '↩ Yesterday logged. Stats updated.' : '✦ Day complete. Stats updated.');
 }
@@ -1483,7 +1580,8 @@ function getMissedDays() {
 function checkAndApplyMisses() {
   const missed = getMissedDays();
   if (!missed.length) {
-    document.getElementById('recoverBtn').style.display = 'none';
+    const rb = document.getElementById('recoverBtn');
+    if (rb) rb.style.display = 'none';
     return;
   }
   const n = missed.length;
@@ -1517,7 +1615,8 @@ function checkAndApplyMisses() {
 
   // Show recover button only if not already recovered
   const hasUnrecovered = hist.some(h => h.missed && !h.recovered);
-  document.getElementById('recoverBtn').style.display = hasUnrecovered ? '' : 'none';
+  const _rb = document.getElementById('recoverBtn');
+  if (_rb) _rb.style.display = hasUnrecovered ? '' : 'none';
 }
 
 function recoverFromMiss() {
@@ -1538,7 +1637,8 @@ function recoverFromMiss() {
   });
   state.points = newPoints;
   delete state.pendingRecover;
-  document.getElementById('recoverBtn').style.display = 'none';
+  const _rb2 = document.getElementById('recoverBtn');
+  if (_rb2) _rb2.style.display = 'none';
   save(); updatePoints(); setGreeting();
   toast(`⟳ Recovered — ${n} missed day${n > 1 ? 's' : ''} marked ${newGrade}. Points: ${newPoints}.`);
 }
@@ -1786,6 +1886,54 @@ function renderStats() {
       </div>`;
     });
     html += `</div></div>`;
+  }
+
+
+  // ── Mood log ──
+  const moodEntries = (state.logEntries || []).filter(e => e.mood);
+  if (moodEntries.length) {
+    const avgMood = r2(moodEntries.reduce((s,e) => s + e.mood, 0) / moodEntries.length);
+    const moodCounts = Array(11).fill(0);
+    moodEntries.forEach(e => { moodCounts[e.mood] = (moodCounts[e.mood]||0) + 1; });
+    const peakMood = MOODS.reduce((best, m) => moodCounts[m.score] > moodCounts[best.score] ? m : best, MOODS[0]);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Mood Tracking</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">AVG MOOD</div><div class="stat-card-value" style="color:#0f766e">${avgMood}/10</div></div>
+        <div class="stat-card"><div class="stat-card-label">ENTRIES</div><div class="stat-card-value" style="color:var(--muted)">${moodEntries.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">MOST COMMON</div><div class="stat-card-value" style="color:#0f766e;font-size:13px">${peakMood.emoji} ${peakMood.label}</div></div>
+      </div>
+      <div class="bar-chart">`;
+    MOODS.slice().reverse().forEach(m => {
+      const count = moodCounts[m.score] || 0;
+      const pct = Math.round(count / moodEntries.length * 100);
+      html += `<div class="bar-row">
+        <span class="bar-label" style="font-size:11px">${m.emoji} ${m.label}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#0f766e"></div></div>
+        <span class="bar-val" style="color:var(--muted)">${count}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+
+    // Recent log entries link section
+    const recent = (state.logEntries||[]).slice().reverse().slice(0,5);
+    if (recent.length) {
+      html += `<div class="stats-group"><div class="stats-group-title">Recent Log Entries</div>`;
+      recent.forEach(e => {
+        const mood = MOODS.find(m => m.score === e.mood);
+        html += `<div class="log-past-entry">
+          <div class="log-past-date">${e.date}</div>
+          ${mood ? `<span class="log-past-mood">${mood.emoji} ${mood.label}</span>` : ''}
+          ${e.reflection ? `<div class="log-past-text">${esc(e.reflection)}</div>` : ''}
+          ${Object.keys(e.plans||{}).length ? `<div class="log-past-plans">
+            ${Object.entries(e.plans).map(([k,v]) =>
+              `<div class="log-past-plan-label">${k.toUpperCase()}</div><div class="log-past-text" style="margin-bottom:6px">${esc(v)}</div>`
+            ).join('')}
+          </div>` : ''}
+        </div>`;
+      });
+      html += `</div>`;
+    }
   }
 
   // ── Gym Challenge Records ──
@@ -2121,18 +2269,19 @@ function saveModal() {
 document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('challengeLogModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeChallengeLog(); });
 document.getElementById('vacationModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('vacationModal').classList.remove('open'); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); document.getElementById('plansModal').classList.remove('open'); } });
+document.getElementById('plansModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('plansModal').classList.remove('open'); });
 
 // ── Tab system ───────────────────────────────────────────────────────
 const TAB_LABELS = {
   common:'Common', uncommon:'Uncommon', rare:'Rare', onetime:'One-Time',
   rewards:'Rewards', food:'Diet', drink:'Drink', grocery:'Grocery',
-  clean:'Deep Clean', gym:'Gym', stats:'Stats'
+  clean:'Deep Clean', gym:'Gym', stats:'Stats', log:'Log'
 };
 const TAB_DEFAULT_COLORS = {
   common:'#0ea5c8', uncommon:'#16a34a', rare:'#9333ea', onetime:'#ea6c00',
   rewards:'#b59a00', food:'#e05020', drink:'#7c3aed', grocery:'#2a9060',
-  clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea'
+  clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea', log:'#0f766e'
 };
 const SWATCHES = [
   '#0ea5c8','#16a34a','#9333ea','#ea6c00','#b59a00','#e05020',
@@ -2249,6 +2398,7 @@ function switchTab(tab) {
   const sec = document.getElementById(`section-${tab}`);
   if (sec) sec.classList.add('active');
   if (tab === 'stats') renderStats();
+  if (tab === 'log') renderLog();
   renderTabs();
 }
 
@@ -2345,6 +2495,12 @@ function gradeToNum(g) {
   return map[g] ?? 0;
 }
 
+function scoreDay(d) {
+  if (!d) return null;
+  if (d.gradeOverride) return d.gradeOverride;
+  return netToGrade(d.netPts || 0);
+}
+
 function gradeColor(g) {
   if (g === 'S+' || g === 'S') return '#c2410c';
   if (g.startsWith('A'))       return '#15803d';
@@ -2391,12 +2547,6 @@ function setGreeting() {
 
   // ── Star ratings ──
   const hist = state.history || [];
-
-  function scoreDay(d) {
-    if (!d) return null;
-    if (d.gradeOverride) return d.gradeOverride;
-    return netToGrade(d.netPts || 0);
-  }
 
   function scoreTodayLive() {
     let earned = 0;
@@ -2985,6 +3135,220 @@ function renderGrocery() {
       <button class="delete-btn" onclick="event.stopPropagation();deleteGroceryItem(${i})">✕</button>
     </div>`).join('');
 }
+
+// ── Log ───────────────────────────────────────────────────────────────
+const MOODS = [
+  { score:1,  label:'Despairing', emoji:'😞' },
+  { score:2,  label:'Miserable',  emoji:'😢' },
+  { score:3,  label:'Low',        emoji:'😔' },
+  { score:4,  label:'Meh',        emoji:'😑' },
+  { score:5,  label:'Neutral',    emoji:'😐' },
+  { score:6,  label:'Decent',     emoji:'🙂' },
+  { score:7,  label:'Good',       emoji:'😊' },
+  { score:8,  label:'Great',      emoji:'😄' },
+  { score:9,  label:'Excellent',  emoji:'😁' },
+  { score:10, label:'Thriving',   emoji:'🌟' },
+];
+
+let _selectedMood = null;
+
+function getSeason(dateStr) {
+  if (typeof getSeason._cached === 'function') return getSeason._cached(dateStr);
+  const d = new Date(dateStr + 'T12:00:00');
+  const m = d.getMonth() + 1;
+  const y = d.getFullYear();
+  if (m >= 3 && m <= 5)  return { label:'Spring', year:y };
+  if (m >= 6 && m <= 8)  return { label:'Summer', year:y };
+  if (m >= 9 && m <= 11) return { label:'Fall',   year:y };
+  return { label:'Winter', year: m === 12 ? y : y - 1 };
+}
+
+function logPlanFields() {
+  const now   = new Date();
+  const dow   = now.getDay(); // 0=Sun
+  const day   = now.getDate();
+  const month = now.getMonth(); // 0-indexed
+  const year  = now.getFullYear();
+
+  // Last day of month
+  const lastOfMonth = new Date(year, month + 1, 0).getDate();
+  // Last day of season
+  const seasonEnds = { Spring: [5,31], Summer: [8,31], Fall: [11,30], Winter: [2,28] };
+  const curSeason = getSeason(now.toLocaleDateString('en-CA')).label;
+  const [seM, seD] = seasonEnds[curSeason] || [12,31];
+  const isLastOfSeason = (month + 1 === seM && day === seD) ||
+    (curSeason === 'Winter' && month === 11 && day === 31);
+  const isLastOfYear = month === 11 && day === 31;
+
+  const fields = { tomorrow: true };
+  if (dow === 0) fields.week   = true;            // Sunday
+  if (day === lastOfMonth) fields.month  = true;  // last day of month
+  if (isLastOfSeason)      fields.season = true;  // last day of season
+  if (isLastOfYear)        fields.year   = true;  // Dec 31
+  return fields;
+}
+
+function renderLog() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-CA');
+
+  document.getElementById('log-date-label').textContent = dateStr;
+
+  // Mood picker
+  const picker = document.getElementById('mood-picker');
+  if (picker) {
+    // Check if today already has an entry
+    const todayEntry = (state.logEntries || []).find(e => e.date === dateStr);
+    _selectedMood = todayEntry ? todayEntry.mood : null;
+    picker.innerHTML = MOODS.map(m =>
+      `<button class="mood-btn${_selectedMood === m.score ? ' selected' : ''}"
+        onclick="selectMood(${m.score})">${m.emoji} ${m.label}</button>`
+    ).join('');
+    // Pre-fill fields if entry exists
+    if (todayEntry) {
+      document.getElementById('log-reflection').value = todayEntry.reflection || '';
+      document.getElementById('log-plan-tomorrow').value = todayEntry.plans?.tomorrow || '';
+      document.getElementById('log-plan-week').value    = todayEntry.plans?.week    || '';
+      document.getElementById('log-plan-month').value   = todayEntry.plans?.month   || '';
+      document.getElementById('log-plan-season').value  = todayEntry.plans?.season  || '';
+      document.getElementById('log-plan-year').value    = todayEntry.plans?.year    || '';
+    } else {
+      document.getElementById('log-reflection').value = '';
+      ['tomorrow','week','month','season','year'].forEach(f => {
+        const el = document.getElementById('log-plan-' + f);
+        if (el) el.value = '';
+      });
+    }
+  }
+
+  // Show/hide plan fields
+  const fields = logPlanFields();
+  ['tomorrow','week','month','season','year'].forEach(f => {
+    const wrap = document.getElementById('log-plan-' + f + '-wrap');
+    if (wrap) wrap.style.display = fields[f] ? '' : 'none';
+  });
+}
+
+function selectMood(score) {
+  _selectedMood = score;
+  document.querySelectorAll('.mood-btn').forEach((btn, i) => {
+    btn.classList.toggle('selected', MOODS[i].score === score);
+  });
+}
+
+function saveLog() {
+  const dateStr = new Date().toLocaleDateString('en-CA');
+  const reflection = document.getElementById('log-reflection').value.trim();
+  const plans = {};
+  ['tomorrow','week','month','season','year'].forEach(f => {
+    const el = document.getElementById('log-plan-' + f);
+    if (el && el.value.trim()) plans[f] = el.value.trim();
+  });
+
+  if (!_selectedMood && !reflection && !Object.keys(plans).length) {
+    toast('Nothing to save.'); return;
+  }
+
+  if (!state.logEntries) state.logEntries = [];
+  const existing = state.logEntries.findIndex(e => e.date === dateStr);
+  const entry = { date: dateStr, mood: _selectedMood, reflection, plans };
+  if (existing >= 0) state.logEntries[existing] = entry;
+  else state.logEntries.push(entry);
+  state.logEntries.sort((a,b) => a.date < b.date ? -1 : 1);
+
+  save();
+  updatePlansBtn();
+  toast('✦ Log entry saved.');
+}
+
+
+// ── Plans Modal ───────────────────────────────────────────────────────
+function getCurrentPlans() {
+  const entries = state.logEntries || [];
+  const now = new Date();
+  const today = now.toLocaleDateString('en-CA');
+  const plans = {};
+
+  // ── Day plan: written for "tomorrow" = yesterday's entry ──
+  const yesterday = new Date(now); yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toLocaleDateString('en-CA');
+  const yEntry = entries.find(e => e.date === yesterdayStr);
+  if (yEntry?.plans?.tomorrow) plans.day = { label: 'Today', text: yEntry.plans.tomorrow, writtenOn: yesterdayStr };
+
+  // ── Week plan: written for "next week" on the most recent Sunday ──
+  // Find the Sunday that started this week
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay()); // back to Sunday
+  weekStart.setHours(12,0,0,0);
+  // The Sunday before this week's Sunday is where the plan was written
+  const planSunday = new Date(weekStart);
+  planSunday.setDate(planSunday.getDate() - 7);
+  // But if today IS Sunday, the plan would have been written last Sunday
+  const sundayStr = (now.getDay() === 0
+    ? new Date(now.getTime() - 7*86400000)
+    : planSunday
+  ).toLocaleDateString('en-CA');
+  const sunEntry = entries.find(e => e.date === sundayStr);
+  if (sunEntry?.plans?.week) plans.week = { label: 'This Week', text: sunEntry.plans.week, writtenOn: sundayStr };
+
+  // ── Month plan: written for "next month" on last day of previous month ──
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastOfPrevMonth = new Date(firstOfMonth - 1);
+  const lastPrevMonthStr = lastOfPrevMonth.toLocaleDateString('en-CA');
+  const monthEntry = entries.find(e => e.date === lastPrevMonthStr);
+  if (monthEntry?.plans?.month) plans.month = { label: 'This Month', text: monthEntry.plans.month, writtenOn: lastPrevMonthStr };
+
+  // ── Season plan: written for "next season" on last day of previous season ──
+  // Current season start dates (meteorological)
+  const m = now.getMonth() + 1;
+  const y = now.getFullYear();
+  let prevSeasonEnd;
+  if (m >= 3 && m <= 5)       prevSeasonEnd = new Date(y, 1, 28);      // end of winter: Feb 28
+  else if (m >= 6 && m <= 8)  prevSeasonEnd = new Date(y, 4, 31);      // end of spring: May 31
+  else if (m >= 9 && m <= 11) prevSeasonEnd = new Date(y, 7, 31);      // end of summer: Aug 31
+  else if (m === 12)           prevSeasonEnd = new Date(y, 10, 30);     // end of fall: Nov 30
+  else                         prevSeasonEnd = new Date(y-1, 10, 30);   // Jan: last fall end was Nov 30
+  const prevSeasonStr = prevSeasonEnd.toLocaleDateString('en-CA');
+  const seasonEntry = entries.find(e => e.date === prevSeasonStr);
+  if (seasonEntry?.plans?.season) plans.season = { label: 'This Season', text: seasonEntry.plans.season, writtenOn: prevSeasonStr };
+
+  // ── Year plan: written for "next year" on Dec 31 of last year ──
+  const dec31 = new Date(now.getFullYear() - 1, 11, 31).toLocaleDateString('en-CA');
+  const yearEntry = entries.find(e => e.date === dec31);
+  if (yearEntry?.plans?.year) plans.year = { label: 'This Year', text: yearEntry.plans.year, writtenOn: dec31 };
+
+  return plans;
+}
+
+function openPlansModal() {
+  const plans = getCurrentPlans();
+  const el = document.getElementById('plans-modal-content');
+  const keys = ['day','week','month','season','year'];
+  const found = keys.filter(k => plans[k]);
+
+  if (!found.length) {
+    el.innerHTML = `<p style="color:var(--muted);font-family:'Crimson Pro',serif;font-size:15px;line-height:1.6">No plans written yet. Use the Log tab to write plans for tomorrow, next week, and beyond.</p>`;
+  } else {
+    el.innerHTML = found.map(k => {
+      const p = plans[k];
+      return `<div style="border-left:3px solid #0f766e;padding-left:12px">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:#0f766e;letter-spacing:1px;margin-bottom:4px">${p.label} <span style="color:var(--muted);margin-left:6px">written ${p.writtenOn}</span></div>
+        <div style="font-family:'Crimson Pro',serif;font-size:15px;color:var(--text);line-height:1.6;white-space:pre-wrap">${esc(p.text)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  document.getElementById('plansModal').classList.add('open');
+}
+
+// Show/hide plans button based on whether any plans exist
+function updatePlansBtn() {
+  const btn = document.getElementById('plans-btn');
+  if (!btn) return;
+  const plans = getCurrentPlans();
+  btn.style.display = Object.keys(plans).length ? '' : 'none';
+}
+
 
 seed();
 setGreeting();
