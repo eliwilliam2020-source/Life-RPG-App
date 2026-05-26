@@ -1258,6 +1258,10 @@ function renderFood() {
         ? `${summary}${todaySpend > 0 ? ` — −${todaySpend} pts` : ' (free)'}`
         : isFree ? 'free · tap to log' : `−${item.ptsLittle} / ${item.ptsMedium} / ${item.ptsLot} pts`;
       return `<div class="food-item" style="cursor:pointer" onclick="openFoodPrompt(${idx})">
+        <div class="reorder-btns">
+          <button class="arrow-btn" onclick="event.stopPropagation();moveFood(${idx},-1)" ${idx===0?'disabled':''}>▲</button>
+          <button class="arrow-btn" onclick="event.stopPropagation();moveFood(${idx},+1)" ${idx===state.food.length-1?'disabled':''}>▼</button>
+        </div>
         <div class="food-item-info">
           <div class="food-item-name">${esc(item.name)}${yukaTag}</div>
           <div class="food-item-pts" style="color:${summary ? 'var(--food)' : 'var(--muted)'}">${sub}</div>
@@ -1266,6 +1270,13 @@ function renderFood() {
         <button class="delete-btn" onclick="event.stopPropagation();deleteFoodItem(${idx})">✕</button>
       </div>`;
     }).join('') + `</div>`;
+}
+
+function moveFood(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= state.food.length) return;
+  [state.food[i], state.food[j]] = [state.food[j], state.food[i]];
+  save(); renderFood();
 }
 
 document.getElementById('food-name').addEventListener('keydown', e => { if (e.key==='Enter') addFoodItem(); });
@@ -1497,7 +1508,7 @@ function commitEndOfDay(daysAgo) {
     });
     state.rewards.forEach(r => { r.redeemed = 0; });
     if (state.drink) {
-      state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 10);
+      state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 1);
       state.drink.todayCount = 0;
       state.drink.todaySpend = 0;
       state.drink.lastDate = dateStr;
@@ -1511,7 +1522,7 @@ function commitEndOfDay(daysAgo) {
     });
     // Reduce drink nextCost as if a day passed
     if (state.drink) {
-      state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 10);
+      state.drink.nextCost = Math.max(10, (state.drink.nextCost || 10) - 1);
     }
   }
   save(); renderAll(); checkAndApplyMisses();
@@ -1695,60 +1706,93 @@ function renderStats() {
     html += `</div></div>`;
   }
 
-  // ── Net pts by day of week (all history) ──
-  {
-    const dowTotals = Array(7).fill(0);
-    const dowCounts = Array(7).fill(0);
-    activeDays.forEach(d => {
-      dowTotals[d.dow] = r2(dowTotals[d.dow] + (d.netPts || 0));
-      dowCounts[d.dow]++;
-    });
-    const dowAvgs = dowTotals.map((t, i) => dowCounts[i] ? r2(t / dowCounts[i]) : null);
-    const dowTotalsDisplay = dowTotals.map((t, i) => dowCounts[i] ? t : null);
-    const allVals = [...dowAvgs, ...dowTotalsDisplay].filter(x => x !== null).map(Math.abs);
-    const maxAbs = Math.max(...allVals, 1);
+  // ── Multi-period breakdown: averages by DOW, month, season, year, all-time ──
+  const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-    html += `<div class="stats-group">
-      <div class="stats-group-title">Net Points by Day of Week</div>
-      <table class="stats-table" style="margin-bottom:14px">
-        <thead><tr><th>DAY</th><th style="text-align:right">DAYS</th><th style="text-align:right">TOTAL</th><th style="text-align:right">AVG</th></tr></thead>
-        <tbody>`;
-    DOW_LABELS.forEach((label, di) => {
-      const total = dowTotalsDisplay[di];
-      const avg   = dowAvgs[di];
-      const count = dowCounts[di];
-      if (total === null) {
-        html += `<tr><td style="color:var(--muted)">${label}</td><td class="num" style="color:var(--muted)">0</td><td class="num" style="color:var(--muted)">—</td><td class="num" style="color:var(--muted)">—</td></tr>`;
-      } else {
-        const tpos = total >= 0; const apos = avg >= 0;
-        html += `<tr>
-          <td>${label}</td>
-          <td class="num" style="color:var(--muted)">${count}</td>
-          <td class="num ${tpos?'pos':'neg'}">${tpos?'+':''}${total}</td>
-          <td class="num ${apos?'pos':'neg'}">${apos?'+':''}${avg}</td>
-        </tr>`;
-      }
-    });
-    html += `</tbody></table>`;
-
-    // Bar chart of averages
-    html += `<div class="bar-chart">`;
-    DOW_LABELS.forEach((label, di) => {
-      const avg = dowAvgs[di];
-      if (avg === null) {
-        html += `<div class="bar-row"><span class="bar-label">${label.slice(0,3)}</span><div class="bar-track"><div class="bar-fill neutral" style="width:3%"></div></div><span class="bar-val" style="color:var(--muted)">no data</span></div>`;
-        return;
-      }
-      const pct = Math.min(100, Math.abs(avg) / maxAbs * 100);
-      const pos = avg >= 0;
-      html += `<div class="bar-row">
-        <span class="bar-label">${label.slice(0,3)}</span>
-        <div class="bar-track"><div class="bar-fill ${pos?'pos':'neg'}" style="width:${pct}%"></div></div>
-        <span class="bar-val ${pos?'pos':'neg'}">${pos?'+':''}${avg}</span>
-      </div>`;
-    });
-    html += `</div></div>`;
+  function summarizeDays(days) {
+    if (!days.length) return null;
+    const n = days.length;
+    const earned = r2(days.reduce((s,d) => s + (d.ptsEarned||0), 0));
+    const spent  = r2(days.reduce((s,d) => s + (d.ptsSpent||0),  0));
+    const net    = r2(days.reduce((s,d) => s + (d.netPts||0),    0));
+    return {
+      days: n,
+      avgEarned: r2(earned/n),
+      avgSpent:  r2(spent/n),
+      avgNet:    r2(net/n),
+      grade:     netToGrade(r2(net/n))
+    };
   }
+
+  function periodTable(title, groups) {
+    // groups: array of { label, days }
+    const rows = groups.map(g => ({ label: g.label, summary: summarizeDays(g.days) }))
+                       .filter(r => r.summary);
+    if (!rows.length) return '';
+    let h = `<div class="stats-group">
+      <div class="stats-group-title">${title}</div>
+      <table class="stats-table">
+        <thead><tr><th>PERIOD</th><th style="text-align:right">DAYS</th><th style="text-align:right">AVG EARN</th><th style="text-align:right">AVG SPEND</th><th style="text-align:right">AVG NET</th><th style="text-align:right">GRADE</th></tr></thead>
+        <tbody>`;
+    rows.forEach(r => {
+      const s = r.summary;
+      const col = gradeColor(s.grade);
+      h += `<tr>
+        <td>${esc(r.label)}</td>
+        <td class="num" style="color:var(--muted)">${s.days}</td>
+        <td class="num pos">+${s.avgEarned}</td>
+        <td class="num neg">−${s.avgSpent}</td>
+        <td class="num ${s.avgNet>=0?'pos':'neg'}">${s.avgNet>=0?'+':''}${s.avgNet}</td>
+        <td class="num" style="font-family:'Cinzel',serif;font-weight:600;color:${col}">${s.grade}</td>
+      </tr>`;
+    });
+    h += `</tbody></table></div>`;
+    return h;
+  }
+
+  // ── By Day of Week (Mon → Sun) ──
+  const DOW_MON_FIRST = [1,2,3,4,5,6,0];
+  html += periodTable('By Day of Week',
+    DOW_MON_FIRST.map(i => ({
+      label: DOW_LABELS[i], days: activeDays.filter(d => d.dow === i)
+    }))
+  );
+
+  // ── By Month of Year (aggregated across all years) ──
+  html += periodTable('By Month',
+    MONTH_NAMES.map((label, i) => ({
+      label, days: activeDays.filter(d => new Date(d.date+'T12:00:00').getMonth() === i)
+    }))
+  );
+
+  // ── By Season (aggregated across all years, meteorological) ──
+  const seasonsArr = [
+    { label: 'Spring', months: [2,3,4] },
+    { label: 'Summer', months: [5,6,7] },
+    { label: 'Fall',   months: [8,9,10] },
+    { label: 'Winter', months: [11,0,1] }
+  ];
+  html += periodTable('By Season',
+    seasonsArr.map(s => ({
+      label: s.label,
+      days: activeDays.filter(d => s.months.includes(new Date(d.date+'T12:00:00').getMonth()))
+    }))
+  );
+
+  // ── By Year ──
+  const yearsPresent = [...new Set(activeDays.map(d => new Date(d.date+'T12:00:00').getFullYear()))].sort();
+  if (yearsPresent.length) {
+    html += periodTable('By Year',
+      yearsPresent.map(y => ({
+        label: String(y),
+        days: activeDays.filter(d => new Date(d.date+'T12:00:00').getFullYear() === y)
+      }))
+    );
+  }
+
+  // ── All Time (single row) ──
+  html += periodTable('All Time', [{ label: 'All Time', days: activeDays }]);
+
 
   // ── Task frequency table ──
   const taskNames = new Set();
@@ -2971,6 +3015,10 @@ function renderChallenges() {
         : c.entries.reduce((b, e) => e.val > b.val ? e : b, c.entries[0]);
     const bestStr = best ? `Best: ${formatChallengeVal(best.val, c.type, c.unit)} on ${best.date}` : 'No entries yet';
     return `<div class="challenge-card">
+      <div class="reorder-btns">
+        <button class="arrow-btn" onclick="moveChallenge(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="arrow-btn" onclick="moveChallenge(${i},+1)" ${i===state.challenges.length-1?'disabled':''}>▼</button>
+      </div>
       <div class="challenge-info">
         <div class="challenge-name">${esc(c.name)}${c.detail ? ` <span style="color:var(--muted);font-size:13px">— ${esc(c.detail)}</span>` : ''}</div>
         <div class="challenge-detail">${c.type === 'time' ? '⏱ Time (m.ss)' : '📊 Units'} · ${entryCount} entr${entryCount===1?'y':'ies'} · ${bestStr}</div>
@@ -2979,6 +3027,14 @@ function renderChallenges() {
       <button class="delete-btn" onclick="deleteChallenge(${i})">✕</button>
     </div>`;
   }).join('');
+}
+
+function moveChallenge(i, dir) {
+  const arr = state.challenges;
+  const j = i + dir;
+  if (j < 0 || j >= arr.length) return;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  save(); renderChallenges();
 }
 
 // ── Deep Clean ───────────────────────────────────────────────────────
@@ -3130,10 +3186,21 @@ function renderGrocery() {
   if (!state.grocery.length) { list.innerHTML = ''; return; }
   list.innerHTML = state.grocery.map((g, i) => `
     <div class="grocery-item ${g.checked ? 'checked' : ''}" onclick="toggleGrocery(${i})">
+      <div class="reorder-btns">
+        <button class="arrow-btn" onclick="event.stopPropagation();moveGrocery(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="arrow-btn" onclick="event.stopPropagation();moveGrocery(${i},+1)" ${i===state.grocery.length-1?'disabled':''}>▼</button>
+      </div>
       <button class="grocery-check-btn" onclick="event.stopPropagation();toggleGrocery(${i})">✓</button>
       <span class="grocery-item-name">${esc(g.name)}</span>
       <button class="delete-btn" onclick="event.stopPropagation();deleteGroceryItem(${i})">✕</button>
     </div>`).join('');
+}
+
+function moveGrocery(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= state.grocery.length) return;
+  [state.grocery[i], state.grocery[j]] = [state.grocery[j], state.grocery[i]];
+  save(); renderGrocery();
 }
 
 // ── Log ───────────────────────────────────────────────────────────────
