@@ -399,6 +399,7 @@
 
   /* ── Log / Journal ── */
   .section-title.log    { color: #0f766e; }
+  .section-title.sleep  { color: #4338ca; }
   .log-group-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
   .log-field-label { font-family: 'Cinzel', serif; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 5px; margin-top: 12px; }
   .log-textarea { width: 100%; min-height: 90px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Crimson Pro', serif; font-size: 16px; padding: 10px 12px; outline: none; resize: vertical; transition: border-color 0.15s; line-height: 1.6; }
@@ -712,6 +713,22 @@
   </div>
 </div>
 
+  <!-- SLEEP -->
+  <div class="section" id="section-sleep">
+    <div class="section-header">
+      <div><div class="section-title sleep">Sleep</div></div>
+    </div>
+    <div class="add-form" style="flex-wrap:wrap;row-gap:6px;align-items:center">
+      <input class="num-input" id="sleep-hours" type="number" placeholder="Hrs" min="0" max="24" style="max-width:70px" />
+      <span style="color:var(--muted);font-family:'Cinzel',serif;font-size:11px">hours</span>
+      <input class="num-input" id="sleep-mins" type="number" placeholder="Min" min="0" max="59" style="max-width:70px" />
+      <span style="color:var(--muted);font-family:'Cinzel',serif;font-size:11px">minutes</span>
+      <input class="num-input" id="sleep-score" type="number" placeholder="Score 1-100" min="1" max="100" style="max-width:110px" />
+      <button class="btn-add" onclick="logSleep()" style="background:#4338ca">Log</button>
+    </div>
+    <div id="sleep-today-status" style="font-family:'Cinzel',serif;font-size:11px;color:var(--muted);letter-spacing:1px;padding:6px 4px 12px;min-height:18px"></div>
+    <div id="sleep-recent"></div>
+  </div>
   <!-- LOG -->
   <div class="section" id="section-log">
     <div class="section-header">
@@ -936,7 +953,8 @@ function defaultState() {
     gymTasks: [],
     challenges: [],
     logEntries: [],
-    tabOrder: ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log'],
+    sleepEntries: [],
+    tabOrder: ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'],
     tabColors: {}
   };
 }
@@ -952,13 +970,14 @@ function load() {
     if (!s.clean)      s.clean = [];
     if (!s.gymTasks)   s.gymTasks = [];
     if (!s.challenges)  s.challenges = [];
-    if (!s.logEntries)  s.logEntries = [];
+    if (!s.logEntries)   s.logEntries = [];
+    if (!s.sleepEntries) s.sleepEntries = [];
     if (s.dailyAdjust === undefined) s.dailyAdjust = 0;
     if (!s.drink.todaySpend) s.drink.todaySpend = 0;
-    if (!s.tabOrder)   s.tabOrder = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log'];
+    if (!s.tabOrder)   s.tabOrder = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
     if (!s.tabColors)  s.tabColors = {};
     // Ensure all tabs are present (add any missing)
-    const allTabs = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log'];
+    const allTabs = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
     allTabs.forEach(t => { if (!s.tabOrder.includes(t)) s.tabOrder.push(t); });
     // Migrate food items to Yuka format if needed
     s.food = (s.food || []).map(f => {
@@ -1417,7 +1436,7 @@ function endYesterday() {
 
   if (todayProgress > 0 && !endYesterday._warned) {
     endYesterday._warned = true;
-    toast("⚠ You've already done things today. Yesterday will log only date-matched activity. Confirm again.");
+    toast("⚠ Yesterday will log all current progress under yesterday's date and reset everything. Confirm again to proceed.");
     setTimeout(() => { endYesterday._warned = false; }, 5000);
     return;
   }
@@ -1980,6 +1999,40 @@ function renderStats() {
     }
   }
 
+
+  // ── Sleep tracking ──
+  const sleepEntries = (state.sleepEntries || []);
+  if (sleepEntries.length) {
+    const totalMin = sleepEntries.reduce((s,e) => s + (e.minutes || 0), 0);
+    const avgMin = r2(totalMin / sleepEntries.length);
+    const avgScore = (() => {
+      const scored = sleepEntries.filter(e => e.score !== null && e.score !== undefined);
+      return scored.length ? r2(scored.reduce((s,e) => s + e.score, 0) / scored.length) : null;
+    })();
+    const best = sleepEntries.reduce((b,e) => (e.score||0) > (b.score||0) ? e : b, sleepEntries[0]);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Sleep Tracking</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">AVG DURATION</div><div class="stat-card-value" style="color:#4338ca">${fmtSleepDuration(Math.round(avgMin))}</div></div>
+        ${avgScore !== null ? `<div class="stat-card"><div class="stat-card-label">AVG SCORE</div><div class="stat-card-value" style="color:#4338ca">${avgScore}/100</div></div>` : ''}
+        <div class="stat-card"><div class="stat-card-label">ENTRIES</div><div class="stat-card-value" style="color:var(--muted)">${sleepEntries.length}</div></div>
+        ${best.score ? `<div class="stat-card"><div class="stat-card-label">BEST NIGHT</div><div class="stat-card-value" style="color:#4338ca;font-size:14px">${best.score} on ${best.date}</div></div>` : ''}
+      </div>`;
+    // Bar chart of last 14 nights duration
+    const last14 = sleepEntries.slice(-14);
+    const maxMin = Math.max(...last14.map(e => e.minutes || 0), 480);
+    html += `<div class="bar-chart" style="margin-top:8px">`;
+    last14.forEach(e => {
+      const pct = Math.round((e.minutes || 0) / maxMin * 100);
+      html += `<div class="bar-row">
+        <span class="bar-label">${e.date.slice(5)}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:#4338ca"></div></div>
+        <span class="bar-val" style="color:#4338ca">${fmtSleepDuration(e.minutes||0)}${e.score!==null?` · ${e.score}`:''}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
   // ── Gym Challenge Records ──
   if ((state.challenges || []).length) {
     state.challenges.forEach(c => {
@@ -2320,12 +2373,12 @@ document.getElementById('plansModal').addEventListener('click', e => { if (e.tar
 const TAB_LABELS = {
   common:'Common', uncommon:'Uncommon', rare:'Rare', onetime:'One-Time',
   rewards:'Rewards', food:'Diet', drink:'Drink', grocery:'Grocery',
-  clean:'Deep Clean', gym:'Gym', stats:'Stats', log:'Log'
+  clean:'Deep Clean', gym:'Gym', stats:'Stats', log:'Log', sleep:'Sleep'
 };
 const TAB_DEFAULT_COLORS = {
   common:'#0ea5c8', uncommon:'#16a34a', rare:'#9333ea', onetime:'#ea6c00',
   rewards:'#b59a00', food:'#e05020', drink:'#7c3aed', grocery:'#2a9060',
-  clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea', log:'#0f766e'
+  clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea', log:'#0f766e', sleep:'#4338ca'
 };
 const SWATCHES = [
   '#0ea5c8','#16a34a','#9333ea','#ea6c00','#b59a00','#e05020',
@@ -2443,6 +2496,7 @@ function switchTab(tab) {
   if (sec) sec.classList.add('active');
   if (tab === 'stats') renderStats();
   if (tab === 'log') renderLog();
+  if (tab === 'sleep') renderSleep();
   renderTabs();
 }
 
@@ -3414,6 +3468,75 @@ function updatePlansBtn() {
   if (!btn) return;
   const plans = getCurrentPlans();
   btn.style.display = Object.keys(plans).length ? '' : 'none';
+}
+
+
+// ── Sleep ─────────────────────────────────────────────────────────────
+function logSleep() {
+  const h = parseInt(document.getElementById('sleep-hours').value) || 0;
+  const m = parseInt(document.getElementById('sleep-mins').value)  || 0;
+  const s = parseFloat(document.getElementById('sleep-score').value);
+  if (h === 0 && m === 0 && isNaN(s)) { toast('Enter sleep duration or score.'); return; }
+  const totalMin = h * 60 + m;
+  const score = isNaN(s) ? null : Math.min(100, Math.max(1, s));
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.sleepEntries) state.sleepEntries = [];
+  // Replace today's entry if it exists
+  const existingIdx = state.sleepEntries.findIndex(e => e.date === date);
+  const entry = { date, minutes: totalMin, score };
+  if (existingIdx >= 0) state.sleepEntries[existingIdx] = entry;
+  else state.sleepEntries.push(entry);
+  state.sleepEntries.sort((a,b) => a.date < b.date ? -1 : 1);
+  save(); renderSleep();
+  toast(`✦ Sleep logged: ${h}h ${m}m${score !== null ? ` · score ${score}` : ''}`);
+}
+
+function deleteSleepEntry(date) {
+  if (!state.sleepEntries) return;
+  state.sleepEntries = state.sleepEntries.filter(e => e.date !== date);
+  save(); renderSleep();
+}
+
+function fmtSleepDuration(min) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  return `${h}h ${m}m`;
+}
+
+function renderSleep() {
+  const today = new Date().toLocaleDateString('en-CA');
+  const entries = state.sleepEntries || [];
+  const todayEntry = entries.find(e => e.date === today);
+
+  const status = document.getElementById('sleep-today-status');
+  if (status) {
+    if (todayEntry) {
+      status.innerHTML = `Today: ${fmtSleepDuration(todayEntry.minutes)}${todayEntry.score !== null ? ` · score ${todayEntry.score}` : ''}`;
+      // Pre-fill the inputs so editing is easy
+      document.getElementById('sleep-hours').value = Math.floor(todayEntry.minutes / 60);
+      document.getElementById('sleep-mins').value  = todayEntry.minutes % 60;
+      if (todayEntry.score !== null) document.getElementById('sleep-score').value = todayEntry.score;
+    } else {
+      status.textContent = 'No sleep logged today yet.';
+    }
+  }
+
+  const recent = document.getElementById('sleep-recent');
+  if (recent) {
+    if (!entries.length) { recent.innerHTML = ''; return; }
+    const last14 = entries.slice(-14).reverse();
+    recent.innerHTML = `<div class="stats-group-title" style="margin-top:8px">Recent Sleep</div>
+      <table class="stats-table">
+        <thead><tr><th>DATE</th><th style="text-align:right">DURATION</th><th style="text-align:right">SCORE</th><th></th></tr></thead>
+        <tbody>` +
+      last14.map(e => `<tr>
+        <td style="font-family:'Cinzel',serif;font-size:12px">${e.date}</td>
+        <td class="num" style="color:#4338ca">${fmtSleepDuration(e.minutes)}</td>
+        <td class="num" style="color:${e.score !== null ? '#4338ca' : 'var(--muted)'}">${e.score !== null ? e.score : '—'}</td>
+        <td style="text-align:right"><button class="delete-btn" onclick="deleteSleepEntry('${e.date}')">✕</button></td>
+      </tr>`).join('') +
+      `</tbody></table>`;
+  }
 }
 
 
