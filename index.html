@@ -181,6 +181,7 @@
   .section-title.common   { color: var(--common); }
   .section-title.uncommon { color: var(--uncommon); }
   .section-title.rare     { color: var(--rare); }
+  .section-title.chores   { color: var(--common); }
   .section-title.onetime  { color: var(--onetime); }
   .section-title.rewards  { color: var(--reward); }
   .section-title.food     { color: var(--food); }
@@ -216,9 +217,12 @@
     background: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.12);
   }
   .btn-add:hover { transform: translateY(-1px); filter: brightness(1.15); }
-  #section-common   .btn-add { background: var(--common); }
-  #section-uncommon .btn-add { background: var(--uncommon); }
-  #section-rare     .btn-add { background: var(--rare); }
+  #section-chores   .btn-add { background: var(--common); }
+  .chore-tier-header { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; margin: 16px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .chore-tier-header.common   { color: var(--common); }
+  .chore-tier-header.uncommon { color: var(--uncommon); }
+  .chore-tier-header.rare     { color: var(--rare); }
+  .chore-tier-header:first-child { margin-top: 0; }
   #section-onetime  .btn-add { background: var(--onetime); }
   #section-rewards  .btn-add { background: var(--reward); }
   #section-food     .btn-add { background: var(--food); }
@@ -552,54 +556,29 @@
     <div id="tab-container"></div>
 
     <!-- COMMON -->
-    <div class="section" id="section-common">
+    <div class="section" id="section-chores">
       <div class="section-header">
-        <div><div class="section-title common">Common Tasks</div></div>
+        <div><div class="section-title chores">Chores</div></div>
       </div>
-      <div class="add-form">
-        <input class="task-name"  id="common-name"  type="text"   placeholder="Name" />
-        <input class="unit-label" id="common-unit"  type="text"   placeholder="Unit" />
-        <input class="num-input"  id="common-step"  type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input"  id="common-pts"   type="number" placeholder="Pts" min="0.01" step="any" value="10" />
-        <button class="btn-add" onclick="addTask('common')">+ Add</button>
+      <div class="add-form" style="flex-wrap:wrap;row-gap:6px">
+        <input class="task-name"  id="chore-name"  type="text"   placeholder="Name" style="flex:2;min-width:120px" />
+        <input class="unit-label" id="chore-unit"  type="text"   placeholder="Unit" />
+        <input class="num-input"  id="chore-step"  type="number" placeholder="Step" min="1" value="1" />
+        <input class="num-input"  id="chore-pts"   type="number" placeholder="Pts" min="0.01" step="any" value="10" />
+        <select id="chore-tier" style="font-family:'Crimson Pro',serif">
+          <option value="common">Common</option>
+          <option value="uncommon">Uncommon</option>
+          <option value="rare">Rare</option>
+        </select>
+        <button class="btn-add" onclick="addChore()">+ Add</button>
       </div>
-      <div class="task-list" id="list-common"></div>
-    </div>
-
-    <!-- UNCOMMON -->
-    <div class="section" id="section-uncommon">
-      <div class="section-header">
-        <div><div class="section-title uncommon">Uncommon Tasks</div></div>
-      </div>
-      <div class="add-form">
-        <input class="task-name"  id="uncommon-name" type="text"   placeholder="Name" />
-        <input class="unit-label" id="uncommon-unit" type="text"   placeholder="Unit" />
-        <input class="num-input"  id="uncommon-step" type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input"  id="uncommon-pts"  type="number" placeholder="Pts" min="0.01" step="any" value="15" />
-        <button class="btn-add" onclick="addTask('uncommon')">+ Add</button>
-      </div>
-      <div class="task-list" id="list-uncommon"></div>
-    </div>
-
-    <!-- RARE -->
-    <div class="section" id="section-rare">
-      <div class="section-header">
-        <div><div class="section-title rare">Rare Tasks</div></div>
-      </div>
-      <div class="add-form">
-        <input class="task-name"  id="rare-name" type="text"   placeholder="Name" />
-        <input class="unit-label" id="rare-unit" type="text"   placeholder="Unit" />
-        <input class="num-input"  id="rare-step" type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input"  id="rare-pts"  type="number" placeholder="Pts" min="0.01" step="any" value="40" />
-        <button class="btn-add" onclick="addTask('rare')">+ Add</button>
-      </div>
-      <div class="task-list" id="list-rare"></div>
+      <div id="list-chores"></div>
     </div>
 
     <!-- ONE-TIME -->
     <div class="section" id="section-onetime">
       <div class="section-header">
-        <div><div class="section-title onetime">One-Time Quests</div></div>
+        <div><div class="section-title onetime">To-Do</div></div>
       </div>
       <div class="add-form">
         <input class="task-name" id="onetime-name" type="text"   placeholder="Name" />
@@ -612,14 +591,13 @@
     <!-- REWARDS -->
     <div class="section" id="section-rewards">
       <div class="section-header">
-        <div><div class="section-title rewards">Reward Shop</div></div>
+        <div><div class="section-title rewards">Sex</div></div>
       </div>
-      <div class="add-form">
-        <input class="task-name" id="reward-name" type="text"   placeholder="Name" />
-        <input class="num-input" id="reward-cost" type="number" placeholder="Cost" min="1" value="50" />
-        <button class="btn-add" onclick="addReward()">+ Add</button>
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px">
+        <button onclick="logSex('woohoo')" style="background:#16a34a;border:none;color:#fff;font-family:'Cinzel',serif;font-size:22px;letter-spacing:2px;padding:32px;border-radius:14px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 10px rgba(22,163,74,0.25);font-weight:600">Woohoo <span style="font-size:13px;opacity:0.85;display:block;margin-top:4px;letter-spacing:1px">+12 pts</span></button>
+        <button onclick="logSex('boohoo')" style="background:#dc2626;border:none;color:#fff;font-family:'Cinzel',serif;font-size:22px;letter-spacing:2px;padding:32px;border-radius:14px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 10px rgba(220,38,38,0.25);font-weight:600">Boohoo <span style="font-size:13px;opacity:0.85;display:block;margin-top:4px;letter-spacing:1px">−12 pts</span></button>
       </div>
-      <div class="reward-list" id="list-rewards"></div>
+      <div id="sex-today-status" style="font-family:'Cinzel',serif;font-size:12px;color:var(--muted);letter-spacing:1px;text-align:center;padding:16px 4px;min-height:20px"></div>
     </div>
     <!-- FOOD -->
     <div class="section" id="section-food">
@@ -663,6 +641,13 @@
       <div class="section-header">
         <div><div class="section-title gym">Gym</div></div>
       </div>
+      <!-- Workout Log -->
+      <button onclick="openWorkoutModal()" style="width:100%;background:var(--gym);border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:2px;padding:18px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(234,108,0,0.2);font-weight:600;margin-bottom:10px">🏋 Log Workout</button>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px">
+        <button onclick="openQuickLog('pushups')" style="background:#0369a1;border:none;color:#fff;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;padding:14px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(3,105,161,0.2);font-weight:600">💪 Pushups</button>
+        <button onclick="openQuickLog('jumprope')" style="background:#7c3aed;border:none;color:#fff;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;padding:14px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(124,58,237,0.2);font-weight:600">🪃 Jump Rope</button>
+      </div>
+      <div id="workout-today-status" style="font-family:'Cinzel',serif;font-size:11px;color:var(--muted);letter-spacing:1px;text-align:center;padding:0 4px 12px;min-height:16px"></div>
       <!-- Workout Tasks -->
       <div class="gym-section-label">Workout Tasks</div>
       <div class="add-form">
@@ -701,6 +686,41 @@
       </div>
     </div>
   </div>
+<!-- Quick Log Modal (pushups / jump rope) -->
+<div class="modal-overlay" id="quickLogModal">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title" id="quickLogTitle">Log</div>
+    <div class="modal-field">
+      <div class="modal-label" id="quickLogLabel">COUNT</div>
+      <input class="modal-input" id="quicklog-count" type="number" min="1" placeholder="e.g. 50"
+        oninput="updateQuickLogPreview()" />
+    </div>
+    <div id="quicklog-pts-preview" style="font-size:13px;letter-spacing:1px;font-family:'Cinzel',serif;min-height:18px;margin-top:2px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeQuickLog()">Cancel</button>
+      <button class="undo-btn" id="quicklog-undo-btn" onclick="undoQuickLog()">↩ Undo</button>
+      <button class="modal-save" id="quicklog-save-btn" onclick="saveQuickLog()">Log It</button>
+    </div>
+  </div>
+</div>
+
+<!-- Workout Log Modal -->
+<div class="modal-overlay" id="workoutModal">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-title">🏋 Log Workout</div>
+    <div class="modal-field">
+      <div class="modal-label">DURATION (minutes)</div>
+      <input class="modal-input" id="workout-minutes" type="number" min="1" placeholder="e.g. 45" oninput="document.getElementById('workout-pts-preview').textContent=this.value>0?'+'+calcWorkoutPts(parseInt(this.value))+' pts':''" />
+    </div>
+    <div id="workout-pts-preview" style="font-size:13px;color:var(--gym);font-family:'Cinzel',serif;letter-spacing:1px;min-height:18px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeWorkoutModal()">Cancel</button>
+      <button class="undo-btn" id="workout-undo-btn" onclick="undoWorkout()" style="display:none">↩ Undo</button>
+      <button class="modal-save" style="background:var(--gym)" onclick="saveWorkout()">Log It</button>
+    </div>
+  </div>
+</div>
+
 <!-- Plans Modal -->
 <div class="modal-overlay" id="plansModal">
   <div class="modal" style="max-width:480px;max-height:85vh;overflow-y:auto">
@@ -954,7 +974,11 @@ function defaultState() {
     challenges: [],
     logEntries: [],
     sleepEntries: [],
-    tabOrder: ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'],
+    sexLog: [],
+    workoutLog: [],
+    pushupLog: [],
+    jumpRopeLog: [],
+    tabOrder: ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'],
     tabColors: {}
   };
 }
@@ -972,12 +996,22 @@ function load() {
     if (!s.challenges)  s.challenges = [];
     if (!s.logEntries)   s.logEntries = [];
     if (!s.sleepEntries) s.sleepEntries = [];
+    if (!s.sexLog)       s.sexLog = [];
+    if (!s.workoutLog)   s.workoutLog = [];
+    if (!s.pushupLog)    s.pushupLog = [];
+    if (!s.jumpRopeLog)  s.jumpRopeLog = [];
     if (s.dailyAdjust === undefined) s.dailyAdjust = 0;
     if (!s.drink.todaySpend) s.drink.todaySpend = 0;
-    if (!s.tabOrder)   s.tabOrder = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
+    if (!s.tabOrder)   s.tabOrder = ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
     if (!s.tabColors)  s.tabColors = {};
     // Ensure all tabs are present (add any missing)
-    const allTabs = ['common','uncommon','rare','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
+    const allTabs = ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
+    // Migrate old common/uncommon/rare tabs to single chores tab
+    if (s.tabOrder.includes('common') || s.tabOrder.includes('uncommon') || s.tabOrder.includes('rare')) {
+      const firstIdx = Math.min(...['common','uncommon','rare'].map(t => s.tabOrder.indexOf(t)).filter(i => i >= 0));
+      s.tabOrder = s.tabOrder.filter(t => !['common','uncommon','rare'].includes(t));
+      if (!s.tabOrder.includes('chores')) s.tabOrder.splice(firstIdx, 0, 'chores');
+    }
     allTabs.forEach(t => { if (!s.tabOrder.includes(t)) s.tabOrder.push(t); });
     // Migrate food items to Yuka format if needed
     s.food = (s.food || []).map(f => {
@@ -1017,10 +1051,17 @@ function updatePoints() {
   const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
   const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
   const drinkSpend  = (state.drink || {}).todaySpend || 0;
-  const calcNet = r2(earned - foodSpend - rewardSpend - drinkSpend);
+  const today = new Date().toLocaleDateString('en-CA');
+  const sexLog = (state.sexLog || []).filter(e => e.date === today);
+  const sexNet = r2(sexLog.reduce((s,e) => s + (e.type==='woohoo' ? 12 : -12), 0));
+  const _wToday = new Date().toLocaleDateString('en-CA');
+  const _wPts = ((state.workoutLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _puPts = ((state.pushupLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _jrPts = ((state.jumpRopeLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const calcNet = r2(earned - foodSpend - rewardSpend - drinkSpend + sexNet + _wPts + _puPts + _jrPts);
   const adjust = state.dailyAdjust || 0;
   const net = r2(calcNet + adjust);
-  const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || drinkSpend > 0 || adjust !== 0;
+  const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || drinkSpend > 0 || sexNet !== 0 || _wPts !== 0 || _puPts !== 0 || _jrPts !== 0 || adjust !== 0;
 
   if (!somethingDone) {
     netEl.textContent = '';
@@ -1035,11 +1076,12 @@ function updatePoints() {
 
 // ── Render ────────────────────────────────────────────────────────────
 function renderAll() {
-  ['common','uncommon','rare'].forEach(renderTasks);
+  renderChores();
   renderOnetimeTasks();
   renderRewards();
   renderFood();
   renderGrocery();
+  renderWorkoutStatus();
   renderDrink();
   renderClean();
   renderGymTasks();
@@ -1049,32 +1091,60 @@ function renderAll() {
 
 function earnedPts(t) { return r2((t.count || 0) * t.ptsPerUnit); }
 
+function renderChores() {
+  const list = document.getElementById('list-chores');
+  if (!list) return;
+  const tiers = [
+    { key: 'common',   label: 'Common' },
+    { key: 'uncommon', label: 'Uncommon' },
+    { key: 'rare',     label: 'Rare' }
+  ];
+  let html = '';
+  tiers.forEach(tier => {
+    const tasks = state.tasks[tier.key] || [];
+    if (!tasks.length) return;
+    html += `<div class="chore-tier-header ${tier.key}">${tier.label}</div>`;
+    html += tasks.map((t, i) => {
+      const count = t.count || 0;
+      const earned = earnedPts(t);
+      return `<div class="task-card ${tier.key}">
+        <div class="reorder-btns">
+          <button class="arrow-btn" onclick="moveTask('${tier.key}',${i},-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="arrow-btn" onclick="moveTask('${tier.key}',${i},+1)" ${i===tasks.length-1?'disabled':''}>▼</button>
+        </div>
+        <div class="task-info">
+          <div class="task-name-text">${esc(t.name)}</div>
+        </div>
+        <div class="task-counter">
+          <button class="ctr-btn minus" onclick="adjustCount('${tier.key}',${i},-1)">−</button>
+          <span class="ctr-count ${count>0?'positive':''}">${count}</span>
+          <button class="ctr-btn plus"  onclick="adjustCount('${tier.key}',${i},+1)">+</button>
+        </div>
+        <span class="task-earned">${earned>0?'+':''}${earned} pts</span>
+        <button class="edit-btn" onclick="openEditTask('${tier.key}',${i})">✎</button>
+        <button class="delete-btn" onclick="deleteTask('${tier.key}',${i})">✕</button>
+      </div>`;
+    }).join('');
+  });
+  list.innerHTML = html;
+}
+
+function addChore() {
+  const name = document.getElementById('chore-name').value.trim();
+  const unit = document.getElementById('chore-unit').value.trim() || 'completion';
+  const ptsPerUnit = parseFloat(document.getElementById('chore-pts').value) || 10;
+  const step = Math.max(1, parseInt(document.getElementById('chore-step').value) || 1);
+  const tier = document.getElementById('chore-tier').value;
+  if (!name) return;
+  state.tasks[tier].push({ name, unit, ptsPerUnit, step, count: 0 });
+  document.getElementById('chore-name').value = '';
+  document.getElementById('chore-unit').value = '';
+  save(); renderChores();
+}
+
 function renderTasks(type) {
-  const list = document.getElementById(`list-${type}`);
-  const tasks = state.tasks[type];
-  if (!tasks.length) { list.innerHTML = ''; return; }
-  list.innerHTML = tasks.map((t, i) => {
-    const count = t.count || 0;
-    const earned = earnedPts(t);
-    return `
-    <div class="task-card ${type}">
-      <div class="reorder-btns">
-        <button class="arrow-btn" onclick="moveTask('${type}',${i},-1)" ${i===0?'disabled':''}>▲</button>
-        <button class="arrow-btn" onclick="moveTask('${type}',${i},+1)" ${i===tasks.length-1?'disabled':''}>▼</button>
-      </div>
-      <div class="task-info">
-        <div class="task-name-text">${esc(t.name)}</div>
-      </div>
-      <div class="task-counter">
-        <button class="ctr-btn minus" onclick="adjustCount('${type}',${i},-1)">−</button>
-        <span class="ctr-count ${count>0?'positive':''}">${count}</span>
-        <button class="ctr-btn plus"  onclick="adjustCount('${type}',${i},+1)">+</button>
-      </div>
-      <span class="task-earned">${earned>0?'+':''}${earned} pts</span>
-      <button class="edit-btn" onclick="openEditTask('${type}',${i})">✎</button>
-      <button class="delete-btn" onclick="deleteTask('${type}',${i})">✕</button>
-    </div>`;
-  }).join('');
+  // common/uncommon/rare now all live in the Chores tab
+  if (['common','uncommon','rare'].includes(type)) { renderChores(); return; }
 }
 
 function renderOnetimeTasks() {
@@ -1126,7 +1196,26 @@ function renderOnetimeTasks() {
 }
 
 function renderRewards() {
+  // Sex section — show today's woohoo/boohoo tally
+  const status = document.getElementById('sex-today-status');
+  if (status) {
+    const today = new Date().toLocaleDateString('en-CA');
+    const todayLog = (state.sexLog || []).filter(e => e.date === today);
+    const woohoos = todayLog.filter(e => e.type === 'woohoo').length;
+    const boohoos = todayLog.filter(e => e.type === 'boohoo').length;
+    if (woohoos || boohoos) {
+      status.innerHTML = `Today: ${woohoos} woohoo${woohoos!==1?'s':''} · ${boohoos} boohoo${boohoos!==1?'s':''}` +
+        (todayLog.length ? ` &nbsp; <button class="undo-btn" onclick="undoSex()" style="margin-left:4px">↩ Undo</button>` : '');
+    } else {
+      status.textContent = 'No activity logged today.';
+    }
+  }
+  return _renderRewardsOld();
+}
+
+function _renderRewardsOld() {
   const grid = document.getElementById('list-rewards');
+  if (!grid) return;
   if (!state.rewards.length) { grid.innerHTML = ''; return; }
   grid.innerHTML = state.rewards.map((r, i) => {
     const redeemed = r.redeemed || 0;
@@ -1466,7 +1555,14 @@ function commitEndOfDay(daysAgo) {
   const foodSpend  = r2(foodSnap.reduce((s, f) => s + (f.spend || 0), 0));
   const drinkSpend = r2((state.drink || {}).todaySpend || 0);
   const drinksRecorded = (state.drink || {}).todayCount || 0;
-  ptsSpent = r2(ptsSpent + foodSpend + drinkSpend);
+  const sexEarned = r2((state.sexLog||[]).filter(e=>e.date===dateStr||true).reduce((s,e)=>s+(e.type==='woohoo'?12:0),0));
+  const workoutPts = ((state.workoutLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const pushupPts   = ((state.pushupLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const jumpRopePts = ((state.jumpRopeLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  ptsEarned = r2(ptsEarned + workoutPts + pushupPts + jumpRopePts);
+  const sexSpent  = r2((state.sexLog||[]).filter(e=>e.date===dateStr||true).reduce((s,e)=>s+(e.type==='boohoo'?12:0),0));
+  ptsEarned = r2(ptsEarned + sexEarned);
+  ptsSpent = r2(ptsSpent + foodSpend + drinkSpend + sexSpent);
   const adjust = state.dailyAdjust || 0;
   const netPts = r2(ptsEarned - ptsSpent + adjust);
 
@@ -1996,6 +2092,142 @@ function renderStats() {
     html += `</div></div>`;
   }
 
+
+  // ── Sex tracking ──
+  const sexLog = (state.sexLog || []);
+  if (sexLog.length) {
+    const woohoos = sexLog.filter(e => e.type === 'woohoo');
+    const boohoos = sexLog.filter(e => e.type === 'boohoo');
+
+    // Ratio per time period
+    function ratioFor(filterFn) {
+      const w = woohoos.filter(filterFn).length;
+      const b = boohoos.filter(filterFn).length;
+      return { w, b, ratio: b === 0 ? (w > 0 ? `${w}:0` : '—') : r2(w / b) + ':1' };
+    }
+    const now = new Date();
+    const todayStr = now.toLocaleDateString('en-CA');
+    const weekAgo  = new Date(now.getTime() - 7*86400000).toLocaleDateString('en-CA');
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toLocaleDateString('en-CA');
+    const yearStart  = new Date(now.getFullYear(), 0, 1).toLocaleDateString('en-CA');
+    const m = now.getMonth();
+    const seasonMonths = m>=2&&m<=4 ? [2,3,4] : m>=5&&m<=7 ? [5,6,7] : m>=8&&m<=10 ? [8,9,10] : [11,0,1];
+
+    const periods = [
+      { label: 'Today',     fn: e => e.date === todayStr },
+      { label: 'This Week', fn: e => e.date >= weekAgo },
+      { label: 'This Month',fn: e => e.date >= monthStart },
+      { label: 'This Season',fn: e => seasonMonths.includes(new Date(e.date+'T12:00:00').getMonth()) },
+      { label: 'This Year', fn: e => e.date >= yearStart },
+      { label: 'All Time',  fn: () => true },
+    ];
+
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Woohoo : Boohoo Ratio</div>
+      <table class="stats-table">
+        <thead><tr><th>PERIOD</th><th style="text-align:right">WOOHOO</th><th style="text-align:right">BOOHOO</th><th style="text-align:right">RATIO</th></tr></thead>
+        <tbody>`;
+    periods.forEach(p => {
+      const r = ratioFor(p.fn);
+      if (r.w === 0 && r.b === 0) return;
+      html += `<tr>
+        <td>${p.label}</td>
+        <td class="num" style="color:#16a34a">${r.w}</td>
+        <td class="num" style="color:#dc2626">${r.b}</td>
+        <td class="num" style="font-family:'Cinzel',serif">${r.ratio}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+
+    // Average by day of week
+    const dowW = Array(7).fill(0), dowB = Array(7).fill(0);
+    const dowDays = Array(7).fill(null).map(() => new Set());
+    sexLog.forEach(e => {
+      const dow = new Date(e.date+'T12:00:00').getDay();
+      if (e.type === 'woohoo') dowW[dow]++; else dowB[dow]++;
+      dowDays[dow].add(e.date);
+    });
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Average by Day of Week</div>
+      <table class="stats-table">
+        <thead><tr><th>DAY</th><th style="text-align:right">AVG WOOHOO</th><th style="text-align:right">AVG BOOHOO</th></tr></thead>
+        <tbody>`;
+    [1,2,3,4,5,6,0].forEach(di => {
+      const days = dowDays[di].size;
+      if (!days) return;
+      const avgW = r2(dowW[di] / days);
+      const avgB = r2(dowB[di] / days);
+      html += `<tr>
+        <td>${DOW_LABELS[di]}</td>
+        <td class="num" style="color:#16a34a">${avgW}</td>
+        <td class="num" style="color:#dc2626">${avgB}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+
+  // ── Workout log ──
+  const workoutLog = (state.workoutLog || []);
+  if (workoutLog.length) {
+    const totalMin = workoutLog.reduce((s,e) => s + (e.minutes||0), 0);
+    const totalPts = r2(workoutLog.reduce((s,e) => s + (e.pts||0), 0));
+    const avgMin = r2(totalMin / workoutLog.length);
+    const avgPts = r2(totalPts / workoutLog.length);
+    const longest = workoutLog.reduce((b,e) => (e.minutes||0) > (b.minutes||0) ? e : b, workoutLog[0]);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Workout Log</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">TOTAL SESSIONS</div><div class="stat-card-value" style="color:var(--gym)">${workoutLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">AVG DURATION</div><div class="stat-card-value" style="color:var(--gym)">${avgMin}m</div></div>
+        <div class="stat-card"><div class="stat-card-label">AVG PTS</div><div class="stat-card-value" style="color:var(--gym)">+${avgPts}</div></div>
+        <div class="stat-card"><div class="stat-card-label">LONGEST</div><div class="stat-card-value" style="color:var(--gym);font-size:14px">${longest.minutes}m on ${longest.date}</div></div>
+      </div>
+      <div class="bar-chart" style="margin-top:8px">`;
+    const last14w = workoutLog.slice(-14);
+    const maxW = Math.max(...last14w.map(e => e.minutes||0), 1);
+    last14w.forEach(e => {
+      const pct = Math.round((e.minutes||0) / maxW * 100);
+      html += `<div class="bar-row">
+        <span class="bar-label">${e.date.slice(5)}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--gym)"></div></div>
+        <span class="bar-val" style="color:var(--gym)">${e.minutes}m +${e.pts}</span>
+      </div>`;
+    });
+    html += `</div></div>`;
+  }
+
+
+  // ── Pushup log ──
+  const pushupLog = (state.pushupLog || []);
+  if (pushupLog.length) {
+    const totalPU = pushupLog.reduce((s,e) => s + (e.count||0), 0);
+    const best = pushupLog.reduce((b,e) => (e.count||0) > (b.count||0) ? e : b, pushupLog[0]);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">💪 Pushups</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">TOTAL SESSIONS</div><div class="stat-card-value" style="color:#0369a1">${pushupLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">TOTAL PUSHUPS</div><div class="stat-card-value" style="color:#0369a1">${totalPU}</div></div>
+        <div class="stat-card"><div class="stat-card-label">BEST SESSION</div><div class="stat-card-value" style="color:#0369a1;font-size:14px">${best.count} on ${best.date}</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Jump rope log ──
+  const jumpRopeLog = (state.jumpRopeLog || []);
+  if (jumpRopeLog.length) {
+    const totalJR = jumpRopeLog.reduce((s,e) => s + (e.count||0), 0);
+    const bestJR = jumpRopeLog.reduce((b,e) => (e.count||0) > (b.count||0) ? e : b, jumpRopeLog[0]);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">🪃 Jump Rope</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">TOTAL SESSIONS</div><div class="stat-card-value" style="color:#7c3aed">${jumpRopeLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">TOTAL JUMPS</div><div class="stat-card-value" style="color:#7c3aed">${totalJR}</div></div>
+        <div class="stat-card"><div class="stat-card-label">BEST SESSION</div><div class="stat-card-value" style="color:#7c3aed;font-size:14px">${bestJR.count} on ${bestJR.date}</div></div>
+      </div>
+    </div>`;
+  }
+
   // ── Gym Challenge Records ──
   if ((state.challenges || []).length) {
     state.challenges.forEach(c => {
@@ -2334,12 +2566,12 @@ document.getElementById('plansModal').addEventListener('click', e => { if (e.tar
 
 // ── Tab system ───────────────────────────────────────────────────────
 const TAB_LABELS = {
-  common:'Common', uncommon:'Uncommon', rare:'Rare', onetime:'One-Time',
-  rewards:'Rewards', food:'Diet', drink:'Drink', grocery:'Grocery',
+  chores:'Chores', onetime:'To-Do',
+  rewards:'Sex', food:'Diet', drink:'Drink', grocery:'Grocery',
   clean:'Deep Clean', gym:'Gym', stats:'Stats', log:'Log', sleep:'Sleep'
 };
 const TAB_DEFAULT_COLORS = {
-  common:'#0ea5c8', uncommon:'#16a34a', rare:'#9333ea', onetime:'#ea6c00',
+  chores:'#0ea5c8', onetime:'#ea6c00',
   rewards:'#b59a00', food:'#e05020', drink:'#7c3aed', grocery:'#2a9060',
   clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea', log:'#0f766e', sleep:'#4338ca'
 };
@@ -2349,7 +2581,7 @@ const SWATCHES = [
   '#65a30d','#c2410c','#6d28d9','#0f766e','#4f46e5','#1a1a1a'
 ];
 
-let _activeTab = 'common';
+let _activeTab = 'chores';
 let _dragSrc = null;
 let _dragBtn = null;
 let _touchDragging = false;
@@ -2511,11 +2743,8 @@ function closeColorPicker() {
 }
 
 
-['common','uncommon','rare'].forEach(t => {
-  document.getElementById(`${t}-name`).addEventListener('keydown', e => { if (e.key==='Enter') addTask(t); });
-});
+document.getElementById('chore-name').addEventListener('keydown', e => { if (e.key==='Enter') addChore(); });
 document.getElementById('onetime-name').addEventListener('keydown', e => { if (e.key==='Enter') addOnetimeTask(); });
-document.getElementById('reward-name').addEventListener('keydown', e => { if (e.key==='Enter') addReward(); });
 document.getElementById('grocery-name').addEventListener('keydown', e => { if (e.key==='Enter') addGroceryItem(); });
 document.getElementById('clean-name').addEventListener('keydown', e => { if (e.key==='Enter') addCleanItem(); });
 document.getElementById('gym-name').addEventListener('keydown', e => { if (e.key==='Enter') addGymTask(); });
@@ -2620,10 +2849,17 @@ function setGreeting() {
     const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
     const drinkSpend  = (state.drink || {}).todaySpend || 0;
     const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
-    const calcNet = r2(earned - rewardSpend - drinkSpend - foodSpend);
+    const _today = new Date().toLocaleDateString('en-CA');
+    const _sexLog = (state.sexLog || []).filter(e => e.date === _today);
+    const _sexNet = r2(_sexLog.reduce((s,e) => s + (e.type==='woohoo' ? 12 : -12), 0));
+    const _wt = new Date().toLocaleDateString('en-CA');
+    const _wp = ((state.workoutLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _pp = ((state.pushupLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _jp = ((state.jumpRopeLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const calcNet = r2(earned - rewardSpend - drinkSpend - foodSpend + _sexNet + _wp + _pp + _jp);
     const adjust = state.dailyAdjust || 0;
     const net = r2(calcNet + adjust);
-    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || adjust !== 0;
+    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || _sexNet !== 0 || _wp !== 0 || _pp !== 0 || _jp !== 0 || adjust !== 0;
     if (!somethingDone) return null;
     return netToGrade(net);
   }
@@ -2759,7 +2995,9 @@ function savePointsModal() {
       const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
       const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
       const drinkSpend  = (state.drink || {}).todaySpend || 0;
-      const currentNet  = r2(earned - foodSpend - rewardSpend - drinkSpend);
+      const _t = new Date().toLocaleDateString('en-CA');
+      const _sn = r2((state.sexLog||[]).filter(e=>e.date===_t).reduce((s,e)=>s+(e.type==='woohoo'?12:-12),0));
+      const currentNet  = r2(earned - foodSpend - rewardSpend - drinkSpend + _sn);
       state.dailyAdjust = r2(dailyVal - currentNet);
     }
   } else {
@@ -3503,12 +3741,199 @@ function renderSleep() {
 }
 
 
+// ── Sex (woohoo/boohoo) ──────────────────────────────────────────────
+function logSex(type) {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.sexLog) state.sexLog = [];
+  state.sexLog.push({ date, type });
+  applyPoints(type === 'woohoo' ? 12 : -12);
+  save(); renderRewards(); updatePoints();
+  toast(type === 'woohoo' ? '🎉 Woohoo! +12 pts' : '😔 Boohoo. −12 pts');
+}
+
+function undoSex() {
+  const today = new Date().toLocaleDateString('en-CA');
+  if (!state.sexLog) return;
+  // Remove the most recent entry from today
+  for (let i = state.sexLog.length - 1; i >= 0; i--) {
+    if (state.sexLog[i].date === today) {
+      const removed = state.sexLog.splice(i, 1)[0];
+      applyPoints(removed.type === 'woohoo' ? -12 : 12);
+      save(); renderRewards(); updatePoints();
+      toast(`↩ Undid ${removed.type}`);
+      return;
+    }
+  }
+}
+
+
+// ── Workout Log ───────────────────────────────────────────────────────
+function calcWorkoutPts(minutes) {
+  // 0-20 min: 0.6/min, 21-40 min: 0.4/min, 41+: 0.3/min
+  const m = Math.max(0, minutes);
+  let pts = 0;
+  pts += Math.min(m, 20) * 0.6;
+  pts += Math.min(Math.max(m - 20, 0), 20) * 0.4;
+  pts += Math.max(m - 40, 0) * 0.3;
+  return r2(pts);
+}
+
+function openWorkoutModal() {
+  document.getElementById('workout-minutes').value = '';
+  document.getElementById('workout-pts-preview').textContent = '';
+  const today = new Date().toLocaleDateString('en-CA');
+  const todayEntry = (state.workoutLog || []).find(e => e.date === today);
+  document.getElementById('workout-undo-btn').style.display = todayEntry ? '' : 'none';
+  document.getElementById('workoutModal').classList.add('open');
+  setTimeout(() => document.getElementById('workout-minutes').focus(), 50);
+}
+
+function closeWorkoutModal() {
+  document.getElementById('workoutModal').classList.remove('open');
+}
+
+document.getElementById('workoutModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeWorkoutModal();
+});
+
+function saveWorkout() {
+  const m = parseInt(document.getElementById('workout-minutes').value) || 0;
+  if (m <= 0) { toast('Enter a duration.'); return; }
+  const pts = calcWorkoutPts(m);
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.workoutLog) state.workoutLog = [];
+  // Replace today's entry if exists
+  const idx = state.workoutLog.findIndex(e => e.date === date);
+  if (idx >= 0) {
+    // Refund old pts first
+    applyPoints(-state.workoutLog[idx].pts);
+    state.workoutLog[idx] = { date, minutes: m, pts };
+  } else {
+    state.workoutLog.push({ date, minutes: m, pts });
+  }
+  applyPoints(pts);
+  save(); closeWorkoutModal(); renderWorkoutStatus(); updatePoints();
+  toast(`🏋 ${m} min workout · +${pts} pts`);
+}
+
+function undoWorkout() {
+  const today = new Date().toLocaleDateString('en-CA');
+  const idx = (state.workoutLog || []).findIndex(e => e.date === today);
+  if (idx < 0) return;
+  applyPoints(-state.workoutLog[idx].pts);
+  state.workoutLog.splice(idx, 1);
+  save(); closeWorkoutModal(); renderWorkoutStatus(); updatePoints();
+  toast('↩ Workout removed.');
+}
+
+function renderWorkoutStatus() {
+  const el = document.getElementById('workout-today-status');
+  if (!el) return;
+  const today = new Date().toLocaleDateString('en-CA');
+  const parts = [];
+  const w = (state.workoutLog  || []).find(e => e.date === today);
+  const p = (state.pushupLog   || []).find(e => e.date === today);
+  const j = (state.jumpRopeLog || []).find(e => e.date === today);
+  if (w) parts.push(`🏋 ${w.minutes}m +${w.pts}`);
+  if (p) parts.push(`💪 ${p.count} +${p.pts}`);
+  if (j) parts.push(`🪃 ${j.count} +${j.pts}`);
+  el.textContent = parts.length ? parts.join('  ·  ') : '';
+}
+
+
+// ── Quick log: pushups & jump rope ────────────────────────────────────
+function calcPushupPts(n) {
+  // 1-10: 0.4/pushup, 11-30: 0.3/pushup, 31+: 0.2/pushup
+  let pts = 0;
+  pts += Math.min(n, 10) * 0.4;
+  pts += Math.min(Math.max(n - 10, 0), 20) * 0.3;
+  pts += Math.max(n - 30, 0) * 0.2;
+  return r2(pts);
+}
+
+function calcJumpRopePts(n) {
+  // 1-100: 0.08/jump, 101-200: 0.04/jump, 201+: 0.02/jump
+  let pts = 0;
+  pts += Math.min(n, 100) * 0.08;
+  pts += Math.min(Math.max(n - 100, 0), 100) * 0.04;
+  pts += Math.max(n - 200, 0) * 0.02;
+  return r2(pts);
+}
+
+let _quickLogType = null;
+
+function openQuickLog(type) {
+  _quickLogType = type;
+  const isPushup = type === 'pushups';
+  document.getElementById('quickLogTitle').textContent = isPushup ? '💪 Log Pushups' : '🪃 Log Jump Rope';
+  document.getElementById('quickLogLabel').textContent = isPushup ? 'PUSHUPS' : 'JUMPS';
+  document.getElementById('quicklog-save-btn').style.background = isPushup ? '#0369a1' : '#7c3aed';
+  document.getElementById('quicklog-count').value = '';
+  document.getElementById('quicklog-pts-preview').textContent = '';
+  document.getElementById('quicklog-pts-preview').style.color = isPushup ? '#0369a1' : '#7c3aed';
+
+  const today = new Date().toLocaleDateString('en-CA');
+  const key = type === 'pushups' ? 'pushupLog' : 'jumpRopeLog';
+  const todayEntry = (state[key] || []).find(e => e.date === today);
+  document.getElementById('quicklog-undo-btn').style.display = todayEntry ? '' : 'none';
+  document.getElementById('quickLogModal').classList.add('open');
+  setTimeout(() => document.getElementById('quicklog-count').focus(), 50);
+}
+
+function closeQuickLog() {
+  document.getElementById('quickLogModal').classList.remove('open');
+  _quickLogType = null;
+}
+
+function updateQuickLogPreview() {
+  const n = parseInt(document.getElementById('quicklog-count').value) || 0;
+  const pts = _quickLogType === 'pushups' ? calcPushupPts(n) : calcJumpRopePts(n);
+  document.getElementById('quicklog-pts-preview').textContent = n > 0 ? `+${pts} pts` : '';
+}
+
+function saveQuickLog() {
+  const n = parseInt(document.getElementById('quicklog-count').value) || 0;
+  if (n <= 0) { toast('Enter a count.'); return; }
+  const isPushup = _quickLogType === 'pushups';
+  const pts = isPushup ? calcPushupPts(n) : calcJumpRopePts(n);
+  const date = new Date().toLocaleDateString('en-CA');
+  const key = isPushup ? 'pushupLog' : 'jumpRopeLog';
+  if (!state[key]) state[key] = [];
+  const idx = state[key].findIndex(e => e.date === date);
+  if (idx >= 0) {
+    applyPoints(-state[key][idx].pts);
+    state[key][idx] = { date, count: n, pts };
+  } else {
+    state[key].push({ date, count: n, pts });
+  }
+  applyPoints(pts);
+  save(); closeQuickLog(); renderWorkoutStatus(); updatePoints();
+  const label = isPushup ? `${n} pushups` : `${n} jumps`;
+  toast(`${isPushup ? '💪' : '🪃'} ${label} · +${pts} pts`);
+}
+
+function undoQuickLog() {
+  const today = new Date().toLocaleDateString('en-CA');
+  const key = _quickLogType === 'pushups' ? 'pushupLog' : 'jumpRopeLog';
+  const idx = (state[key] || []).findIndex(e => e.date === today);
+  if (idx < 0) return;
+  applyPoints(-state[key][idx].pts);
+  state[key].splice(idx, 1);
+  save(); closeQuickLog(); renderWorkoutStatus(); updatePoints();
+  toast('↩ Removed.');
+}
+
+document.getElementById('quickLogModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeQuickLog();
+});
+
+
 seed();
 setGreeting();
 renderAll();
 checkAndApplyMisses();
 renderTabs();
-switchTab(_activeTab || 'common');
+switchTab(_activeTab && _activeTab !== 'common' && _activeTab !== 'uncommon' && _activeTab !== 'rare' ? _activeTab : 'chores');
 
 </script>
 </body>
