@@ -103,7 +103,7 @@
     margin-bottom: 16px;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   }
   .points-label { font-family: 'Cinzel', serif; font-size: 10px; color: var(--muted); letter-spacing: 2px; }
@@ -185,6 +185,8 @@
   .section-title.onetime  { color: var(--onetime); }
   .section-title.rewards  { color: var(--reward); }
   .section-title.food     { color: var(--food); }
+  .food-meal-header { font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--food); margin: 14px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
+  .food-meal-header:first-child { margin-top: 0; }
   .section-title.grocery  { color: var(--grocery); }
   .section-title.drink    { color: var(--drink); }
   .section-title.clean    { color: var(--clean); }
@@ -404,6 +406,10 @@
   /* ── Log / Journal ── */
   .section-title.log    { color: #0f766e; }
   .section-title.sleep  { color: #4338ca; }
+  .section-title.meditation { color: #7c3aed; }
+  .section-title.fasting { color: #0d9488; }
+  .med-preset:hover { border-color: #7c3aed !important; background: #f0ecfc !important; }
+  .med-preset.active { border-color: #7c3aed !important; background: #f0ecfc !important; }
   .log-group-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
   .log-field-label { font-family: 'Cinzel', serif; font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-bottom: 5px; margin-top: 12px; }
   .log-textarea { width: 100%; min-height: 90px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: 'Crimson Pro', serif; font-size: 16px; padding: 10px 12px; outline: none; resize: vertical; transition: border-color 0.15s; line-height: 1.6; }
@@ -541,9 +547,8 @@
   </header>
 
   <div class="points-bar">
-    <span class="points-label">POINTS</span>
-    <span class="points-value" id="pointsDisplay" onclick="editPoints('total')" style="cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px" title="Edit total points">0</span>
-    <span id="netDisplay" onclick="editPoints('daily')" style="font-family:'Cinzel',serif;font-size:13px;color:var(--pos);margin-left:2px;transition:color 0.2s;cursor:pointer" title="Edit daily points"></span>
+    <span class="points-label">TODAY</span>
+    <span id="netDisplay" onclick="editPoints('daily')" style="font-family:'Cinzel',serif;font-size:22px;color:var(--pos);transition:color 0.2s;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px" title="Edit daily points">+0</span>
     <button class="stats-nav-btn btn-vacation" id="vacationBtn" onclick="takeVacationDay()" style="margin-left:auto;background:linear-gradient(135deg,#0ea5e9,#0369a1);box-shadow:0 2px 10px #38bdf844" title="Vacation Day">🏖</button>
     <button class="stats-nav-btn btn-export" onclick="exportData()" title="Export data">⬇</button>
     <button class="stats-nav-btn btn-import" onclick="document.getElementById('importInput').click()" title="Import data">⬆</button>
@@ -560,17 +565,81 @@
       <div class="section-header">
         <div><div class="section-title chores">Chores</div></div>
       </div>
-      <div class="add-form" style="flex-wrap:wrap;row-gap:6px">
-        <input class="task-name"  id="chore-name"  type="text"   placeholder="Name" style="flex:2;min-width:120px" />
-        <input class="unit-label" id="chore-unit"  type="text"   placeholder="Unit" />
-        <input class="num-input"  id="chore-step"  type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input"  id="chore-pts"   type="number" placeholder="Pts" min="0.01" step="any" value="10" />
-        <select id="chore-tier" style="font-family:'Crimson Pro',serif">
-          <option value="common">Common</option>
-          <option value="uncommon">Uncommon</option>
-          <option value="rare">Rare</option>
-        </select>
-        <button class="btn-add" onclick="addChore()">+ Add</button>
+      <!-- Hardcoded chores: Water + Work -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logWater()" style="background:#0ea5c8;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(14,165,200,0.2);font-weight:600">💧 Water <span id="water-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="water-undo" onclick="undoWater()" style="display:none">↩ Undo</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="openWorkModal()" style="background:#475569;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(71,85,105,0.2);font-weight:600">💼 Work <span id="work-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logDishes()" style="background:#0891b2;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(8,145,178,0.2);font-weight:600">🍽 Dishes <span id="dishes-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="dishes-undo" onclick="undoDishes()" style="display:none">↩ Undo</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logGarbage()" style="background:#65a30d;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(101,163,13,0.2);font-weight:600">🗑 Garbage <span id="garbage-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="garbage-undo" onclick="undoGarbage()" style="display:none">↩ Undo</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logHeavyDiaper()" style="background:#9a3412;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(154,52,18,0.2);font-weight:600">💩 Heavy Diaper <span id="heavydiaper-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="heavydiaper-undo" onclick="undoHeavyDiaper()" style="display:none">↩ Undo</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logLightDiaper()" style="background:#ca8a04;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(202,138,4,0.2);font-weight:600">💧 Light Diaper <span id="lightdiaper-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="lightdiaper-undo" onclick="undoLightDiaper()" style="display:none">↩ Undo</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logDriveKids()" style="background:#7c3aed;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(124,58,237,0.2);font-weight:600">🚗 Drive Kids <span id="drivekids-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="drivekids-undo" onclick="undoDriveKids()" style="display:none">↩ Undo</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="openTakeKidsModal()" style="background:#db2777;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(219,39,119,0.2);font-weight:600">🎒 Take Kids Out <span id="takekids-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logCreatine()" style="background:#0d9488;border:none;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.5px;padding:12px 4px;border-radius:9px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 6px rgba(13,148,136,0.2);font-weight:600">💊 Creatine <span id="creatine-sub" style="font-size:10px;opacity:0.85;display:block;margin-top:2px"></span></button>
+          <button class="undo-btn" id="creatine-undo" onclick="undoCreatine()" style="display:none;font-size:9px;padding:4px">↩</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="openEggsModal()" style="background:#f59e0b;border:none;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.5px;padding:12px 4px;border-radius:9px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 6px rgba(245,158,11,0.2);font-weight:600">🥚 Eggs <span id="eggs-sub" style="font-size:10px;opacity:0.85;display:block;margin-top:2px"></span></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logTeeth()" style="background:#06b6d4;border:none;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.5px;padding:12px 4px;border-radius:9px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 6px rgba(6,182,212,0.2);font-weight:600">🦷 Teeth <span id="teeth-sub" style="font-size:10px;opacity:0.85;display:block;margin-top:2px"></span></button>
+          <button class="undo-btn" id="teeth-undo" onclick="undoTeeth()" style="display:none;font-size:9px;padding:4px">↩</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logShower()" style="background:#3b82f6;border:none;color:#fff;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.5px;padding:12px 4px;border-radius:9px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 6px rgba(59,130,246,0.2);font-weight:600">🚿 Shower <span id="shower-sub" style="font-size:10px;opacity:0.85;display:block;margin-top:2px"></span></button>
+          <button class="undo-btn" id="shower-undo" onclick="undoShower()" style="display:none;font-size:9px;padding:4px">↩</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logLaundry()" style="background:#7c3aed;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(124,58,237,0.2);font-weight:600">🧺 Laundry <span id="laundry-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="laundry-undo" onclick="undoLaundry()" style="display:none">↩ Undo</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logShopping()" style="background:#16a34a;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(22,163,74,0.2);font-weight:600">🛒 Shopping <span id="shopping-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="shopping-undo" onclick="undoShopping()" style="display:none">↩ Undo</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logGas()" style="background:#dc2626;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(220,38,38,0.2);font-weight:600">⛽ Gas <span id="gas-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="gas-undo" onclick="undoGas()" style="display:none">↩ Undo</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <button onclick="logOilChange()" style="background:#78716c;border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(120,113,108,0.2);font-weight:600">🛢 Oil Change <span id="oil-sub" style="font-size:11px;opacity:0.85;display:block;margin-top:3px"></span></button>
+          <button class="undo-btn" id="oil-undo" onclick="undoOilChange()" style="display:none">↩ Undo</button>
+        </div>
       </div>
       <div id="list-chores"></div>
     </div>
@@ -648,15 +717,6 @@
         <button onclick="openQuickLog('jumprope')" style="background:#7c3aed;border:none;color:#fff;font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;padding:14px;border-radius:10px;cursor:pointer;transition:all 0.15s;box-shadow:0 2px 8px rgba(124,58,237,0.2);font-weight:600">🪃 Jump Rope</button>
       </div>
       <div id="workout-today-status" style="font-family:'Cinzel',serif;font-size:11px;color:var(--muted);letter-spacing:1px;text-align:center;padding:0 4px 12px;min-height:16px"></div>
-      <!-- Workout Tasks -->
-      <div class="gym-section-label">Workout Tasks</div>
-      <div class="add-form">
-        <input class="task-name" id="gym-name" type="text" placeholder="Task name" />
-        <input class="unit-label" id="gym-unit" type="text" placeholder="Unit" />
-        <input class="num-input" id="gym-step" type="number" placeholder="Step" min="1" value="1" />
-        <input class="num-input" id="gym-pts" type="number" placeholder="Pts" min="0.01" step="any" value="10" />
-        <button class="btn-add" onclick="addGymTask()">+ Add</button>
-      </div>
       <div class="task-list" id="list-gym"></div>
       <!-- Challenges -->
       <div class="gym-section-label" style="margin-top:28px">Challenges</div>
@@ -686,6 +746,74 @@
       </div>
     </div>
   </div>
+<!-- Eggs Modal -->
+<div class="modal-overlay" id="eggsModal">
+  <div class="modal" style="max-width:280px">
+    <div class="modal-title">🥚 Log Eggs</div>
+    <div class="modal-field">
+      <div class="modal-label">HOW MANY EGGS</div>
+      <input class="modal-input" id="eggs-count" type="number" min="1" placeholder="e.g. 3"
+        oninput="document.getElementById('eggs-pts-preview').textContent=this.value>0?'+'+(parseInt(this.value)||0)+' pts':''" />
+    </div>
+    <div id="eggs-pts-preview" style="font-size:13px;color:#f59e0b;font-family:'Cinzel',serif;letter-spacing:1px;min-height:18px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEggsModal()">Cancel</button>
+      <button class="undo-btn" id="eggs-undo-btn" onclick="undoEggs()" style="display:none">↩ Undo</button>
+      <button class="modal-save" style="background:#f59e0b" onclick="saveEggs()">Log It</button>
+    </div>
+  </div>
+</div>
+
+<!-- Take Kids Out Modal -->
+<div class="modal-overlay" id="takeKidsModal">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title">🎒 Take Kids Out</div>
+    <div style="display:flex;gap:8px">
+      <div class="modal-field" style="flex:1">
+        <div class="modal-label">HOURS</div>
+        <input class="modal-input" id="takekids-hours" type="number" min="0" placeholder="0" oninput="updateTakeKidsPreview()" />
+      </div>
+      <div class="modal-field" style="flex:1">
+        <div class="modal-label">MINUTES</div>
+        <input class="modal-input" id="takekids-mins" type="number" min="0" max="59" placeholder="0" oninput="updateTakeKidsPreview()" />
+      </div>
+    </div>
+    <div id="takekids-pts-preview" style="font-size:13px;color:#db2777;font-family:'Cinzel',serif;letter-spacing:1px;min-height:18px"></div>
+    <div class="modal-field">
+      <div class="modal-label">WHAT DID YOU DO? (optional)</div>
+      <input class="modal-input" id="takekids-note" type="text" placeholder="e.g. park, library, swimming" />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeTakeKidsModal()">Cancel</button>
+      <button class="undo-btn" id="takekids-undo-btn" onclick="undoTakeKids()" style="display:none">↩ Undo</button>
+      <button class="modal-save" style="background:#db2777" onclick="saveTakeKids()">Log It</button>
+    </div>
+  </div>
+</div>
+
+<!-- Work Log Modal -->
+<div class="modal-overlay" id="workModal">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-title">💼 Log Work</div>
+    <div style="display:flex;gap:8px">
+      <div class="modal-field" style="flex:1">
+        <div class="modal-label">HOURS</div>
+        <input class="modal-input" id="work-hours" type="number" min="0" placeholder="0" oninput="updateWorkPreview()" />
+      </div>
+      <div class="modal-field" style="flex:1">
+        <div class="modal-label">MINUTES</div>
+        <input class="modal-input" id="work-mins" type="number" min="0" max="59" placeholder="0" oninput="updateWorkPreview()" />
+      </div>
+    </div>
+    <div id="work-pts-preview" style="font-size:13px;color:#475569;font-family:'Cinzel',serif;letter-spacing:1px;min-height:18px"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeWorkModal()">Cancel</button>
+      <button class="undo-btn" id="work-undo-btn" onclick="undoWork()" style="display:none">↩ Undo</button>
+      <button class="modal-save" style="background:#475569" onclick="saveWork()">Log It</button>
+    </div>
+  </div>
+</div>
+
 <!-- Quick Log Modal (pushups / jump rope) -->
 <div class="modal-overlay" id="quickLogModal">
   <div class="modal" style="max-width:300px">
@@ -748,6 +876,49 @@
     </div>
     <div id="sleep-today-status" style="font-family:'Cinzel',serif;font-size:11px;color:var(--muted);letter-spacing:1px;padding:6px 4px 12px;min-height:18px"></div>
     <div id="sleep-recent"></div>
+  </div>
+  <!-- MEDITATION -->
+  <div class="section" id="section-meditation">
+    <div class="section-header">
+      <div><div class="section-title meditation">Meditation</div></div>
+    </div>
+    <div style="text-align:center;padding:20px 0">
+      <div id="med-timer-display" style="font-family:'Cinzel',serif;font-size:64px;color:#7c3aed;letter-spacing:2px;line-height:1">00:00</div>
+      <div id="med-pts-preview" style="font-family:'Cinzel',serif;font-size:13px;color:var(--muted);letter-spacing:1px;margin-top:6px;min-height:18px"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+      <button class="med-preset" onclick="setMedTimer(5)" style="background:var(--surface);border:1px solid var(--border);color:#7c3aed;font-family:'Cinzel',serif;font-size:13px;padding:14px;border-radius:9px;cursor:pointer;transition:all 0.15s;font-weight:600">5 min</button>
+      <button class="med-preset" onclick="setMedTimer(10)" style="background:var(--surface);border:1px solid var(--border);color:#7c3aed;font-family:'Cinzel',serif;font-size:13px;padding:14px;border-radius:9px;cursor:pointer;transition:all 0.15s;font-weight:600">10 min</button>
+      <button class="med-preset" onclick="setMedTimer(20)" style="background:var(--surface);border:1px solid var(--border);color:#7c3aed;font-family:'Cinzel',serif;font-size:13px;padding:14px;border-radius:9px;cursor:pointer;transition:all 0.15s;font-weight:600">20 min</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button id="med-start-btn" onclick="toggleMedTimer()" style="flex:2;background:#7c3aed;border:none;color:#fff;font-family:'Cinzel',serif;font-size:15px;letter-spacing:2px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s;font-weight:600;box-shadow:0 2px 8px rgba(124,58,237,0.2)">Start</button>
+      <button onclick="resetMedTimer()" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:13px;letter-spacing:1px;padding:16px;border-radius:10px;cursor:pointer;transition:all 0.15s">Reset</button>
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:10px;color:var(--muted);letter-spacing:1px;text-align:center">12 pts for first 20 min · 4 pts per 10 min after</div>
+    <div id="med-today-status" style="font-family:'Cinzel',serif;font-size:11px;color:#7c3aed;letter-spacing:1px;text-align:center;padding:12px 4px;min-height:16px"></div>
+  </div>
+  <!-- FASTING -->
+  <div class="section" id="section-fasting">
+    <div class="section-header">
+      <div><div class="section-title fasting">Fasting</div></div>
+    </div>
+    <div class="add-form" style="flex-direction:column;gap:10px;align-items:stretch">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">FAST STARTED</div>
+        <input class="modal-input" id="fast-start" type="datetime-local" style="width:100%" oninput="updateFastPreview()" />
+      </div>
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">FAST ENDED</div>
+        <input class="modal-input" id="fast-end" type="datetime-local" style="width:100%" oninput="updateFastPreview()" />
+      </div>
+      <div id="fast-preview" style="font-family:'Cinzel',serif;font-size:13px;color:#0d9488;letter-spacing:1px;min-height:18px;text-align:center"></div>
+      <button class="btn-add" onclick="logFast()" style="background:#0d9488;width:100%">Log Fast</button>
+    </div>
+    <div style="font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:0.5px;text-align:center;line-height:1.7;margin-bottom:8px">
+      16h = 6 pts · +1/hr to 20h · 20h = 12 pts · +2/hr to 24h · 24h+ = 24 pts
+    </div>
+    <div id="fast-recent"></div>
   </div>
   <!-- LOG -->
   <div class="section" id="section-log">
@@ -891,6 +1062,17 @@
   </div>
 </div>
 
+<!-- Past Days Picker Modal -->
+<div class="modal-overlay" id="pastDaysModal">
+  <div class="modal" style="max-width:380px;max-height:80vh;overflow-y:auto">
+    <div class="modal-title">📅 Edit a Past Day</div>
+    <div id="pastDaysList" style="display:flex;flex-direction:column;gap:6px;margin:4px 0"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('pastDaysModal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- History Task Editor Modal -->
 <div class="modal-overlay" id="historyTaskModal">
   <div class="modal" style="max-width:500px;max-height:80vh;overflow-y:auto">
@@ -905,13 +1087,9 @@
 
 <!-- Food portion modal -->
 <div class="modal-overlay" id="foodPromptModal">
-  <div class="modal" style="max-width:300px">
+  <div class="modal" style="max-width:360px">
     <div class="modal-title" id="foodPromptTitle">How much?</div>
-    <div style="display:flex;flex-direction:column;gap:8px;margin:12px 0 8px">
-      <button class="modal-save" id="foodBtnLittle" style="text-align:left;padding:12px 16px;background:#16a34a" onclick="logFood('little')">A little <span id="foodCostLittle" style="float:right;opacity:0.75"></span></button>
-      <button class="modal-save" id="foodBtnMedium" style="text-align:left;padding:12px 16px;background:#a16207" onclick="logFood('medium')">Medium <span id="foodCostMedium" style="float:right;opacity:0.75"></span></button>
-      <button class="modal-save" id="foodBtnLot" style="text-align:left;padding:12px 16px;background:#dc2626" onclick="logFood('lot')">A lot <span id="foodCostLot" style="float:right;opacity:0.75"></span></button>
-    </div>
+    <div id="foodGrid" style="margin:12px 0 8px"></div>
     <div class="modal-actions" style="margin-top:4px">
       <button class="modal-cancel" onclick="closeFoodPrompt()">Cancel</button>
       <button class="undo-btn" id="foodPromptUndo" onclick="undoFoodFromPrompt()" style="display:none">↩ Undo Last</button>
@@ -925,20 +1103,20 @@
     <div class="modal-title">How Grades Are Calculated</div>
     <p style="font-size:13px;color:var(--muted);margin:4px 0 12px;line-height:1.6">Grade is based on net points for the day. Food costs subtract from your daily net.</p>
     <table class="score-table">
-      <tr><td style="color:#c2410c">S+</td><td>100+ pts</td></tr>
-      <tr><td style="color:#c2410c">S</td><td>80–99 pts</td></tr>
-      <tr><td style="color:#15803d">A+</td><td>60–79 pts</td></tr>
-      <tr><td style="color:#15803d">A</td><td>52–59 pts</td></tr>
-      <tr><td style="color:#15803d">A−</td><td>49–51 pts</td></tr>
-      <tr><td style="color:#0369a1">B+</td><td>41–48 pts</td></tr>
-      <tr><td style="color:#0369a1">B</td><td>33–40 pts</td></tr>
-      <tr><td style="color:#0369a1">B−</td><td>25–32 pts</td></tr>
-      <tr><td style="color:#a16207">C+</td><td>21–24 pts</td></tr>
-      <tr><td style="color:#a16207">C</td><td>17–20 pts</td></tr>
-      <tr><td style="color:#a16207">C−</td><td>13–16 pts</td></tr>
-      <tr><td style="color:#6d28d9">D+</td><td>9–12 pts</td></tr>
-      <tr><td style="color:#6d28d9">D</td><td>5–8 pts</td></tr>
-      <tr><td style="color:#6d28d9">D−</td><td>1–4 pts</td></tr>
+      <tr><td style="color:#c2410c">S+</td><td>120+ pts</td></tr>
+      <tr><td style="color:#c2410c">S</td><td>96–119 pts</td></tr>
+      <tr><td style="color:#15803d">A+</td><td>72–95 pts</td></tr>
+      <tr><td style="color:#15803d">A</td><td>62–71 pts</td></tr>
+      <tr><td style="color:#15803d">A−</td><td>59–61 pts</td></tr>
+      <tr><td style="color:#0369a1">B+</td><td>49–58 pts</td></tr>
+      <tr><td style="color:#0369a1">B</td><td>40–48 pts</td></tr>
+      <tr><td style="color:#0369a1">B−</td><td>30–39 pts</td></tr>
+      <tr><td style="color:#a16207">C+</td><td>25–29 pts</td></tr>
+      <tr><td style="color:#a16207">C</td><td>20–24 pts</td></tr>
+      <tr><td style="color:#a16207">C−</td><td>16–19 pts</td></tr>
+      <tr><td style="color:#6d28d9">D+</td><td>11–15 pts</td></tr>
+      <tr><td style="color:#6d28d9">D</td><td>6–10 pts</td></tr>
+      <tr><td style="color:#6d28d9">D−</td><td>1–5 pts</td></tr>
       <tr><td style="color:#dc2626">F</td><td>0 or negative pts</td></tr>
     </table>
     <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">Week and month grades show the average grade across those days.</p>
@@ -949,9 +1127,7 @@
 </div>
 
 <div class="eod-footer">
-  <button class="eod-btn eod-yesterday" id="eoyBtn" onclick="endYesterday()">↩ Yesterday</button>
-  <button class="eod-btn" id="eodBtn" onclick="endOfDay()">✦ End of Day ✦</button>
-  <button class="eod-btn" id="recoverBtn" onclick="recoverFromMiss()" style="display:none;background:#7c3aed">⟳ Recover</button>
+  <button class="eod-btn" id="pastDaysBtn" onclick="openPastDaysModal()">📅 Edit a Past Day</button>
 </div>
 
 <div id="toast"></div>
@@ -974,11 +1150,32 @@ function defaultState() {
     challenges: [],
     logEntries: [],
     sleepEntries: [],
+    workingDate: new Date().toLocaleDateString('en-CA'),
     sexLog: [],
     workoutLog: [],
     pushupLog: [],
     jumpRopeLog: [],
-    tabOrder: ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'],
+    waterLog: [],
+    workLog: [],
+    dishesLog: [],
+    garbageLog: [],
+    heavyDiaperLog: [],
+    lightDiaperLog: [],
+    driveKidsLog: [],
+    takeKidsLog: [],
+    creatineLog: [],
+    eggsLog: [],
+    teethLog: [],
+    showerLog: [],
+    laundryLog: [],
+    shoppingLog: [],
+    gasLog: [],
+    oilLog: [],
+    logBonusLog: [],
+    sleepBonusLog: [],
+    meditationLog: [],
+    fastingLog: [],
+    tabOrder: ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep','meditation','fasting'],
     tabColors: {}
   };
 }
@@ -995,17 +1192,38 @@ function load() {
     if (!s.gymTasks)   s.gymTasks = [];
     if (!s.challenges)  s.challenges = [];
     if (!s.logEntries)   s.logEntries = [];
+    if (!s.workingDate)  s.workingDate = new Date().toLocaleDateString('en-CA');
     if (!s.sleepEntries) s.sleepEntries = [];
     if (!s.sexLog)       s.sexLog = [];
     if (!s.workoutLog)   s.workoutLog = [];
     if (!s.pushupLog)    s.pushupLog = [];
     if (!s.jumpRopeLog)  s.jumpRopeLog = [];
+    if (!s.waterLog)     s.waterLog = [];
+    if (!s.workLog)      s.workLog = [];
+    if (!s.dishesLog)    s.dishesLog = [];
+    if (!s.garbageLog)   s.garbageLog = [];
+    if (!s.heavyDiaperLog) s.heavyDiaperLog = [];
+    if (!s.lightDiaperLog) s.lightDiaperLog = [];
+    if (!s.driveKidsLog)   s.driveKidsLog = [];
+    if (!s.takeKidsLog)    s.takeKidsLog = [];
+    if (!s.creatineLog)    s.creatineLog = [];
+    if (!s.eggsLog)        s.eggsLog = [];
+    if (!s.teethLog)       s.teethLog = [];
+    if (!s.showerLog)      s.showerLog = [];
+    if (!s.laundryLog)     s.laundryLog = [];
+    if (!s.shoppingLog)    s.shoppingLog = [];
+    if (!s.gasLog)         s.gasLog = [];
+    if (!s.oilLog)         s.oilLog = [];
+    if (!s.logBonusLog)    s.logBonusLog = [];
+    if (!s.sleepBonusLog)  s.sleepBonusLog = [];
+    if (!s.meditationLog)  s.meditationLog = [];
+    if (!s.fastingLog)     s.fastingLog = [];
     if (s.dailyAdjust === undefined) s.dailyAdjust = 0;
     if (!s.drink.todaySpend) s.drink.todaySpend = 0;
     if (!s.tabOrder)   s.tabOrder = ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
     if (!s.tabColors)  s.tabColors = {};
     // Ensure all tabs are present (add any missing)
-    const allTabs = ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep'];
+    const allTabs = ['chores','onetime','rewards','food','drink','grocery','clean','gym','stats','log','sleep','meditation','fasting'];
     // Migrate old common/uncommon/rare tabs to single chores tab
     if (s.tabOrder.includes('common') || s.tabOrder.includes('uncommon') || s.tabOrder.includes('rare')) {
       const firstIdx = Math.min(...['common','uncommon','rare'].map(t => s.tabOrder.indexOf(t)).filter(i => i >= 0));
@@ -1013,17 +1231,17 @@ function load() {
       if (!s.tabOrder.includes('chores')) s.tabOrder.splice(firstIdx, 0, 'chores');
     }
     allTabs.forEach(t => { if (!s.tabOrder.includes(t)) s.tabOrder.push(t); });
-    // Migrate food items to Yuka format if needed
+    // Migrate food items: strip precomputed tiers, migrate logs to role/amount/meal
     s.food = (s.food || []).map(f => {
-      if (f.ptsLittle === undefined) {
-        const pts = f.pts || 5;
-        return { name: f.name || 'Food', yuka: null,
-          ptsLittle: pts, ptsMedium: r2(pts*2.5), ptsLot: r2(pts*6.25),
-          todaySpend: f.todaySpend||0, log: (f.log||[]).map(e=>({portion:'little',pts,date:e.date||e})) };
-      }
-      if (f.yuka === undefined) f.yuka = null;
-      if (f.ptsTiny !== undefined) delete f.ptsTiny;
-      return f;
+      const item = { name: f.name || 'Food', yuka: (f.yuka === undefined ? null : f.yuka),
+                     todaySpend: f.todaySpend || 0, log: [] };
+      item.log = (f.log || []).map(e => {
+        if (e.role && e.amount) return e; // already new shape
+        // old shape had {portion, pts, date}
+        const amount = e.portion === 'lot' ? 'lot' : e.portion === 'medium' ? 'medium' : 'little';
+        return { role: 'side', amount, meal: 'lunch', pts: e.pts || 0, date: e.date || '' };
+      });
+      return item;
     });
     return s;
   } catch { return defaultState(); }
@@ -1037,7 +1255,6 @@ function applyPoints(diff) {
   state.points = r2(state.points + diff);
 }
 function updatePoints() {
-  document.getElementById('pointsDisplay').textContent = r2(state.points);
   const netEl = document.getElementById('netDisplay');
   if (!netEl) { setGreeting(); return; }
 
@@ -1058,18 +1275,33 @@ function updatePoints() {
   const _wPts = ((state.workoutLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
   const _puPts = ((state.pushupLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
   const _jrPts = ((state.jumpRopeLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
-  const calcNet = r2(earned - foodSpend - rewardSpend - drinkSpend + sexNet + _wPts + _puPts + _jrPts);
+  const _waterPts = ((state.waterLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _workPts = ((state.workLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _dishPts = ((state.dishesLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _garbPts = ((state.garbageLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _hdPts = ((state.heavyDiaperLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _ldPts = ((state.lightDiaperLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _dkPts = ((state.driveKidsLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _tkPts = ((state.takeKidsLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _crPts = ((state.creatineLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _egPts = ((state.eggsLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _tePts = ((state.teethLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _laPts = ((state.laundryLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _spPts = ((state.shoppingLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _gaPts = ((state.gasLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _oiPts = ((state.oilLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _lgPts = ((state.logBonusLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _slPts = ((state.sleepBonusLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _metPts = ((state.meditationLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const _fastPts = ((state.fastingLog||[]).find(e=>e.date===_wToday)||{}).pts||0;
+  const calcNet = r2(earned - foodSpend - rewardSpend - drinkSpend + sexNet + _wPts + _puPts + _jrPts + _waterPts + _workPts + _dishPts + _garbPts + _hdPts + _ldPts + _dkPts + _tkPts + _crPts + _egPts + _tePts + _laPts + _spPts + _gaPts + _oiPts + _lgPts + _slPts + _metPts + _fastPts);
   const adjust = state.dailyAdjust || 0;
   const net = r2(calcNet + adjust);
-  const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || drinkSpend > 0 || sexNet !== 0 || _wPts !== 0 || _puPts !== 0 || _jrPts !== 0 || adjust !== 0;
+  const somethingDone = earned > 0 || foodSpend > 0 || rewardSpend > 0 || drinkSpend > 0 || sexNet !== 0 || _wPts !== 0 || _puPts !== 0 || _jrPts !== 0 || _waterPts !== 0 || _workPts !== 0 || _dishPts !== 0 || _garbPts !== 0 || _hdPts !== 0 || _ldPts !== 0 || _dkPts !== 0 || _tkPts !== 0 || _crPts !== 0 || _egPts !== 0 || _tePts !== 0 || _laPts !== 0 || _spPts !== 0 || _gaPts !== 0 || _oiPts !== 0 || _lgPts !== 0 || _slPts !== 0 || _metPts !== 0 || _fastPts !== 0 || adjust !== 0;
 
-  if (!somethingDone) {
-    netEl.textContent = '';
-  } else {
-    const sign = net >= 0 ? '+' : '';
-    netEl.textContent = `(${sign}${net})`;
-    netEl.style.color = net >= 0 ? 'var(--pos)' : 'var(--neg)';
-  }
+  const sign = net >= 0 ? '+' : '';
+  netEl.textContent = `${sign}${net}`;
+  netEl.style.color = net >= 0 ? 'var(--pos)' : 'var(--neg)';
   setGreeting();
   updatePlansBtn();
 }
@@ -1127,6 +1359,7 @@ function renderChores() {
     }).join('');
   });
   list.innerHTML = html;
+  renderWaterWorkStatus();
 }
 
 function addChore() {
@@ -1244,37 +1477,49 @@ function _renderRewardsOld() {
 // Each item: { name, yuka, ptsLittle, ptsMedium, ptsLot, todaySpend, log:[{portion,pts,date}] }
 // Yuka 0-49: smallPts = (50-rating)*0.2. Medium = small*2.5. Lot = small*6.25. 50+ = free.
 
-function yukaTopts(yuka) {
+// Base cost from Yuka score — single smooth slope (steeper than before)
+function yukaBase(yuka) {
+  if (yuka === null || yuka === undefined || isNaN(yuka)) return 9.8; // unknown → treat as bad (Yuka ~15)
   const rating = Math.min(100, Math.max(0, yuka));
-  if (rating >= 50) return { little: 0, medium: 0, lot: 0 };
-  // Yuka 25-49: 0.2 per point. Yuka 0-24: base 5 + 0.1 per point below 25 (slower)
-  const small = rating >= 25
-    ? r2((50 - rating) * 0.2)
-    : r2(5 + (25 - rating) * 0.1);
-  return { little: small, medium: r2(small * 2.5), lot: r2(small * 6.25) };
+  if (rating >= 50) return 0;
+  return r2((50 - rating) * 0.28); // 0-49: 0.28/pt → Yuka 49=0.28, 25=7, 0=14
 }
 
+// Role and amount multipliers
+const FOOD_ROLE_MULT   = { accent: 0.4, side: 1.5, main: 2.5 };
+const FOOD_AMOUNT_MULT = { little: 0.7, medium: 1.0, lot: 1.8 };
+const FOOD_ROLE_LABEL   = { accent: 'Accent', side: 'Side', main: 'Main' };
+const FOOD_AMOUNT_LABEL = { little: 'Little', medium: 'Medium', lot: 'Lot' };
 
+function foodCost(yuka, role, amount) {
+  return r2(yukaBase(yuka) * (FOOD_ROLE_MULT[role]||1) * (FOOD_AMOUNT_MULT[amount]||1));
+}
+
+// Which meal section based on the hour an item is eaten
+function mealForHour(h) {
+  if (h < 11) return 'breakfast';
+  if (h < 16) return 'lunch';
+  return 'dinner';
+}
+const MEAL_LABEL = { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner' };
+function currentMeal() { return mealForHour(new Date().getHours()); }
 
 function previewYukaPts() {
   const raw = document.getElementById('food-yuka').value;
   const el  = document.getElementById('yuka-preview');
   if (raw === '' || isNaN(raw)) { el.textContent = ''; return; }
-  const pts = yukaTopts(parseFloat(raw));
-  el.innerHTML = pts.little === 0
+  const base = yukaBase(parseFloat(raw));
+  el.innerHTML = base === 0
     ? '<span style="color:var(--pos)">Free (50+ Yuka)</span>'
-    : `A little: −${pts.little} &nbsp;·&nbsp; Medium: −${pts.medium} &nbsp;·&nbsp; A lot: −${pts.lot}`;
+    : `Base cost −${base} · scaled by role &amp; amount when logged`;
 }
 
 function addFoodItem() {
   const name = document.getElementById('food-name').value.trim();
   const yuka = parseFloat(document.getElementById('food-yuka').value);
   if (!name) return;
-  const pts = isNaN(yuka) ? { little: 5, medium: 12.5, lot: 31.25 } : yukaTopts(yuka);
   if (!state.food) state.food = [];
-  state.food.push({ name, yuka: isNaN(yuka) ? null : yuka,
-    ptsLittle: pts.little, ptsMedium: pts.medium, ptsLot: pts.lot,
-    todaySpend: 0, log: [] });
+  state.food.push({ name, yuka: isNaN(yuka) ? null : yuka, todaySpend: 0, log: [] });
   document.getElementById('food-name').value = '';
   document.getElementById('food-yuka').value = '';
   document.getElementById('yuka-preview').textContent = '';
@@ -1290,9 +1535,27 @@ function openFoodPrompt(idx) {
   const item = state.food[idx];
   const yukaStr = item.yuka !== null && item.yuka !== undefined ? ` · Yuka ${item.yuka}` : '';
   document.getElementById('foodPromptTitle').textContent = item.name + yukaStr;
-  document.getElementById('foodCostLittle').textContent = item.ptsLittle > 0 ? `−${item.ptsLittle} pts` : 'free';
-  document.getElementById('foodCostMedium').textContent = item.ptsMedium > 0 ? `−${item.ptsMedium} pts` : 'free';
-  document.getElementById('foodCostLot').textContent    = item.ptsLot    > 0 ? `−${item.ptsLot} pts`    : 'free';
+
+  const base = yukaBase(item.yuka);
+  const grid = document.getElementById('foodGrid');
+  if (base === 0) {
+    grid.innerHTML = `<div style="text-align:center;color:var(--pos);font-family:'Cinzel',serif;padding:16px">This food is free (Yuka 50+).<br><button class="modal-save" style="margin-top:12px;background:var(--pos)" onclick="logFood('main','medium')">Log it (0 pts)</button></div>`;
+  } else {
+    const roles = ['accent','side','main'];
+    const amounts = ['little','medium','lot'];
+    let html = `<div style="display:grid;grid-template-columns:auto 1fr 1fr 1fr;gap:5px;align-items:center">`;
+    html += `<div></div>` + amounts.map(a => `<div style="text-align:center;font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:1px">${FOOD_AMOUNT_LABEL[a]}</div>`).join('');
+    roles.forEach(role => {
+      html += `<div style="font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:1px;padding-right:4px">${FOOD_ROLE_LABEL[role]}</div>`;
+      amounts.forEach(amount => {
+        const c = foodCost(item.yuka, role, amount);
+        html += `<button onclick="logFood('${role}','${amount}')" style="background:var(--food);border:none;color:#fff;font-family:'Cinzel',serif;font-size:14px;padding:12px 4px;border-radius:7px;cursor:pointer;transition:all 0.15s;font-weight:600">−${c}</button>`;
+      });
+    });
+    html += `</div>`;
+    grid.innerHTML = html;
+  }
+
   const today = new Date().toLocaleDateString('en-CA');
   const hasToday = (item.log||[]).some(e => e.date === today);
   document.getElementById('foodPromptUndo').style.display = hasToday ? '' : 'none';
@@ -1304,20 +1567,20 @@ function closeFoodPrompt() {
   _foodPromptIdx = null;
 }
 
-function logFood(portion) {
+function logFood(role, amount) {
   if (_foodPromptIdx === null) return;
-  const item   = state.food[_foodPromptIdx];
-  const ptsMap = { little: item.ptsLittle, medium: item.ptsMedium, lot: item.ptsLot };
-  const pts    = ptsMap[portion] || 0;
-  const date   = new Date().toLocaleDateString('en-CA');
+  const item = state.food[_foodPromptIdx];
+  const pts  = foodCost(item.yuka, role, amount);
+  const now  = new Date();
+  const date = now.toLocaleDateString('en-CA');
+  const meal = currentMeal();
   item.log = item.log || [];
-  item.log.push({ portion, pts, date });
+  item.log.push({ role, amount, meal, pts, date });
   item.todaySpend = r2((item.todaySpend || 0) + pts);
   applyPoints(-pts);
   save(); renderFood(); updatePoints(); closeFoodPrompt();
-  const label = { little: 'A little', medium: 'Medium', lot: 'A lot' }[portion];
-  const cost  = pts > 0 ? `−${pts} pts` : 'free';
-  toast(`${item.name} (${label}) · ${cost}`);
+  const cost = pts > 0 ? `−${pts} pts` : 'free';
+  toast(`${item.name} · ${FOOD_ROLE_LABEL[role]}/${FOOD_AMOUNT_LABEL[amount]} · ${cost}`);
 }
 
 function undoFoodFromPrompt() {
@@ -1351,38 +1614,90 @@ function renderFood() {
   if (!el) return;
   const today = new Date().toLocaleDateString('en-CA');
 
-  if (!state.food || !state.food.length) { el.innerHTML = ''; return; }
+  if (!state.food || !state.food.length) { el.innerHTML = '<div style="color:var(--muted);font-style:italic;text-align:center;padding:20px">No foods yet. Add one above.</div>'; return; }
 
-  // Sort by most recently logged — items logged today first, then by last log date desc, unlogged last
-  const indexed = state.food.map((item, idx) => ({ item, idx }));
-  indexed.sort((a, b) => {
-    const aLast = (a.item.log || []).length ? (a.item.log || []).slice(-1)[0].date : '';
-    const bLast = (b.item.log || []).length ? (b.item.log || []).slice(-1)[0].date : '';
-    return bLast.localeCompare(aLast);
+  // Build a card for a food item (idx is its index in state.food)
+  function foodCard(item, idx) {
+    const todayLogs = (item.log || []).filter(e => e.date === today);
+    const todaySpend = r2(todayLogs.reduce((s,e) => s + (e.pts||0), 0));
+    const base = yukaBase(item.yuka);
+    const isFree = base === 0;
+    const yukaTag = item.yuka !== null && item.yuka !== undefined
+      ? `<span style="font-size:10px;color:var(--muted);font-family:'Cinzel',serif;margin-left:4px">Y${item.yuka}</span>` : '';
+    let sub;
+    if (todayLogs.length) {
+      sub = todayLogs.map(e => `${FOOD_ROLE_LABEL[e.role]||''}/${FOOD_AMOUNT_LABEL[e.amount]||''}`).join(', ') + (todaySpend > 0 ? ` · −${todaySpend}` : ' (free)');
+    } else {
+      sub = isFree ? 'free · tap to log' : 'tap to log';
+    }
+    return `<div class="food-item" style="cursor:pointer" onclick="openFoodPrompt(${idx})">
+      <div class="food-item-info">
+        <div class="food-item-name">${esc(item.name)}${yukaTag}</div>
+        <div class="food-item-pts" style="color:${todayLogs.length ? 'var(--food)' : 'var(--muted)'}">${sub}</div>
+      </div>
+      ${todayLogs.length ? `<button class="undo-btn" onclick="event.stopPropagation();undoFood(${idx})" style="margin-right:4px">↩</button>` : ''}
+      <button class="delete-btn" onclick="event.stopPropagation();deleteFoodItem(${idx})">✕</button>
+    </div>`;
+  }
+
+  // Determine which meal each food belongs in for display:
+  // - if logged today, use the meal of its most recent today-log
+  // Place each food in the meal it's most often eaten; sort by that meal's frequency.
+  const meals = { breakfast: [], lunch: [], dinner: [] };
+  const nowMeal = currentMeal();
+
+  function mealCounts(item) {
+    const c = { breakfast: 0, lunch: 0, dinner: 0 };
+    (item.log || []).forEach(e => { if (e.meal && c[e.meal] !== undefined) c[e.meal]++; });
+    return c;
+  }
+
+  state.food.forEach((item, idx) => {
+    const todayLogs = (item.log || []).filter(e => e.date === today);
+    const counts = mealCounts(item);
+    const totalLogs = counts.breakfast + counts.lunch + counts.dinner;
+    let meal;
+    if (todayLogs.length) {
+      // If logged today, show it in the meal it was eaten today
+      meal = todayLogs[todayLogs.length-1].meal || nowMeal;
+    } else if (totalLogs > 0) {
+      // Otherwise put it in the meal it's historically most eaten
+      meal = ['breakfast','lunch','dinner'].reduce((best, m) => counts[m] > counts[best] ? m : best, 'breakfast');
+    } else {
+      // Never logged → current meal
+      meal = nowMeal;
+    }
+    meals[meal].push({
+      item, idx,
+      logged: todayLogs.length > 0,
+      mealFreq: counts[meal] || 0,
+      lastDate: (item.log||[]).length ? (item.log||[]).slice(-1)[0].date : ''
+    });
   });
 
-  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">` +
-    indexed.map(({ item, idx }) => {
-      const todayLogs  = (item.log || []).filter(e => e.date === today);
-      const todaySpend = item.todaySpend || 0;
-      const isFree     = item.ptsLittle === 0 && item.ptsMedium === 0 && item.ptsLot === 0;
-      const summary    = todayLogs.length
-        ? todayLogs.map(e => ({little:'A little',medium:'Medium',lot:'A lot'}[e.portion]||e.portion)).join(', ')
-        : null;
-      const yukaTag    = item.yuka !== null && item.yuka !== undefined
-        ? `<span style="font-size:10px;color:var(--muted);font-family:'Cinzel',serif;margin-left:4px">Y${item.yuka}</span>` : '';
-      const sub = summary
-        ? `${summary}${todaySpend > 0 ? ` — −${todaySpend} pts` : ' (free)'}`
-        : isFree ? 'free · tap to log' : `−${item.ptsLittle} / ${item.ptsMedium} / ${item.ptsLot} pts`;
-      return `<div class="food-item" style="cursor:pointer" onclick="openFoodPrompt(${idx})">
-        <div class="food-item-info">
-          <div class="food-item-name">${esc(item.name)}${yukaTag}</div>
-          <div class="food-item-pts" style="color:${summary ? 'var(--food)' : 'var(--muted)'}">${sub}</div>
-        </div>
-        ${todayLogs.length ? `<button class="undo-btn" onclick="event.stopPropagation();undoFood(${idx})" style="margin-right:4px">↩</button>` : ''}
-        <button class="delete-btn" onclick="event.stopPropagation();deleteFoodItem(${idx})">✕</button>
-      </div>`;
-    }).join('') + `</div>`;
+  // Within each meal: logged-today first, then by how often eaten in THIS meal, then recency
+  Object.keys(meals).forEach(m => {
+    meals[m].sort((a,b) => {
+      if (a.logged !== b.logged) return a.logged ? -1 : 1;
+      if (b.mealFreq !== a.mealFreq) return b.mealFreq - a.mealFreq;
+      return b.lastDate.localeCompare(a.lastDate);
+    });
+  });
+
+  const order = ['breakfast','lunch','dinner'];
+  let html = '';
+  order.forEach(m => {
+    const items = meals[m];
+    const mealSpend = r2(items.reduce((s,o) => s + (o.item.log||[]).filter(e=>e.date===today).reduce((ss,e)=>ss+(e.pts||0),0), 0));
+    html += `<div class="food-meal-header">${MEAL_LABEL[m]}${mealSpend>0?` <span style="color:var(--food);font-weight:400">−${mealSpend}</span>`:''}</div>`;
+    if (!items.length) {
+      html += `<div style="color:var(--border2);font-size:13px;font-style:italic;padding:4px 0 8px">—</div>`;
+    } else {
+      html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">` +
+        items.map(o => foodCard(o.item, o.idx)).join('') + `</div>`;
+    }
+  });
+  el.innerHTML = html;
 }
 
 function moveFood(i, dir) {
@@ -1504,6 +1819,7 @@ const EOD = { pending: false, timer: null, id: 'eodBtn', label: '✦ End of Day 
 const EOY = { pending: false, timer: null, id: 'eoyBtn', label: '↩ Yesterday', confirm: '⚑ Confirm Yesterday?', daysAgo: 1 };
 
 function _eodConfirm(a, b) {
+  if (!document.getElementById(a.id)) return; // buttons removed from UI
   const btn = document.getElementById(a.id);
   if (b.pending) { clearTimeout(b.timer); b.pending = false; document.getElementById(b.id).textContent = b.label; document.getElementById(b.id).classList.remove('confirming'); }
   if (!a.pending) {
@@ -1518,12 +1834,17 @@ function _eodConfirm(a, b) {
 function endOfDay()   { _eodConfirm(EOD, EOY); }
 function endYesterday() { _eodConfirm(EOY, EOD); }
 
-function commitEndOfDay(daysAgo) {
-  const d = new Date();
-  d.setDate(d.getDate() - (daysAgo || 0));
-  // Use local date string consistently (not ISO which can be off by timezone)
-  const dateStr = d.toLocaleDateString('en-CA');
-  const dow = d.getDay();
+function commitEndOfDay(daysAgo, explicitDate) {
+  let dateStr, dow;
+  if (explicitDate) {
+    dateStr = explicitDate;
+    dow = new Date(explicitDate + 'T12:00:00').getDay();
+  } else {
+    const d = new Date();
+    d.setDate(d.getDate() - (daysAgo || 0));
+    dateStr = d.toLocaleDateString('en-CA');
+    dow = d.getDay();
+  }
 
   // Build snapshot
   const taskSnap = {};
@@ -1564,7 +1885,26 @@ function commitEndOfDay(daysAgo) {
   const workoutPts = ((state.workoutLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
   const pushupPts   = ((state.pushupLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
   const jumpRopePts = ((state.jumpRopeLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
-  ptsEarned = r2(ptsEarned + workoutPts + pushupPts + jumpRopePts);
+  const waterPts = ((state.waterLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const workPts = ((state.workLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const dishPts = ((state.dishesLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const garbPts = ((state.garbageLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const hdPts = ((state.heavyDiaperLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const ldPts = ((state.lightDiaperLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const dkPts = ((state.driveKidsLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const tkPts = ((state.takeKidsLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const crPts = ((state.creatineLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const egPts = ((state.eggsLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const tePts = ((state.teethLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const laPts = ((state.laundryLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const spPts = ((state.shoppingLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const gaPts = ((state.gasLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const oiPts = ((state.oilLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const lgPts = ((state.logBonusLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const slPts = ((state.sleepBonusLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const metPts = ((state.meditationLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  const fastPts = ((state.fastingLog||[]).find(e=>e.date===dateStr)||{}).pts||0;
+  ptsEarned = r2(ptsEarned + workoutPts + pushupPts + jumpRopePts + waterPts + workPts + dishPts + garbPts + hdPts + ldPts + dkPts + tkPts + crPts + egPts + tePts + laPts + spPts + gaPts + oiPts + lgPts + slPts + metPts + fastPts);
   const sexSpent  = r2((state.sexLog||[]).filter(e=>e.date===dateStr||true).reduce((s,e)=>s+(e.type==='boohoo'?12:0),0));
   ptsEarned = r2(ptsEarned + sexEarned);
   ptsSpent = r2(ptsSpent + foodSpend + drinkSpend + sexSpent);
@@ -1608,6 +1948,7 @@ function commitEndOfDay(daysAgo) {
   }
   state.manualPointsSet = false;
   state.dailyAdjust = 0;
+  state.workingDate = new Date().toLocaleDateString('en-CA');
   save(); renderAll(); checkAndApplyMisses();
   toast(daysAgo ? '↩ Yesterday logged. Stats updated.' : '✦ Day complete. Stats updated.');
 }
@@ -1647,6 +1988,7 @@ function confirmVacationDay() {
   if (state.drink) { state.drink.todayCount = 0; state.drink.todaySpend = 0; }
   state.manualPointsSet = false;
   state.dailyAdjust = 0;
+  state.workingDate = new Date().toLocaleDateString('en-CA');
   save(); renderAll(); checkAndApplyMisses();
   toast('🏖 Vacation day logged. Stats unaffected.');
 }
@@ -1673,68 +2015,30 @@ function getMissedDays() {
 
 function checkAndApplyMisses() {
   const missed = getMissedDays();
-  if (!missed.length) {
-    const rb = document.getElementById('recoverBtn');
-    if (rb) rb.style.display = 'none';
-    return;
-  }
-  const n = missed.length;
-  // Determine penalty based on how many days missed
-  let grade, pointsTarget;
-  if (n === 1)      { grade = 'X+'; pointsTarget = Math.floor(state.points / 2); }
-  else if (n === 2) { grade = 'X';  pointsTarget = 0; }
-  else              { grade = 'X−'; pointsTarget = -24; }
-
-  // Insert placeholder history entries for each missed day if not already there
   const hist = state.history || [];
   let changed = false;
+  // Insert a plain X-grade placeholder for each missed day. No penalty.
   missed.forEach(ds => {
     if (!hist.find(h => h.date === ds)) {
       const d = new Date(ds + 'T12:00:00');
       hist.push({ date: ds, dow: d.getDay(), netPts: 0, ptsEarned: 0, ptsSpent: 0,
-                  tasks: {}, rewards: {}, food: [], drinks: 0, gradeOverride: grade, missed: true });
+                  tasks: {}, rewards: {}, food: [], drinks: 0, gradeOverride: 'X', missed: true });
       changed = true;
     }
   });
   if (changed) {
     hist.sort((a, b) => a.date < b.date ? -1 : 1);
     state.history = hist;
-    // Only apply point penalty if we haven't already (pendingRecover tracks this)
-    if (!state.pendingRecover) {
-      state.pendingRecover = { n, grade, originalPoints: state.points };
-      state.points = pointsTarget;
-    }
-    save(); updatePoints(); setGreeting();
+    save(); setGreeting();
   }
-
-  // Show recover button only if not already recovered
-  const hasUnrecovered = hist.some(h => h.missed && !h.recovered);
   const _rb = document.getElementById('recoverBtn');
-  if (_rb) _rb.style.display = hasUnrecovered ? '' : 'none';
+  if (_rb) _rb.style.display = 'none';
 }
 
 function recoverFromMiss() {
-  const hist = state.history || [];
-  const unrecovered = hist.filter(h => h.missed && !h.recovered);
-  if (!unrecovered.length) return;
-  const n = unrecovered.length;
-  const origPts = (state.pendingRecover && state.pendingRecover.originalPoints != null)
-    ? state.pendingRecover.originalPoints : state.points;
-  let newGrade, newPoints;
-  if (n === 1)      { newGrade = 'X+'; newPoints = Math.floor(origPts / 2); }
-  else if (n === 2) { newGrade = 'X';  newPoints = 0; }
-  else              { newGrade = 'X−'; newPoints = -24; }
-
-  unrecovered.forEach(h => {
-    h.gradeOverride = newGrade;
-    h.recovered = true;
-  });
-  state.points = newPoints;
-  delete state.pendingRecover;
+  // Recover mechanic removed — missed days are simply graded X and excluded from stats.
   const _rb2 = document.getElementById('recoverBtn');
   if (_rb2) _rb2.style.display = 'none';
-  save(); updatePoints(); setGreeting();
-  toast(`⟳ Recovered — ${n} missed day${n > 1 ? 's' : ''} marked ${newGrade}. Points: ${newPoints}.`);
 }
 
 // ── Stats ─────────────────────────────────────────────────────────────
@@ -1750,7 +2054,7 @@ function renderStats() {
   }
 
   const DOW_LABELS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-  const activeDays = hist.filter(d => !d.vacation); // exclude vacation days from stats
+  const activeDays = hist.filter(d => !d.vacation && !d.missed); // exclude vacation AND missed days from all stats/averages
   const totalDays = activeDays.length || 1;
 
   // ── Summary cards ──
@@ -1972,7 +2276,7 @@ function renderStats() {
       html += `</div></div>`;
     }
   }
-  // Streak: consecutive days ending yesterday with B or better (net >= 33)
+  // Streak: consecutive days ending yesterday with B or better (net >= 40)
   const STREAK_GRADES = new Set(['S+','S','A+','A','A−','B+','B']);
   const qualifies = d => !d.vacation && !d.missed && STREAK_GRADES.has(scoreDay(d));
   let streak = 0;
@@ -2233,6 +2537,163 @@ function renderStats() {
     </div>`;
   }
 
+
+  // ── Water log ──
+  const waterLog = (state.waterLog || []);
+  if (waterLog.length) {
+    const totalMl = waterLog.reduce((s,e) => s + (e.ml||0), 0);
+    const avgMl = Math.round(totalMl / waterLog.length);
+    const best = waterLog.reduce((b,e) => (e.ml||0) > (b.ml||0) ? e : b, waterLog[0]);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">💧 Water</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">DAYS LOGGED</div><div class="stat-card-value" style="color:#0ea5c8">${waterLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">AVG / DAY</div><div class="stat-card-value" style="color:#0ea5c8">${avgMl} ml</div></div>
+        <div class="stat-card"><div class="stat-card-label">BEST DAY</div><div class="stat-card-value" style="color:#0ea5c8;font-size:14px">${best.ml} ml on ${best.date}</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Work log ──
+  const workLog = (state.workLog || []);
+  if (workLog.length) {
+    const totalMin = workLog.reduce((s,e) => s + (e.hours*60 + e.mins), 0);
+    const totalHrs = r2(totalMin / 60);
+    const avgMin = Math.round(totalMin / workLog.length);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">💼 Work</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">DAYS LOGGED</div><div class="stat-card-value" style="color:#475569">${workLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">TOTAL HOURS</div><div class="stat-card-value" style="color:#475569">${totalHrs}h</div></div>
+        <div class="stat-card"><div class="stat-card-label">AVG / DAY</div><div class="stat-card-value" style="color:#475569">${Math.floor(avgMin/60)}h ${avgMin%60}m</div></div>
+      </div>
+    </div>`;
+  }
+
+
+  // ── Dishes log ──
+  const dishesLog = (state.dishesLog || []);
+  if (dishesLog.length) {
+    const totalP = dishesLog.reduce((s,e) => s + (e.presses||0), 0);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">🍽 Dishes</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">DAYS LOGGED</div><div class="stat-card-value" style="color:#0891b2">${dishesLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">TOTAL TIMES</div><div class="stat-card-value" style="color:#0891b2">${totalP}</div></div>
+      </div>
+    </div>`;
+  }
+
+  // ── Garbage log ──
+  const garbageLog = (state.garbageLog || []);
+  if (garbageLog.length) {
+    const totalG = garbageLog.reduce((s,e) => s + (e.presses||0), 0);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">🗑 Garbage</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">DAYS LOGGED</div><div class="stat-card-value" style="color:#65a30d">${garbageLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">TOTAL TIMES</div><div class="stat-card-value" style="color:#65a30d">${totalG}</div></div>
+      </div>
+    </div>`;
+  }
+
+
+  // ── Diaper logs ──
+  const heavyDiaperLog = (state.heavyDiaperLog || []);
+  const lightDiaperLog = (state.lightDiaperLog || []);
+  if (heavyDiaperLog.length || lightDiaperLog.length) {
+    const totalH = heavyDiaperLog.reduce((s,e) => s + (e.presses||0), 0);
+    const totalL = lightDiaperLog.reduce((s,e) => s + (e.presses||0), 0);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Diapers</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">💩 HEAVY TOTAL</div><div class="stat-card-value" style="color:#9a3412">${totalH}</div></div>
+        <div class="stat-card"><div class="stat-card-label">💧 LIGHT TOTAL</div><div class="stat-card-value" style="color:#ca8a04">${totalL}</div></div>
+        <div class="stat-card"><div class="stat-card-label">TOTAL CHANGES</div><div class="stat-card-value" style="color:var(--text)">${totalH + totalL}</div></div>
+      </div>
+    </div>`;
+  }
+
+
+  // ── Kids logs ──
+  const driveKidsLog = (state.driveKidsLog || []);
+  const takeKidsLog  = (state.takeKidsLog || []);
+  if (driveKidsLog.length || takeKidsLog.length) {
+    const totalDrives = driveKidsLog.reduce((s,e) => s + (e.presses||0), 0);
+    const totalOutMin = takeKidsLog.reduce((s,e) => s + (e.hours*60 + e.mins), 0);
+    const totalOutHrs = r2(totalOutMin / 60);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Kids</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">🚗 DRIVES</div><div class="stat-card-value" style="color:#7c3aed">${totalDrives}</div></div>
+        <div class="stat-card"><div class="stat-card-label">🎒 OUTINGS</div><div class="stat-card-value" style="color:#db2777">${takeKidsLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">🎒 TOTAL HOURS OUT</div><div class="stat-card-value" style="color:#db2777">${totalOutHrs}h</div></div>
+      </div>`;
+    const noted = takeKidsLog.filter(e => e.note).slice(-8).reverse();
+    if (noted.length) {
+      html += `<table class="stats-table" style="margin-top:8px"><thead><tr><th>DATE</th><th>OUTING</th><th style="text-align:right">TIME</th></tr></thead><tbody>` +
+        noted.map(e => `<tr><td style="font-family:'Cinzel',serif;font-size:12px">${e.date.slice(5)}</td><td>${esc(e.note)}</td><td class="num" style="color:#db2777">${e.hours}h ${e.mins}m</td></tr>`).join('') +
+        `</tbody></table>`;
+    }
+    html += `</div>`;
+  }
+
+
+  // ── Creatine / Eggs / Teeth / Shower ──
+  const creatineLog = (state.creatineLog || []);
+  const eggsLog = (state.eggsLog || []);
+  const teethLog = (state.teethLog || []);
+  const showerLog = (state.showerLog || []);
+  if (creatineLog.length || eggsLog.length || teethLog.length || showerLog.length || (state.laundryLog||[]).length || (state.shoppingLog||[]).length) {
+    const totalEggs = eggsLog.reduce((s,e) => s + (e.count||0), 0);
+    const totalTeeth = teethLog.reduce((s,e) => s + (e.presses||0), 0);
+    const totalShowers = showerLog.reduce((s,e) => s + (e.presses||0), 0);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">Habits</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">💊 CREATINE DAYS</div><div class="stat-card-value" style="color:#0d9488">${creatineLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">🥚 TOTAL EGGS</div><div class="stat-card-value" style="color:#f59e0b">${totalEggs}</div></div>
+        <div class="stat-card"><div class="stat-card-label">🦷 TEETH BRUSHES</div><div class="stat-card-value" style="color:#06b6d4">${totalTeeth}</div></div>
+        <div class="stat-card"><div class="stat-card-label">🚿 SHOWERS</div><div class="stat-card-value" style="color:#3b82f6">${totalShowers}</div></div>
+        <div class="stat-card"><div class="stat-card-label">🧺 LAUNDRY</div><div class="stat-card-value" style="color:#7c3aed">${(state.laundryLog||[]).reduce((s,e)=>s+(e.presses||0),0)}</div></div>
+        <div class="stat-card"><div class="stat-card-label">🛒 SHOPPING DAYS</div><div class="stat-card-value" style="color:#16a34a">${(state.shoppingLog||[]).length}</div></div>
+      </div>
+    </div>`;
+  }
+
+
+  // ── Meditation log ──
+  const meditationLog = (state.meditationLog || []);
+  if (meditationLog.length) {
+    const totalMin = meditationLog.reduce((s,e) => s + (e.minutes||0), 0);
+    const avgMin = Math.round(totalMin / meditationLog.length);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">🧘 Meditation</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">SESSIONS (days)</div><div class="stat-card-value" style="color:#7c3aed">${meditationLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">TOTAL MINUTES</div><div class="stat-card-value" style="color:#7c3aed">${totalMin}</div></div>
+        <div class="stat-card"><div class="stat-card-label">AVG / DAY</div><div class="stat-card-value" style="color:#7c3aed">${avgMin}m</div></div>
+      </div>
+    </div>`;
+  }
+
+
+  // ── Fasting log ──
+  const fastingLog = (state.fastingLog || []);
+  if (fastingLog.length) {
+    const totalHrs = r2(fastingLog.reduce((s,e) => s + (e.hours||0), 0));
+    const avgHrs = r2(totalHrs / fastingLog.length);
+    const longest = fastingLog.reduce((b,e) => (e.hours||0) > (b.hours||0) ? e : b, fastingLog[0]);
+    html += `<div class="stats-group">
+      <div class="stats-group-title">🍃 Fasting</div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-label">TOTAL FASTS</div><div class="stat-card-value" style="color:#0d9488">${fastingLog.length}</div></div>
+        <div class="stat-card"><div class="stat-card-label">AVG LENGTH</div><div class="stat-card-value" style="color:#0d9488">${avgHrs}h</div></div>
+        <div class="stat-card"><div class="stat-card-label">LONGEST</div><div class="stat-card-value" style="color:#0d9488">${Math.floor(longest.hours)}h</div></div>
+      </div>
+    </div>`;
+  }
+
   // ── Gym Challenge Records ──
   if ((state.challenges || []).length) {
     state.challenges.forEach(c => {
@@ -2299,7 +2760,7 @@ let historyTaskCtx = null;
 function openHistoryTaskModal(histIndex) {
   const entry = state.history[histIndex];
   historyTaskCtx = { index: histIndex };
-  document.getElementById('historyTaskModalTitle').textContent = 'Edit Tasks — ' + entry.date;
+  document.getElementById('historyTaskModalTitle').textContent = 'Edit Day — ' + entry.date;
 
   const allTasks = {};
   ['common','uncommon','rare'].forEach(type => {
@@ -2317,8 +2778,16 @@ function openHistoryTaskModal(histIndex) {
   const rowStyle = 'display:flex;align-items:center;gap:8px;margin-bottom:6px';
   const headerStyle = 'font-family:"Cinzel",serif;font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)';
 
+  function activityRow(label, sublabel, val, kind, color) {
+    return '<div style="' + rowStyle + '">'
+      + '<div style="flex:1;font-size:14px;color:var(--text)">' + label
+      + (sublabel ? '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + sublabel + '</span>' : '')
+      + '</div>'
+      + '<input type="number" step="any" value="' + val + '" data-kind="' + kind + '" style="' + inputStyle + (color?';color:'+color:'') + '" /></div>';
+  }
+
   if (Object.keys(allTasks).length) {
-    html += '<div style="' + headerStyle + '">TASKS</div>';
+    html += '<div style="' + headerStyle + '">TASKS (count)</div>';
     Object.entries(allTasks).forEach(([name, info]) => {
       const count = (entry.tasks || {})[name] || 0;
       const ptsLabel = info.ptsPerUnit !== null ? info.ptsPerUnit + ' pts/' + info.unit : 'pts unknown';
@@ -2330,18 +2799,72 @@ function openHistoryTaskModal(histIndex) {
   }
 
   if (rewardNames.length) {
-    html += '<div style="' + headerStyle + ';margin-top:10px">REWARDS REDEEMED</div>';
+    html += '<div style="' + headerStyle + ';margin-top:10px">REWARDS (count)</div>';
     rewardNames.forEach(name => {
       const count = (entry.rewards || {})[name] || 0;
       const reward = state.rewards.find(r => r.name === name);
       const costLabel = reward ? reward.cost + ' pts each' : 'cost unknown';
-      const rewardInputStyle = inputStyle.replace('var(--accent2)', 'var(--reward)');
       html += '<div style="' + rowStyle + '">'
         + '<div style="flex:1;font-size:14px;color:var(--text)">' + esc(name)
         + '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + costLabel + '</span></div>'
-        + '<input type="number" min="0" step="1" value="' + count + '" data-task="' + esc(name) + '" data-kind="reward" style="' + rewardInputStyle + '" /></div>';
+        + '<input type="number" min="0" step="1" value="' + count + '" data-task="' + esc(name) + '" data-kind="reward" style="' + inputStyle + '" /></div>';
     });
   }
+
+  // Helper: read a stored direct value, falling back to a date-stamped activity log's pts
+  function storedPts(field, logKey) {
+    if (entry[field] !== undefined) return entry[field];
+    if (logKey) { const e = (state[logKey]||[]).find(x => x.date === entry.date); if (e) return e.pts || 0; }
+    return 0;
+  }
+
+  // Chores — direct point entry
+  html += '<div style="' + headerStyle + ';margin-top:10px">CHORES (points earned)</div>';
+  html += activityRow('💧 Water', '', storedPts('waterPts','waterLog'), 'waterPts', '#0ea5c8');
+  html += activityRow('💼 Work', '', storedPts('workPts','workLog'), 'workPts', '#475569');
+  html += activityRow('🍽 Dishes', '', storedPts('dishPts','dishesLog'), 'dishPts', '#0891b2');
+  html += activityRow('🗑 Garbage', '', storedPts('garbPts','garbageLog'), 'garbPts', '#65a30d');
+  html += activityRow('💩 Heavy diaper', '', storedPts('hdPts','heavyDiaperLog'), 'hdPts', '#9a3412');
+  html += activityRow('💧 Light diaper', '', storedPts('ldPts','lightDiaperLog'), 'ldPts', '#ca8a04');
+  html += activityRow('🚗 Drive kids', '', storedPts('dkPts','driveKidsLog'), 'dkPts', '#7c3aed');
+  html += activityRow('🎒 Take kids out', '', storedPts('tkPts','takeKidsLog'), 'tkPts', '#db2777');
+  html += activityRow('💊 Creatine', '', storedPts('crPts','creatineLog'), 'crPts', '#0d9488');
+  html += activityRow('🥚 Eggs', '', storedPts('egPts','eggsLog'), 'egPts', '#f59e0b');
+  html += activityRow('🦷 Teeth', '', storedPts('tePts','teethLog'), 'tePts', '#06b6d4');
+  html += activityRow('🧺 Laundry', '', storedPts('laPts','laundryLog'), 'laPts', '#7c3aed');
+  html += activityRow('🛒 Shopping', '', storedPts('spPts','shoppingLog'), 'spPts', '#16a34a');
+  html += activityRow('⛽ Gas', '', storedPts('gaPts','gasLog'), 'gaPts', '#dc2626');
+  html += activityRow('🛢 Oil change', '', storedPts('oiPts','oilLog'), 'oiPts', '#78716c');
+  html += activityRow('📓 Log bonus', '4 pts for logging', storedPts('lgPts','logBonusLog'), 'lgPts', '#0f766e');
+  html += activityRow('😴 Sleep bonus', '4 pts for logging', storedPts('slPts','sleepBonusLog'), 'slPts', '#4338ca');
+  html += activityRow('🧘 Meditation', '', storedPts('metPts','meditationLog'), 'metPts', '#7c3aed');
+  html += activityRow('🍃 Fasting', '', storedPts('fastPts','fastingLog'), 'fastPts', '#0d9488');
+
+  // Gym — direct point entry
+  html += '<div style="' + headerStyle + ';margin-top:10px">GYM (points earned)</div>';
+  html += activityRow('🏋 Workout', '', storedPts('workoutPts','workoutLog'), 'workoutPts', 'var(--gym)');
+  html += activityRow('💪 Pushups', '', storedPts('pushupPts','pushupLog'), 'pushupPts', '#0369a1');
+  html += activityRow('🪃 Jump rope', '', storedPts('jumpRopePts','jumpRopeLog'), 'jumpRopePts', '#7c3aed');
+
+  // Sex & consumption
+  html += '<div style="' + headerStyle + ';margin-top:10px">OTHER</div>';
+  html += activityRow('🎉 Woohoo count', '+12 pts each', entry.woohoos || 0, 'woohoos', '#16a34a');
+  html += activityRow('😔 Boohoo count', '−12 pts each', entry.boohoos || 0, 'boohoos', '#dc2626');
+  html += activityRow('🍺 Drink spend', 'points spent', entry.drinkSpend || 0, 'drinkSpend', '#7c3aed');
+  html += activityRow('🍽 Food spend', 'points spent', entry.foodSpendOverride !== undefined ? entry.foodSpendOverride : r2((entry.food || []).reduce((s,f)=>s+(f.spend||0),0)), 'foodSpend', 'var(--food)');
+  html += activityRow('⚖ Manual adjust', 'extra net (+/−)', entry.adjust || 0, 'adjust', null);
+
+  // Sleep
+  html += '<div style="' + headerStyle + ';margin-top:10px">SLEEP (no point effect)</div>';
+  const sleepEntry = (state.sleepEntries || []).find(s => s.date === entry.date);
+  const sh = sleepEntry ? Math.floor(sleepEntry.minutes/60) : 0;
+  const sm = sleepEntry ? sleepEntry.minutes%60 : 0;
+  const ss = sleepEntry && sleepEntry.score != null ? sleepEntry.score : '';
+  html += '<div style="' + rowStyle + '"><div style="flex:1;font-size:14px;color:var(--text)">Hours / Minutes</div>'
+    + '<input type="number" min="0" max="24" value="' + sh + '" data-kind="sleepH" style="' + inputStyle + ';width:48px" />'
+    + '<input type="number" min="0" max="59" value="' + sm + '" data-kind="sleepM" style="' + inputStyle + ';width:48px" /></div>';
+  html += '<div style="' + rowStyle + '"><div style="flex:1;font-size:14px;color:var(--text)">Sleep score (1-100)</div>'
+    + '<input type="number" min="1" max="100" value="' + ss + '" data-kind="sleepScore" style="' + inputStyle + '" /></div>';
 
   document.getElementById('historyTaskList').innerHTML = html;
   document.getElementById('historyTaskModal').classList.add('open');
@@ -2357,46 +2880,89 @@ function saveHistoryTasks() {
   const entry = state.history[historyTaskCtx.index];
   const inputs = document.querySelectorAll('#historyTaskList input');
   const newTasks = {}, newRewards = {};
+  const direct = {};
   inputs.forEach(inp => {
-    const name = inp.dataset.task;
-    const val  = Math.max(0, parseInt(inp.value) || 0);
-    if (inp.dataset.kind === 'task')   { if (val > 0) newTasks[name]   = val; }
-    else                               { if (val > 0) newRewards[name] = val; }
+    const kind = inp.dataset.kind;
+    if (kind === 'task')   { const v = Math.max(0, parseInt(inp.value)||0); if (v>0) newTasks[inp.dataset.task] = v; }
+    else if (kind === 'reward') { const v = Math.max(0, parseInt(inp.value)||0); if (v>0) newRewards[inp.dataset.task] = v; }
+    else { direct[kind] = parseFloat(inp.value) || 0; }
   });
 
+  // Earned from tasks
   let ptsEarned = 0;
   Object.entries(newTasks).forEach(([name, count]) => {
-    // Check regular tasks first
     let found = null;
     ['common','uncommon','rare'].forEach(type => {
       state.tasks[type].forEach(t => { if (t.name === name) found = t; });
     });
-    if (found) {
-      ptsEarned = r2(ptsEarned + count * found.ptsPerUnit);
-    } else {
-      // May be a onetime task — check onetime list
-      const ot = state.tasks.onetime.find(t => t.name === name);
-      if (ot) ptsEarned = r2(ptsEarned + count * ot.pts);
-    }
+    if (found) ptsEarned = r2(ptsEarned + count * found.ptsPerUnit);
+    else { const ot = state.tasks.onetime.find(t => t.name === name); if (ot) ptsEarned = r2(ptsEarned + count * ot.pts); }
   });
 
+  // Spent from rewards
   let ptsSpent = 0;
   Object.entries(newRewards).forEach(([name, count]) => {
     const reward = state.rewards.find(r => r.name === name);
     if (reward) ptsSpent = r2(ptsSpent + count * reward.cost);
   });
-  // Preserve food spend from the original entry
-  const foodSpend = r2((entry.food || []).reduce((s, f) => s + (f.spend || 0), 0));
-  ptsSpent = r2(ptsSpent + foodSpend);
 
-  const oldNet = entry.netPts;
-  const newNet = r2(ptsEarned - ptsSpent);
-  const diff   = r2(newNet - oldNet);
-  entry.tasks = newTasks; entry.rewards = newRewards;
-  entry.ptsEarned = ptsEarned; entry.ptsSpent = ptsSpent; entry.netPts = newNet;
+  // Direct activity points — chores
+  const choreFields = ['waterPts','workPts','dishPts','garbPts','hdPts','ldPts','dkPts','tkPts','crPts','egPts','tePts','laPts','spPts','gaPts','oiPts','lgPts','slPts','metPts','fastPts',
+                       'workoutPts','pushupPts','jumpRopePts'];
+  const chorePts = {};
+  let choreTotal = 0;
+  choreFields.forEach(f => { chorePts[f] = r2(direct[f] || 0); choreTotal = r2(choreTotal + chorePts[f]); });
+
+  const woohoos     = Math.max(0, Math.round(direct.woohoos || 0));
+  const boohoos     = Math.max(0, Math.round(direct.boohoos || 0));
+  const drinkSpend  = r2(direct.drinkSpend  || 0);
+  const foodSpend   = r2(direct.foodSpend   || 0);
+  const adjust      = r2(direct.adjust      || 0);
+
+  ptsEarned = r2(ptsEarned + choreTotal + woohoos * 12);
+  ptsSpent  = r2(ptsSpent + drinkSpend + foodSpend + boohoos * 12);
+
+  const newNet = r2(ptsEarned - ptsSpent + adjust);
+  const diff   = r2(newNet - (entry.netPts || 0));
+
+  // Store everything on the entry
+  entry.tasks = newTasks;
+  entry.rewards = newRewards;
+  choreFields.forEach(f => { entry[f] = chorePts[f]; });
+  entry.woohoos = woohoos;
+  entry.boohoos = boohoos;
+  entry.drinkSpend = drinkSpend;
+  entry.foodSpendOverride = foodSpend;
+  entry.adjust = adjust;
+  entry.ptsEarned = ptsEarned;
+  entry.ptsSpent = ptsSpent;
+  entry.netPts = newNet;
+  // Recompute grade from net unless it's a vacation day. Editing a missed day un-marks it.
+  if (entry.vacation) {
+    entry.gradeOverride = 'V';
+  } else {
+    delete entry.gradeOverride;
+    if (entry.missed && newNet !== 0) entry.missed = false;
+  }
+
+  // Sleep
+  const sh = parseInt((document.querySelector('[data-kind="sleepH"]')||{}).value) || 0;
+  const sm = parseInt((document.querySelector('[data-kind="sleepM"]')||{}).value) || 0;
+  const sscore = parseFloat((document.querySelector('[data-kind="sleepScore"]')||{}).value);
+  const totalMin = sh*60 + sm;
+  if (!state.sleepEntries) state.sleepEntries = [];
+  const si = state.sleepEntries.findIndex(s => s.date === entry.date);
+  if (totalMin > 0 || !isNaN(sscore)) {
+    const sleepObj = { date: entry.date, minutes: totalMin, score: isNaN(sscore) ? null : sscore };
+    if (si >= 0) state.sleepEntries[si] = sleepObj; else state.sleepEntries.push(sleepObj);
+    state.sleepEntries.sort((a,b) => a.date < b.date ? -1 : 1);
+  } else if (si >= 0) {
+    state.sleepEntries.splice(si, 1);
+  }
+
   applyPoints(diff);
   save(); closeHistoryTaskModal(); renderStats(); updatePoints();
-  toast('History updated. Points ' + (diff >= 0 ? '+' : '') + diff + '.');
+  toast('Day updated. Points ' + (diff >= 0 ? '+' : '') + diff + '.');
 }
 
 document.getElementById('historyTaskModal').addEventListener('click', e => {
@@ -2573,12 +3139,12 @@ document.getElementById('plansModal').addEventListener('click', e => { if (e.tar
 const TAB_LABELS = {
   chores:'Chores', onetime:'To-Do',
   rewards:'Sex', food:'Diet', drink:'Drink', grocery:'Grocery',
-  clean:'Deep Clean', gym:'Gym', stats:'Stats', log:'Log', sleep:'Sleep'
+  clean:'Deep Clean', gym:'Gym', stats:'Stats', log:'Log', sleep:'Sleep', meditation:'Meditate', fasting:'Fasting'
 };
 const TAB_DEFAULT_COLORS = {
   chores:'#0ea5c8', onetime:'#ea6c00',
   rewards:'#b59a00', food:'#e05020', drink:'#7c3aed', grocery:'#2a9060',
-  clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea', log:'#0f766e', sleep:'#4338ca'
+  clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea', log:'#0f766e', sleep:'#4338ca', meditation:'#7c3aed', fasting:'#0d9488'
 };
 const SWATCHES = [
   '#0ea5c8','#16a34a','#9333ea','#ea6c00','#b59a00','#e05020',
@@ -2609,9 +3175,14 @@ function renderTabs() {
   if (!container) return;
   const order = state.tabOrder || Object.keys(TAB_LABELS);
 
-  // Split into rows of 7
-  const row1 = order.slice(0, 7);
-  const row2 = order.slice(7);
+  // Split into 3 balanced rows
+  const total = order.length;
+  const perRow = Math.ceil(total / 3);
+  const rows = [
+    order.slice(0, perRow),
+    order.slice(perRow, perRow * 2),
+    order.slice(perRow * 2)
+  ];
 
   function makeRow(tabs, mt) {
     const row = document.createElement('div');
@@ -2685,8 +3256,9 @@ function renderTabs() {
   }
 
   container.innerHTML = '';
-  container.appendChild(makeRow(row1, false));
-  if (row2.length) container.appendChild(makeRow(row2, true));
+  rows.forEach((rowTabs, i) => {
+    if (rowTabs.length) container.appendChild(makeRow(rowTabs, i > 0));
+  });
 }
 
 function switchTab(tab) {
@@ -2697,6 +3269,8 @@ function switchTab(tab) {
   if (tab === 'stats') renderStats();
   if (tab === 'log') renderLog();
   if (tab === 'sleep') renderSleep();
+  if (tab === 'meditation') renderMeditation();
+  if (tab === 'fasting') renderFasting();
   renderTabs();
 }
 
@@ -2748,11 +3322,9 @@ function closeColorPicker() {
 }
 
 
-document.getElementById('chore-name').addEventListener('keydown', e => { if (e.key==='Enter') addChore(); });
 document.getElementById('onetime-name').addEventListener('keydown', e => { if (e.key==='Enter') addOnetimeTask(); });
 document.getElementById('grocery-name').addEventListener('keydown', e => { if (e.key==='Enter') addGroceryItem(); });
 document.getElementById('clean-name').addEventListener('keydown', e => { if (e.key==='Enter') addCleanItem(); });
-document.getElementById('gym-name').addEventListener('keydown', e => { if (e.key==='Enter') addGymTask(); });
 document.getElementById('challenge-name').addEventListener('keydown', e => { if (e.key==='Enter') addChallenge(); });
 
 let toastTimer;
@@ -2767,26 +3339,26 @@ function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 
 // Grade thresholds — returns a grade string from net points
 function netToGrade(net) {
-  if (net >= 100) return 'S+';
-  if (net >= 80)  return 'S';
-  if (net >= 60)  return 'A+';
-  if (net >= 52)  return 'A';
-  if (net >= 49)  return 'A−';
-  if (net >= 41)  return 'B+';
-  if (net >= 33)  return 'B';
-  if (net >= 25)  return 'B−';
-  if (net >= 21)  return 'C+';
-  if (net >= 17)  return 'C';
-  if (net >= 13)  return 'C−';
-  if (net >= 9)   return 'D+';
-  if (net >= 5)   return 'D';
+  if (net >= 120) return 'S+';
+  if (net >= 96)  return 'S';
+  if (net >= 72)  return 'A+';
+  if (net >= 62)  return 'A';
+  if (net >= 59)  return 'A−';
+  if (net >= 49)  return 'B+';
+  if (net >= 40)  return 'B';
+  if (net >= 30)  return 'B−';
+  if (net >= 25)  return 'C+';
+  if (net >= 20)  return 'C';
+  if (net >= 16)  return 'C−';
+  if (net >= 11)  return 'D+';
+  if (net >= 6)   return 'D';
   if (net >= 1)   return 'D−';
   return 'F';
 }
 
 // Numeric weight for averaging grades (maps grade → midpoint pts for avg display)
 function gradeToNum(g) {
-  const map = { 'S+':110,'S':90,'A+':70,'A':55,'A−':50,'B+':44,'B':36,'B−':28,'C+':22,'C':18,'C−':14,'D+':10,'D':6,'D−':2,'F':0,'X+':0,'X':0,'X−':0,'V':0 };
+  const map = { 'S+':132,'S':108,'A+':84,'A':66,'A−':60,'B+':53,'B':43,'B−':34,'C+':26,'C':22,'C−':17,'D+':12,'D':7,'D−':2,'F':0,'X+':0,'X':0,'X−':0,'V':0 };
   return map[g] ?? 0;
 }
 
@@ -2861,10 +3433,29 @@ function setGreeting() {
     const _wp = ((state.workoutLog||[]).find(e=>e.date===_wt)||{}).pts||0;
     const _pp = ((state.pushupLog||[]).find(e=>e.date===_wt)||{}).pts||0;
     const _jp = ((state.jumpRopeLog||[]).find(e=>e.date===_wt)||{}).pts||0;
-    const calcNet = r2(earned - rewardSpend - drinkSpend - foodSpend + _sexNet + _wp + _pp + _jp);
+    const _watp = ((state.waterLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _wrkp = ((state.workLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _dshp = ((state.dishesLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _grbp = ((state.garbageLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _hdp = ((state.heavyDiaperLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _ldp = ((state.lightDiaperLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _dkp = ((state.driveKidsLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _tkp = ((state.takeKidsLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _crp = ((state.creatineLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _egp = ((state.eggsLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _tep = ((state.teethLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _lap = ((state.laundryLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _spp = ((state.shoppingLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _gap = ((state.gasLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _oip = ((state.oilLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _lgp = ((state.logBonusLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _slp = ((state.sleepBonusLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _metp = ((state.meditationLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const _fastp = ((state.fastingLog||[]).find(e=>e.date===_wt)||{}).pts||0;
+    const calcNet = r2(earned - rewardSpend - drinkSpend - foodSpend + _sexNet + _wp + _pp + _jp + _watp + _wrkp + _dshp + _grbp + _hdp + _ldp + _dkp + _tkp + _crp + _egp + _tep + _lap + _spp + _gap + _oip + _lgp + _slp + _metp + _fastp);
     const adjust = state.dailyAdjust || 0;
     const net = r2(calcNet + adjust);
-    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || _sexNet !== 0 || _wp !== 0 || _pp !== 0 || _jp !== 0 || adjust !== 0;
+    const somethingDone = earned > 0 || rewardSpend > 0 || drinkSpend > 0 || foodSpend > 0 || _sexNet !== 0 || _wp !== 0 || _pp !== 0 || _jp !== 0 || _watp !== 0 || _wrkp !== 0 || _dshp !== 0 || _grbp !== 0 || _hdp !== 0 || _ldp !== 0 || _dkp !== 0 || _tkp !== 0 || _crp !== 0 || _egp !== 0 || _tep !== 0 || _lap !== 0 || _spp !== 0 || _gap !== 0 || _oip !== 0 || _lgp !== 0 || _slp !== 0 || _metp !== 0 || _fastp !== 0 || adjust !== 0;
     if (!somethingDone) return null;
     return netToGrade(net);
   }
@@ -2947,11 +3538,7 @@ function setGreeting() {
 }
 
 
-function editPoints(mode) {
-  const totalField = document.getElementById('pointsTotalField');
-  const dailyField = document.getElementById('pointsDailyField');
-  const title      = document.getElementById('pointsModalTitle');
-
+function computeLiveNet() {
   let earned = 0;
   ['common','uncommon','rare'].forEach(type => {
     (state.tasks[type] || []).forEach(t => { earned += earnedPts(t); });
@@ -2962,54 +3549,36 @@ function editPoints(mode) {
   const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
   const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
   const drinkSpend  = (state.drink || {}).todaySpend || 0;
-  const currentNet  = r2(earned - foodSpend - rewardSpend - drinkSpend);
+  const t = new Date().toLocaleDateString('en-CA');
+  const g = (k) => ((state[k]||[]).find(e=>e.date===t)||{}).pts||0;
+  const sexNet = r2((state.sexLog||[]).filter(e=>e.date===t).reduce((s,e)=>s+(e.type==='woohoo'?12:-12),0));
+  const activity = g('workoutLog')+g('pushupLog')+g('jumpRopeLog')+g('waterLog')+g('workLog')+
+    g('dishesLog')+g('garbageLog')+g('heavyDiaperLog')+g('lightDiaperLog')+g('driveKidsLog')+g('takeKidsLog');
+  return r2(earned - foodSpend - rewardSpend - drinkSpend + sexNet + activity);
+}
 
-  if (mode === 'daily') {
-    title.textContent = 'Edit Daily Points';
-    totalField.style.display = 'none';
-    dailyField.style.display = '';
-    document.getElementById('pointsDailyInput').value = currentNet;
-    setTimeout(() => document.getElementById('pointsDailyInput').select(), 50);
-  } else {
-    title.textContent = 'Edit Total Points';
-    totalField.style.display = '';
-    dailyField.style.display = 'none';
-    document.getElementById('pointsInput').value = r2(state.points);
-    setTimeout(() => document.getElementById('pointsInput').select(), 50);
-  }
+function editPoints(mode) {
+  const title = document.getElementById('pointsModalTitle');
+  const totalField = document.getElementById('pointsTotalField');
+  const dailyField = document.getElementById('pointsDailyField');
+  if (totalField) totalField.style.display = 'none';
+  if (dailyField) dailyField.style.display = '';
+  title.textContent = 'Set Daily Net';
+  const displayedNet = r2(computeLiveNet() + (state.dailyAdjust || 0));
+  document.getElementById('pointsDailyInput').value = displayedNet;
+  setTimeout(() => document.getElementById('pointsDailyInput').select(), 50);
   document.getElementById('pointsModal').classList.add('open');
 }
 function closePointsModal() {
   document.getElementById('pointsModal').classList.remove('open');
 }
 function savePointsModal() {
-  const totalField = document.getElementById('pointsTotalField');
-  const dailyField = document.getElementById('pointsDailyField');
-
-  if (dailyField.style.display !== 'none') {
-    const dailyVal = parseFloat(document.getElementById('pointsDailyInput').value);
-    if (!isNaN(dailyVal)) {
-      // Compute current net and set adjust so tasks still add on top
-      let earned = 0;
-      ['common','uncommon','rare'].forEach(type => {
-        (state.tasks[type] || []).forEach(t => { earned += earnedPts(t); });
-      });
-      (state.tasks.onetime || []).forEach(t => { if (t.done && !t.snapshotted) earned += t.pts; });
-      (state.clean || []).forEach(t => { if (t.isLog && !t.snapshotted) earned += t.pts; });
-      (state.gymTasks || []).forEach(t => { earned += r2((t.count||0)*t.ptsPerUnit); });
-      const foodSpend   = (state.food || []).reduce((s, f) => s + (f.todaySpend || 0), 0);
-      const rewardSpend = (state.rewards || []).reduce((s, r) => s + (r.redeemed || 0) * r.cost, 0);
-      const drinkSpend  = (state.drink || {}).todaySpend || 0;
-      const _t = new Date().toLocaleDateString('en-CA');
-      const _sn = r2((state.sexLog||[]).filter(e=>e.date===_t).reduce((s,e)=>s+(e.type==='woohoo'?12:-12),0));
-      const currentNet  = r2(earned - foodSpend - rewardSpend - drinkSpend + _sn);
-      state.dailyAdjust = r2(dailyVal - currentNet);
-    }
-  } else {
-    const val = parseFloat(document.getElementById('pointsInput').value);
-    if (!isNaN(val)) state.points = r2(val);
+  const dailyVal = parseFloat(document.getElementById('pointsDailyInput').value);
+  if (!isNaN(dailyVal)) {
+    // dailyAdjust makes displayed net equal dailyVal; activity still adds on top
+    const activityNet = computeLiveNet();
+    state.dailyAdjust = r2(dailyVal - activityNet);
   }
-
   save(); updatePoints(); closePointsModal();
 }
 document.addEventListener('keydown', e => {
@@ -3583,9 +4152,19 @@ function saveLog() {
   else state.logEntries.push(entry);
   state.logEntries.sort((a,b) => a.date < b.date ? -1 : 1);
 
+  // Award a flat 4 pts once per day for logging reflections/plans
+  if (!state.logBonusLog) state.logBonusLog = [];
+  let awarded = false;
+  if (!state.logBonusLog.find(e => e.date === dateStr)) {
+    state.logBonusLog.push({ date: dateStr, pts: 4 });
+    applyPoints(4);
+    awarded = true;
+  }
+
   save();
   updatePlansBtn();
-  toast('✦ Log entry saved.');
+  updatePoints();
+  toast(awarded ? '✦ Log saved · +4 pts' : '✦ Log entry updated.');
 }
 
 
@@ -3693,8 +4272,18 @@ function logSleep() {
   if (existingIdx >= 0) state.sleepEntries[existingIdx] = entry;
   else state.sleepEntries.push(entry);
   state.sleepEntries.sort((a,b) => a.date < b.date ? -1 : 1);
-  save(); renderSleep();
-  toast(`✦ Sleep logged: ${h}h ${m}m${score !== null ? ` · score ${score}` : ''}`);
+
+  // Award a flat 4 pts once per day for logging sleep
+  if (!state.sleepBonusLog) state.sleepBonusLog = [];
+  let awarded = false;
+  if (!state.sleepBonusLog.find(e => e.date === date)) {
+    state.sleepBonusLog.push({ date, pts: 4 });
+    applyPoints(4);
+    awarded = true;
+  }
+
+  save(); renderSleep(); updatePoints();
+  toast(`✦ Sleep logged${awarded ? ' · +4 pts' : ''}: ${h}h ${m}m${score !== null ? ` · score ${score}` : ''}`);
 }
 
 function deleteSleepEntry(date) {
@@ -3933,7 +4522,711 @@ document.getElementById('quickLogModal').addEventListener('click', e => {
 });
 
 
+// ── Water & Work (hardcoded chores) ──────────────────────────────────
+function waterPtsForPress(pressNumber) {
+  // First 2 presses give 4 pts each, then 2 pts each
+  return pressNumber <= 2 ? 4 : 2;
+}
+
+function logWater() {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.waterLog) state.waterLog = [];
+  let entry = state.waterLog.find(e => e.date === date);
+  if (!entry) { entry = { date, presses: 0, ml: 0, pts: 0 }; state.waterLog.push(entry); }
+  entry.presses += 1;
+  entry.ml += 500;
+  const pts = waterPtsForPress(entry.presses);
+  entry.pts = r2(entry.pts + pts);
+  applyPoints(pts);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast(`💧 ${entry.ml} ml · +${pts} pts`);
+}
+
+function undoWater() {
+  const date = new Date().toLocaleDateString('en-CA');
+  const entry = (state.waterLog || []).find(e => e.date === date);
+  if (!entry || entry.presses <= 0) return;
+  const pts = waterPtsForPress(entry.presses);
+  entry.presses -= 1;
+  entry.ml = Math.max(0, entry.ml - 500);
+  entry.pts = r2(entry.pts - pts);
+  applyPoints(-pts);
+  if (entry.presses === 0) {
+    state.waterLog = state.waterLog.filter(e => e.date !== date);
+  }
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Water undone.');
+}
+
+function calcWorkPts(hours, mins) {
+  return r2((hours + mins/60) * 3);
+}
+
+function openWorkModal() {
+  document.getElementById('work-hours').value = '';
+  document.getElementById('work-mins').value = '';
+  document.getElementById('work-pts-preview').textContent = '';
+  const today = new Date().toLocaleDateString('en-CA');
+  const entry = (state.workLog || []).find(e => e.date === today);
+  if (entry) {
+    document.getElementById('work-hours').value = entry.hours;
+    document.getElementById('work-mins').value = entry.mins;
+    updateWorkPreview();
+  }
+  document.getElementById('work-undo-btn').style.display = entry ? '' : 'none';
+  document.getElementById('workModal').classList.add('open');
+  setTimeout(() => document.getElementById('work-hours').focus(), 50);
+}
+
+function closeWorkModal() {
+  document.getElementById('workModal').classList.remove('open');
+}
+
+function updateWorkPreview() {
+  const h = parseInt(document.getElementById('work-hours').value) || 0;
+  const m = parseInt(document.getElementById('work-mins').value) || 0;
+  const pts = calcWorkPts(h, m);
+  document.getElementById('work-pts-preview').textContent = (h>0||m>0) ? `+${pts} pts` : '';
+}
+
+function saveWork() {
+  const h = parseInt(document.getElementById('work-hours').value) || 0;
+  const m = parseInt(document.getElementById('work-mins').value) || 0;
+  if (h <= 0 && m <= 0) { toast('Enter work time.'); return; }
+  const pts = calcWorkPts(h, m);
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.workLog) state.workLog = [];
+  const idx = state.workLog.findIndex(e => e.date === date);
+  if (idx >= 0) { applyPoints(-state.workLog[idx].pts); state.workLog[idx] = { date, hours: h, mins: m, pts }; }
+  else state.workLog.push({ date, hours: h, mins: m, pts });
+  applyPoints(pts);
+  save(); closeWorkModal(); renderWaterWorkStatus(); updatePoints();
+  toast(`💼 ${h}h ${m}m · +${pts} pts`);
+}
+
+function undoWork() {
+  const date = new Date().toLocaleDateString('en-CA');
+  const idx = (state.workLog || []).findIndex(e => e.date === date);
+  if (idx < 0) return;
+  applyPoints(-state.workLog[idx].pts);
+  state.workLog.splice(idx, 1);
+  save(); closeWorkModal(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Work removed.');
+}
+
+function renderWaterWorkStatus() {
+  const today = new Date().toLocaleDateString('en-CA');
+  const w  = (state.waterLog || []).find(e => e.date === today);
+  const wk = (state.workLog || []).find(e => e.date === today);
+  const d  = (state.dishesLog || []).find(e => e.date === today);
+  const g  = (state.garbageLog || []).find(e => e.date === today);
+  const hd = (state.heavyDiaperLog || []).find(e => e.date === today);
+  const ld = (state.lightDiaperLog || []).find(e => e.date === today);
+  const dk = (state.driveKidsLog || []).find(e => e.date === today);
+  const tk = (state.takeKidsLog || []).find(e => e.date === today);
+  const cr = (state.creatineLog || []).find(e => e.date === today);
+  const eg = (state.eggsLog || []).find(e => e.date === today);
+  const te = (state.teethLog || []).find(e => e.date === today);
+  const sh = (state.showerLog || []).find(e => e.date === today);
+  const la = (state.laundryLog || []).find(e => e.date === today);
+  const sp = (state.shoppingLog || []).find(e => e.date === today);
+  const ga = (state.gasLog || []).find(e => e.date === today);
+  const oi = (state.oilLog || []).find(e => e.date === today);
+
+  const set = (id, txt) => { const el = document.getElementById(id); if (el) el.textContent = txt; };
+  const show = (id, on) => { const el = document.getElementById(id); if (el) el.style.display = on ? '' : 'none'; };
+
+  set('water-sub',   w  ? `${w.ml} ml · +${w.pts} pts`            : '');
+  set('work-sub',    wk ? `${wk.hours}h ${wk.mins}m · +${wk.pts} pts` : '');
+  set('dishes-sub',  d  ? `${d.presses}× · +${d.pts} pts`         : '');
+  set('garbage-sub', g  ? `${g.presses}× · +${g.pts} pts`        : '');
+  set('heavydiaper-sub', hd ? `${hd.presses}× · +${hd.pts} pts` : '');
+  set('lightdiaper-sub', ld ? `${ld.presses}× · +${ld.pts} pts` : '');
+  set('drivekids-sub', dk ? `${dk.presses}× · +${dk.pts} pts` : '');
+  set('takekids-sub', tk ? `${tk.hours}h ${tk.mins}m · +${tk.pts} pts${tk.note ? ' · '+tk.note : ''}` : '');
+  set('creatine-sub', cr ? `+${cr.pts} pts` : '');
+  set('eggs-sub', eg ? `${eg.count} · +${eg.pts} pts` : '');
+  set('teeth-sub', te ? `${te.presses}× · +${te.pts} pts` : '');
+  set('shower-sub', sh ? `${sh.presses}×` : '');
+  set('laundry-sub', la ? `${la.presses}× · +${la.pts} pts` : '');
+  set('shopping-sub', sp ? `+${sp.pts} pts` : '');
+  set('gas-sub', ga ? `+${ga.pts} pts` : '');
+  set('oil-sub', oi ? `+${oi.pts} pts` : '');
+
+  show('water-undo',   w && w.presses > 0);
+  show('dishes-undo',  d && d.presses > 0);
+  show('garbage-undo', g && g.presses > 0);
+  show('heavydiaper-undo', hd && hd.presses > 0);
+  show('lightdiaper-undo', ld && ld.presses > 0);
+  show('drivekids-undo', dk && dk.presses > 0);
+  show('creatine-undo', !!cr);
+  show('teeth-undo', te && te.presses > 0);
+  show('shower-undo', sh && sh.presses > 0);
+  show('laundry-undo', la && la.presses > 0);
+  show('shopping-undo', !!sp);
+  show('gas-undo', !!ga);
+  show('oil-undo', !!oi);
+}
+
+document.getElementById('workModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeWorkModal();
+});
+
+
+// ── Dishes & Garbage (press-based chores) ────────────────────────────
+function logPressChore(key, firstPts, afterPts, emoji, label) {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state[key]) state[key] = [];
+  let entry = state[key].find(e => e.date === date);
+  if (!entry) { entry = { date, presses: 0, pts: 0 }; state[key].push(entry); }
+  entry.presses += 1;
+  const pts = entry.presses === 1 ? firstPts : afterPts;
+  entry.pts = r2(entry.pts + pts);
+  applyPoints(pts);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast(`${emoji} ${label} · +${pts} pts`);
+}
+
+function undoPressChore(key, firstPts, afterPts) {
+  const date = new Date().toLocaleDateString('en-CA');
+  const entry = (state[key] || []).find(e => e.date === date);
+  if (!entry || entry.presses <= 0) return;
+  const pts = entry.presses === 1 ? firstPts : afterPts;
+  entry.presses -= 1;
+  entry.pts = r2(entry.pts - pts);
+  applyPoints(-pts);
+  if (entry.presses === 0) state[key] = state[key].filter(e => e.date !== date);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Undone.');
+}
+
+function logDishes()  { logPressChore('dishesLog', 8, 4, '🍽', 'Dishes'); }
+function undoDishes() { undoPressChore('dishesLog', 8, 4); }
+function logGarbage()  { logPressChore('garbageLog', 4, 2, '🗑', 'Garbage'); }
+function undoGarbage() { undoPressChore('garbageLog', 4, 2); }
+
+
+// ── Diapers (three-tier press chores) ────────────────────────────────
+function logTierChore(key, tier1, tier2, tierAfter, emoji, label) {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state[key]) state[key] = [];
+  let entry = state[key].find(e => e.date === date);
+  if (!entry) { entry = { date, presses: 0, pts: 0 }; state[key].push(entry); }
+  entry.presses += 1;
+  const pts = entry.presses === 1 ? tier1 : entry.presses === 2 ? tier2 : tierAfter;
+  entry.pts = r2(entry.pts + pts);
+  applyPoints(pts);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast(`${emoji} ${label} · +${pts} pts`);
+}
+
+function undoTierChore(key, tier1, tier2, tierAfter) {
+  const date = new Date().toLocaleDateString('en-CA');
+  const entry = (state[key] || []).find(e => e.date === date);
+  if (!entry || entry.presses <= 0) return;
+  const pts = entry.presses === 1 ? tier1 : entry.presses === 2 ? tier2 : tierAfter;
+  entry.presses -= 1;
+  entry.pts = r2(entry.pts - pts);
+  applyPoints(-pts);
+  if (entry.presses === 0) state[key] = state[key].filter(e => e.date !== date);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Undone.');
+}
+
+function logHeavyDiaper()  { logPressChore('heavyDiaperLog', 8, 4, '💩', 'Heavy diaper'); }
+function undoHeavyDiaper() { undoPressChore('heavyDiaperLog', 8, 4); }
+function logLightDiaper()  { logPressChore('lightDiaperLog', 4, 2, '💧', 'Light diaper'); }
+function undoLightDiaper() { undoPressChore('lightDiaperLog', 4, 2); }
+
+
+// ── Drive Kids & Take Kids Out ────────────────────────────────────────
+function logDriveKids()  { logPressChore('driveKidsLog', 8, 4, '🚗', 'Drive kids'); }
+function undoDriveKids() { undoPressChore('driveKidsLog', 8, 4); }
+
+function calcTakeKidsPts(hours, mins) {
+  // 12 pts first hour, 8 pts second hour, 6 pts every hour after — prorated by minutes
+  const totalHrs = hours + mins/60;
+  let pts = 0;
+  pts += Math.min(totalHrs, 1) * 12;
+  pts += Math.min(Math.max(totalHrs - 1, 0), 1) * 8;
+  pts += Math.max(totalHrs - 2, 0) * 6;
+  return r2(pts);
+}
+
+function openTakeKidsModal() {
+  document.getElementById('takekids-hours').value = '';
+  document.getElementById('takekids-mins').value = '';
+  document.getElementById('takekids-pts-preview').textContent = '';
+  const today = new Date().toLocaleDateString('en-CA');
+  const entry = (state.takeKidsLog || []).find(e => e.date === today);
+  document.getElementById('takekids-note').value = '';
+  if (entry) {
+    document.getElementById('takekids-hours').value = entry.hours;
+    document.getElementById('takekids-mins').value = entry.mins;
+    document.getElementById('takekids-note').value = entry.note || '';
+    updateTakeKidsPreview();
+  }
+  document.getElementById('takekids-undo-btn').style.display = entry ? '' : 'none';
+  document.getElementById('takeKidsModal').classList.add('open');
+  setTimeout(() => document.getElementById('takekids-hours').focus(), 50);
+}
+
+function closeTakeKidsModal() {
+  document.getElementById('takeKidsModal').classList.remove('open');
+}
+
+function updateTakeKidsPreview() {
+  const h = parseInt(document.getElementById('takekids-hours').value) || 0;
+  const m = parseInt(document.getElementById('takekids-mins').value) || 0;
+  const pts = calcTakeKidsPts(h, m);
+  document.getElementById('takekids-pts-preview').textContent = (h>0||m>0) ? `+${pts} pts` : '';
+}
+
+function saveTakeKids() {
+  const h = parseInt(document.getElementById('takekids-hours').value) || 0;
+  const m = parseInt(document.getElementById('takekids-mins').value) || 0;
+  if (h <= 0 && m <= 0) { toast('Enter time.'); return; }
+  const pts = calcTakeKidsPts(h, m);
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.takeKidsLog) state.takeKidsLog = [];
+  const idx = state.takeKidsLog.findIndex(e => e.date === date);
+  const note = document.getElementById('takekids-note').value.trim();
+  if (idx >= 0) { applyPoints(-state.takeKidsLog[idx].pts); state.takeKidsLog[idx] = { date, hours: h, mins: m, pts, note }; }
+  else state.takeKidsLog.push({ date, hours: h, mins: m, pts, note });
+  applyPoints(pts);
+  save(); closeTakeKidsModal(); renderWaterWorkStatus(); updatePoints();
+  toast(`🎒 ${h}h ${m}m · +${pts} pts`);
+}
+
+function undoTakeKids() {
+  const date = new Date().toLocaleDateString('en-CA');
+  const idx = (state.takeKidsLog || []).findIndex(e => e.date === date);
+  if (idx < 0) return;
+  applyPoints(-state.takeKidsLog[idx].pts);
+  state.takeKidsLog.splice(idx, 1);
+  save(); closeTakeKidsModal(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Removed.');
+}
+
+document.getElementById('takeKidsModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeTakeKidsModal();
+});
+
+
+// ── Auto rollover: if working state belongs to a past day with progress, commit it ──
+function autoRolloverIfNeeded() {
+  const today = new Date().toLocaleDateString('en-CA');
+  const wd = state.workingDate || today;
+  if (wd >= today) { state.workingDate = today; return; }
+
+  // The working day is in the past. Check if there's any uncommitted progress.
+  let hasProgress = false;
+  ['common','uncommon','rare'].forEach(type => {
+    (state.tasks[type]||[]).forEach(t => { if (t.count) hasProgress = true; });
+  });
+  (state.tasks.onetime||[]).forEach(t => { if (t.done && !t.snapshotted) hasProgress = true; });
+  (state.clean||[]).forEach(t => { if (t.isLog && !t.snapshotted) hasProgress = true; });
+  (state.gymTasks||[]).forEach(t => { if (t.count) hasProgress = true; });
+  if ((state.food||[]).some(f => (f.todaySpend||0) > 0 || (f.log||[]).length)) hasProgress = true;
+  if ((state.rewards||[]).some(r => r.redeemed)) hasProgress = true;
+  if ((state.drink||{}).todayCount) hasProgress = true;
+  // Date-stamped activity logs for the working date
+  ['sexLog','workoutLog','pushupLog','jumpRopeLog','waterLog','workLog','dishesLog',
+   'garbageLog','heavyDiaperLog','lightDiaperLog','driveKidsLog','takeKidsLog',
+   'creatineLog','eggsLog','teethLog','showerLog','laundryLog','shoppingLog','gasLog','oilLog',
+   'logBonusLog','sleepBonusLog','meditationLog','fastingLog'].forEach(k => {
+    if ((state[k]||[]).some(e => e.date === wd)) hasProgress = true;
+  });
+  if (state.dailyAdjust) hasProgress = true;
+
+  if (hasProgress) {
+    // Commit the working state under the working date, then reset (which sets workingDate = today)
+    commitEndOfDay(0, wd);
+    toast(`✦ ${wd}'s progress was logged automatically.`);
+  } else {
+    // No progress — just advance the working date
+    state.workingDate = today;
+    save();
+  }
+}
+
+// ── Creatine, Eggs, Teeth, Shower ────────────────────────────────────
+// Creatine: flat 3 pts, once per day (single press, toggleable)
+function logCreatine() {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.creatineLog) state.creatineLog = [];
+  if (state.creatineLog.find(e => e.date === date)) { toast('Already logged creatine today.'); return; }
+  state.creatineLog.push({ date, pts: 3 });
+  applyPoints(3);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('💊 Creatine · +3 pts');
+}
+function undoCreatine() {
+  const date = new Date().toLocaleDateString('en-CA');
+  const idx = (state.creatineLog || []).findIndex(e => e.date === date);
+  if (idx < 0) return;
+  applyPoints(-state.creatineLog[idx].pts);
+  state.creatineLog.splice(idx, 1);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Creatine removed.');
+}
+
+// Eggs: 1 pt per egg, count modal
+function openEggsModal() {
+  document.getElementById('eggs-count').value = '';
+  document.getElementById('eggs-pts-preview').textContent = '';
+  const today = new Date().toLocaleDateString('en-CA');
+  const entry = (state.eggsLog || []).find(e => e.date === today);
+  if (entry) { document.getElementById('eggs-count').value = entry.count; document.getElementById('eggs-pts-preview').textContent = '+'+entry.count+' pts'; }
+  document.getElementById('eggs-undo-btn').style.display = entry ? '' : 'none';
+  document.getElementById('eggsModal').classList.add('open');
+  setTimeout(() => document.getElementById('eggs-count').focus(), 50);
+}
+function closeEggsModal() { document.getElementById('eggsModal').classList.remove('open'); }
+function saveEggs() {
+  const n = parseInt(document.getElementById('eggs-count').value) || 0;
+  if (n <= 0) { toast('Enter a count.'); return; }
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.eggsLog) state.eggsLog = [];
+  const idx = state.eggsLog.findIndex(e => e.date === date);
+  if (idx >= 0) { applyPoints(-state.eggsLog[idx].pts); state.eggsLog[idx] = { date, count: n, pts: n }; }
+  else state.eggsLog.push({ date, count: n, pts: n });
+  applyPoints(n);
+  save(); closeEggsModal(); renderWaterWorkStatus(); updatePoints();
+  toast(`🥚 ${n} eggs · +${n} pts`);
+}
+function undoEggs() {
+  const date = new Date().toLocaleDateString('en-CA');
+  const idx = (state.eggsLog || []).findIndex(e => e.date === date);
+  if (idx < 0) return;
+  applyPoints(-state.eggsLog[idx].pts);
+  state.eggsLog.splice(idx, 1);
+  save(); closeEggsModal(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Eggs removed.');
+}
+
+// Teeth: 8 first, 4 after (press-based)
+function logTeeth()  { logPressChore('teethLog', 8, 4, '🦷', 'Teeth'); }
+function undoTeeth() { undoPressChore('teethLog', 8, 4); }
+
+// Shower: no points, just tracking (press-based)
+function logShower() {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.showerLog) state.showerLog = [];
+  let entry = state.showerLog.find(e => e.date === date);
+  if (!entry) { entry = { date, presses: 0, pts: 0 }; state.showerLog.push(entry); }
+  entry.presses += 1;
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('🚿 Shower logged');
+}
+function undoShower() {
+  const date = new Date().toLocaleDateString('en-CA');
+  const entry = (state.showerLog || []).find(e => e.date === date);
+  if (!entry || entry.presses <= 0) return;
+  entry.presses -= 1;
+  if (entry.presses === 0) state.showerLog = state.showerLog.filter(e => e.date !== date);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Shower removed.');
+}
+
+document.getElementById('eggsModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeEggsModal();
+});
+
+
+// ── Laundry & Shopping ───────────────────────────────────────────────
+function logLaundry()  { logPressChore('laundryLog', 3, 3, '🧺', 'Laundry'); }
+function undoLaundry() { undoPressChore('laundryLog', 3, 3); }
+
+function logShopping() {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.shoppingLog) state.shoppingLog = [];
+  if (state.shoppingLog.find(e => e.date === date)) { toast('Already logged shopping today.'); return; }
+  state.shoppingLog.push({ date, pts: 12 });
+  applyPoints(12);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('🛒 Shopping · +12 pts');
+}
+function undoShopping() {
+  const date = new Date().toLocaleDateString('en-CA');
+  const idx = (state.shoppingLog || []).findIndex(e => e.date === date);
+  if (idx < 0) return;
+  applyPoints(-state.shoppingLog[idx].pts);
+  state.shoppingLog.splice(idx, 1);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Shopping removed.');
+}
+
+
+// ── Gas & Oil Change ─────────────────────────────────────────────────
+function logFlatChore(key, pts, emoji, label) {
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state[key]) state[key] = [];
+  if (state[key].find(e => e.date === date)) { toast(`Already logged ${label.toLowerCase()} today.`); return; }
+  state[key].push({ date, pts });
+  applyPoints(pts);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast(`${emoji} ${label} · +${pts} pts`);
+}
+function undoFlatChore(key) {
+  const date = new Date().toLocaleDateString('en-CA');
+  const idx = (state[key] || []).findIndex(e => e.date === date);
+  if (idx < 0) return;
+  applyPoints(-state[key][idx].pts);
+  state[key].splice(idx, 1);
+  save(); renderWaterWorkStatus(); updatePoints();
+  toast('↩ Removed.');
+}
+function logGas()        { logFlatChore('gasLog', 4, '⛽', 'Gas'); }
+function undoGas()       { undoFlatChore('gasLog'); }
+function logOilChange()  { logFlatChore('oilLog', 8, '🛢', 'Oil change'); }
+function undoOilChange() { undoFlatChore('oilLog'); }
+
+
+// ── Meditation Timer ──────────────────────────────────────────────────
+let _medDuration = 0;     // selected duration in seconds
+let _medRemaining = 0;    // remaining seconds
+let _medInterval = null;
+let _medRunning = false;
+
+function calcMeditationPts(minutes) {
+  // 12 pts for first 20 min, 4 pts per 10 min after
+  if (minutes <= 0) return 0;
+  if (minutes <= 20) return 12;
+  const extra = minutes - 20;
+  return r2(12 + Math.floor(extra / 10) * 4);
+}
+
+function fmtMedTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function setMedTimer(minutes) {
+  if (_medRunning) return;
+  _medDuration = minutes * 60;
+  _medRemaining = _medDuration;
+  document.querySelectorAll('.med-preset').forEach(b => b.classList.remove('active'));
+  const btns = { 5:0, 10:1, 20:2 };
+  const all = document.querySelectorAll('.med-preset');
+  if (all[btns[minutes]]) all[btns[minutes]].classList.add('active');
+  updateMedDisplay();
+}
+
+function updateMedDisplay() {
+  const disp = document.getElementById('med-timer-display');
+  if (disp) disp.textContent = fmtMedTime(_medRemaining);
+  const prev = document.getElementById('med-pts-preview');
+  if (prev) {
+    const mins = Math.floor(_medDuration / 60);
+    prev.textContent = mins > 0 ? `${mins} min · +${calcMeditationPts(mins)} pts` : '';
+  }
+}
+
+function toggleMedTimer() {
+  if (_medRunning) { pauseMedTimer(); return; }
+  if (_medRemaining <= 0) { toast('Pick a duration first.'); return; }
+  _medRunning = true;
+  document.getElementById('med-start-btn').textContent = 'Pause';
+  _medInterval = setInterval(() => {
+    _medRemaining--;
+    updateMedDisplay();
+    if (_medRemaining <= 0) finishMedTimer();
+  }, 1000);
+}
+
+function pauseMedTimer() {
+  _medRunning = false;
+  clearInterval(_medInterval);
+  document.getElementById('med-start-btn').textContent = 'Resume';
+}
+
+function resetMedTimer() {
+  _medRunning = false;
+  clearInterval(_medInterval);
+  _medRemaining = _medDuration;
+  document.getElementById('med-start-btn').textContent = 'Start';
+  updateMedDisplay();
+}
+
+function finishMedTimer() {
+  _medRunning = false;
+  clearInterval(_medInterval);
+  document.getElementById('med-start-btn').textContent = 'Start';
+  const mins = Math.floor(_medDuration / 60);
+  const pts = calcMeditationPts(mins);
+  const date = new Date().toLocaleDateString('en-CA');
+  if (!state.meditationLog) state.meditationLog = [];
+  let entry = state.meditationLog.find(e => e.date === date);
+  if (entry) { entry.minutes += mins; entry.pts = r2(entry.pts + pts); }
+  else state.meditationLog.push({ date, minutes: mins, pts });
+  applyPoints(pts);
+  save(); renderMeditation(); updatePoints();
+  _medRemaining = _medDuration;
+  updateMedDisplay();
+  try { navigator.vibrate && navigator.vibrate([200,100,200]); } catch(e){}
+  toast(`🧘 ${mins} min meditation · +${pts} pts`);
+}
+
+function renderMeditation() {
+  updateMedDisplay();
+  const el = document.getElementById('med-today-status');
+  if (!el) return;
+  const today = new Date().toLocaleDateString('en-CA');
+  const entry = (state.meditationLog || []).find(e => e.date === today);
+  el.innerHTML = entry
+    ? `Today: ${entry.minutes} min · +${entry.pts} pts <button class="undo-btn" onclick="undoMeditation()" style="margin-left:6px">↩ Undo</button>`
+    : '';
+}
+
+function undoMeditation() {
+  const today = new Date().toLocaleDateString('en-CA');
+  const idx = (state.meditationLog || []).findIndex(e => e.date === today);
+  if (idx < 0) return;
+  applyPoints(-state.meditationLog[idx].pts);
+  state.meditationLog.splice(idx, 1);
+  save(); renderMeditation(); updatePoints();
+  toast('↩ Meditation removed.');
+}
+
+
+// ── Fasting ───────────────────────────────────────────────────────────
+function calcFastPts(hours) {
+  // whole hours only; capped at 24h
+  const h = Math.floor(hours);
+  if (h < 16) return 0;
+  if (h < 20) return 6 + (h - 16) * 1;     // 16=6,17=7,18=8,19=9
+  if (h < 24) return 12 + (h - 20) * 2;    // 20=12,21=14,22=16,23=18
+  return 24;                                // 24h+
+}
+
+function fastHoursBetween(startStr, endStr) {
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (isNaN(start) || isNaN(end) || end <= start) return null;
+  return (end - start) / 3600000;
+}
+
+function updateFastPreview() {
+  const s = document.getElementById('fast-start').value;
+  const e = document.getElementById('fast-end').value;
+  const prev = document.getElementById('fast-preview');
+  const hrs = fastHoursBetween(s, e);
+  if (hrs === null) { prev.textContent = ''; return; }
+  const wholeH = Math.floor(hrs);
+  const mins = Math.round((hrs - wholeH) * 60);
+  prev.textContent = `${wholeH}h ${mins}m · +${calcFastPts(hrs)} pts`;
+}
+
+function logFast() {
+  const s = document.getElementById('fast-start').value;
+  const e = document.getElementById('fast-end').value;
+  const hrs = fastHoursBetween(s, e);
+  if (hrs === null) { toast('Enter valid start and end times.'); return; }
+  const pts = calcFastPts(hrs);
+  // Log against the END date (fast completes when broken)
+  const date = new Date(e).toLocaleDateString('en-CA');
+  if (!state.fastingLog) state.fastingLog = [];
+  const entry = { date, start: s, end: e, hours: r2(hrs), pts };
+  // Replace any existing fast that ended on the same date
+  const idx = state.fastingLog.findIndex(f => f.date === date);
+  if (idx >= 0) { applyPoints(-state.fastingLog[idx].pts); state.fastingLog[idx] = entry; }
+  else state.fastingLog.push(entry);
+  state.fastingLog.sort((a,b) => a.end < b.end ? -1 : 1);
+  applyPoints(pts);
+  save(); renderFasting(); updatePoints();
+  document.getElementById('fast-start').value = '';
+  document.getElementById('fast-end').value = '';
+  document.getElementById('fast-preview').textContent = '';
+  const wholeH = Math.floor(hrs);
+  toast(`🍃 ${wholeH}h fast · +${pts} pts`);
+}
+
+function deleteFast(end) {
+  const idx = (state.fastingLog || []).findIndex(f => f.end === end);
+  if (idx < 0) return;
+  const date = state.fastingLog[idx].date;
+  const today = new Date().toLocaleDateString('en-CA');
+  // Only refund points if the fast was logged today (today's net), else just remove
+  if (date === today) applyPoints(-state.fastingLog[idx].pts);
+  state.fastingLog.splice(idx, 1);
+  save(); renderFasting(); updatePoints();
+  toast('↩ Fast removed.');
+}
+
+function renderFasting() {
+  const el = document.getElementById('fast-recent');
+  if (!el) return;
+  const log = (state.fastingLog || []);
+  if (!log.length) { el.innerHTML = ''; return; }
+  const recent = log.slice(-10).reverse();
+  el.innerHTML = `<div class="stats-group-title" style="margin-top:8px">Recent Fasts</div>
+    <table class="stats-table"><thead><tr><th>ENDED</th><th style="text-align:right">LENGTH</th><th style="text-align:right">PTS</th><th></th></tr></thead><tbody>` +
+    recent.map(f => {
+      const wholeH = Math.floor(f.hours);
+      const mins = Math.round((f.hours - wholeH) * 60);
+      return `<tr>
+        <td style="font-family:'Cinzel',serif;font-size:12px">${f.date.slice(5)}</td>
+        <td class="num" style="color:#0d9488">${wholeH}h ${mins}m</td>
+        <td class="num" style="color:#0d9488">+${f.pts}</td>
+        <td style="text-align:right"><button class="delete-btn" onclick="deleteFast('${f.end}')">✕</button></td>
+      </tr>`;
+    }).join('') + `</tbody></table>`;
+}
+
+
+// ── Past Days Picker ──────────────────────────────────────────────────
+function openPastDaysModal() {
+  const list = document.getElementById('pastDaysList');
+  const today = new Date();
+  let html = '';
+  for (let i = 1; i <= 14; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const ds = d.toLocaleDateString('en-CA');
+    const dow = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()];
+    const entry = (state.history || []).find(h => h.date === ds);
+    let gradeBadge;
+    if (entry) {
+      const g = scoreDay(entry);
+      const col = gradeColor(g);
+      gradeBadge = `<span style="font-family:'Cinzel',serif;font-weight:600;color:${col};font-size:15px">${g}</span>`;
+    } else {
+      gradeBadge = `<span style="font-family:'Cinzel',serif;color:var(--muted);font-size:11px;letter-spacing:1px">not logged</span>`;
+    }
+    const niceDate = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    html += `<button onclick="editPastDay('${ds}')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;cursor:pointer;transition:all 0.15s;width:100%;text-align:left;font-family:'Crimson Pro',serif">
+      <span style="font-size:15px;color:var(--text)"><span style="font-family:'Cinzel',serif;font-size:10px;color:var(--muted);letter-spacing:1px;margin-right:8px">${dow}</span>${niceDate}</span>
+      ${gradeBadge}
+    </button>`;
+  }
+  list.innerHTML = html;
+  document.getElementById('pastDaysModal').classList.add('open');
+}
+
+function editPastDay(dateStr) {
+  let idx = (state.history || []).findIndex(h => h.date === dateStr);
+  if (idx < 0) {
+    const d = new Date(dateStr + 'T12:00:00');
+    state.history.push({
+      date: dateStr, dow: d.getDay(), netPts: 0, ptsEarned: 0, ptsSpent: 0,
+      tasks: {}, rewards: {}, food: [], drinks: 0
+    });
+    state.history.sort((a, b) => a.date < b.date ? -1 : 1);
+    idx = state.history.findIndex(h => h.date === dateStr);
+    save();
+  }
+  document.getElementById('pastDaysModal').classList.remove('open');
+  openHistoryTaskModal(idx);
+}
+
+document.getElementById('pastDaysModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) document.getElementById('pastDaysModal').classList.remove('open');
+});
+
 seed();
+autoRolloverIfNeeded();
 setGreeting();
 renderAll();
 checkAndApplyMisses();
