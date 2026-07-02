@@ -2812,47 +2812,73 @@ function openHistoryTaskModal(histIndex) {
   }
 
   // Helper: read a stored direct value, falling back to a date-stamped activity log's pts
-  function storedPts(field, logKey) {
+  // Stored quantity for an activity, falling back to that date's live log
+  function storedQty(field, logKey, prop) {
     if (entry[field] !== undefined) return entry[field];
-    if (logKey) { const e = (state[logKey]||[]).find(x => x.date === entry.date); if (e) return e.pts || 0; }
+    if (logKey) { const e = (state[logKey]||[]).find(x => x.date === entry.date); if (e) return e[prop] || 0; }
     return 0;
   }
+  // A row that takes a quantity, shows a unit hint
+  function qtyRow(label, hint, val, kind, color) {
+    return '<div style="' + rowStyle + '">'
+      + '<div style="flex:1;font-size:14px;color:var(--text)">' + label
+      + (hint ? '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + hint + '</span>' : '')
+      + '</div>'
+      + '<input type="number" step="any" min="0" value="' + val + '" data-kind="' + kind + '" style="' + inputStyle + (color?';color:'+color:'') + '" /></div>';
+  }
+  // A two-field hours/minutes row
+  function hmRow(label, hint, h, m, kindH, kindM, color) {
+    return '<div style="' + rowStyle + '">'
+      + '<div style="flex:1;font-size:14px;color:var(--text)">' + label
+      + (hint ? '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + hint + '</span>' : '')
+      + '</div>'
+      + '<input type="number" min="0" placeholder="h" value="' + (h||'') + '" data-kind="' + kindH + '" style="' + inputStyle + ';width:46px' + (color?';color:'+color:'') + '" />'
+      + '<input type="number" min="0" max="59" placeholder="m" value="' + (m||'') + '" data-kind="' + kindM + '" style="' + inputStyle + ';width:46px' + (color?';color:'+color:'') + '" /></div>';
+  }
 
-  // Chores — direct point entry
-  html += '<div style="' + headerStyle + ';margin-top:10px">CHORES (points earned)</div>';
-  html += activityRow('💧 Water', '', storedPts('waterPts','waterLog'), 'waterPts', '#0ea5c8');
-  html += activityRow('💼 Work', '', storedPts('workPts','workLog'), 'workPts', '#475569');
-  html += activityRow('🍽 Dishes', '', storedPts('dishPts','dishesLog'), 'dishPts', '#0891b2');
-  html += activityRow('🗑 Garbage', '', storedPts('garbPts','garbageLog'), 'garbPts', '#65a30d');
-  html += activityRow('💩 Heavy diaper', '', storedPts('hdPts','heavyDiaperLog'), 'hdPts', '#9a3412');
-  html += activityRow('💧 Light diaper', '', storedPts('ldPts','lightDiaperLog'), 'ldPts', '#ca8a04');
-  html += activityRow('🚗 Drive kids', '', storedPts('dkPts','driveKidsLog'), 'dkPts', '#7c3aed');
-  html += activityRow('🎒 Take kids out', '', storedPts('tkPts','takeKidsLog'), 'tkPts', '#db2777');
-  html += activityRow('💊 Creatine', '', storedPts('crPts','creatineLog'), 'crPts', '#0d9488');
-  html += activityRow('🥚 Eggs', '', storedPts('egPts','eggsLog'), 'egPts', '#f59e0b');
-  html += activityRow('🦷 Teeth', '', storedPts('tePts','teethLog'), 'tePts', '#06b6d4');
-  html += activityRow('🧺 Laundry', '', storedPts('laPts','laundryLog'), 'laPts', '#7c3aed');
-  html += activityRow('🛒 Shopping', '', storedPts('spPts','shoppingLog'), 'spPts', '#16a34a');
-  html += activityRow('⛽ Gas', '', storedPts('gaPts','gasLog'), 'gaPts', '#dc2626');
-  html += activityRow('🛢 Oil change', '', storedPts('oiPts','oilLog'), 'oiPts', '#78716c');
-  html += activityRow('📓 Log bonus', '4 pts for logging', storedPts('lgPts','logBonusLog'), 'lgPts', '#0f766e');
-  html += activityRow('😴 Sleep bonus', '4 pts for logging', storedPts('slPts','sleepBonusLog'), 'slPts', '#4338ca');
-  html += activityRow('🧘 Meditation', '', storedPts('metPts','meditationLog'), 'metPts', '#7c3aed');
-  html += activityRow('🍃 Fasting', '', storedPts('fastPts','fastingLog'), 'fastPts', '#0d9488');
+  function logField(logKey, prop) {
+    const e = (state[logKey]||[]).find(x => x.date === entry.date);
+    return e ? (e[prop] || 0) : 0;
+  }
 
-  // Gym — direct point entry
-  html += '<div style="' + headerStyle + ';margin-top:10px">GYM (points earned)</div>';
-  html += activityRow('🏋 Workout', '', storedPts('workoutPts','workoutLog'), 'workoutPts', 'var(--gym)');
-  html += activityRow('💪 Pushups', '', storedPts('pushupPts','pushupLog'), 'pushupPts', '#0369a1');
-  html += activityRow('🪃 Jump rope', '', storedPts('jumpRopePts','jumpRopeLog'), 'jumpRopePts', '#7c3aed');
+  // Chores — enter COUNTS, app converts to points
+  html += '<div style="' + headerStyle + ';margin-top:10px">CHORES (enter how many)</div>';
+  html += qtyRow('💧 Water', '500 ml per press · 4 then 2 pts', storedQty('waterPresses','waterLog','presses'), 'waterPresses', '#0ea5c8');
+  html += hmRow('💼 Work', '3 pts/hr', (entry.workH ?? Math.floor(logField('workLog','hours'))), (entry.workM ?? logField('workLog','mins')), 'workH', 'workM', '#475569');
+  html += qtyRow('🍽 Dishes', '8 then 4 pts', storedQty('dishPresses','dishesLog','presses'), 'dishPresses', '#0891b2');
+  html += qtyRow('🗑 Garbage', '4 then 2 pts', storedQty('garbPresses','garbageLog','presses'), 'garbPresses', '#65a30d');
+  html += qtyRow('💩 Heavy diaper', '8 then 4 pts', storedQty('hdPresses','heavyDiaperLog','presses'), 'hdPresses', '#9a3412');
+  html += qtyRow('💧 Light diaper', '4 then 2 pts', storedQty('ldPresses','lightDiaperLog','presses'), 'ldPresses', '#ca8a04');
+  html += qtyRow('🚗 Drive kids', '8 then 4 pts', storedQty('dkPresses','driveKidsLog','presses'), 'dkPresses', '#7c3aed');
+  html += hmRow('🎒 Take kids out', '12/8/6 pts per hr', (entry.tkH ?? Math.floor(logField('takeKidsLog','hours'))), (entry.tkM ?? logField('takeKidsLog','mins')), 'tkH', 'tkM', '#db2777');
+  html += qtyRow('💊 Creatine', '1 = +3 pts', storedQty('crCount', null, '') || ((logField('creatineLog','pts')>0)?1:0), 'crCount', '#0d9488');
+  html += qtyRow('🥚 Eggs', '1 pt per egg', storedQty('egCount','eggsLog','count'), 'egCount', '#f59e0b');
+  html += qtyRow('🦷 Teeth', '8 then 4 pts', storedQty('tePresses','teethLog','presses'), 'tePresses', '#06b6d4');
+  html += qtyRow('🧺 Laundry', '3 pts each', storedQty('laPresses','laundryLog','presses'), 'laPresses', '#7c3aed');
+  html += qtyRow('🛒 Shopping', '1 = +12 pts', ((logField('shoppingLog','pts')>0)?1:0), 'spCount', '#16a34a');
+  html += qtyRow('⛽ Gas', '1 = +4 pts', ((logField('gasLog','pts')>0)?1:0), 'gaCount', '#dc2626');
+  html += qtyRow('🛢 Oil change', '1 = +8 pts', ((logField('oilLog','pts')>0)?1:0), 'oiCount', '#78716c');
+  html += qtyRow('🧘 Meditation', 'minutes', storedQty('metMin','meditationLog','minutes'), 'metMin', '#7c3aed');
+  html += hmRow('🍃 Fasting', 'hours fasted', (entry.fastH ?? Math.floor(logField('fastingLog','hours'))), 0, 'fastH', 'fastM_unused', '#0d9488');
 
-  // Sex & consumption
+  // Bonuses (toggle 0/1)
+  html += '<div style="' + headerStyle + ';margin-top:10px">BONUSES (1 = logged, +4 pts)</div>';
+  html += qtyRow('📓 Logged reflections/plans', '', ((logField('logBonusLog','pts')>0)?1:0), 'lgCount', '#0f766e');
+  html += qtyRow('😴 Logged sleep', '', ((logField('sleepBonusLog','pts')>0)?1:0), 'slCount', '#4338ca');
+
+  // Gym — enter COUNTS
+  html += '<div style="' + headerStyle + ';margin-top:10px">GYM (enter how many)</div>';
+  html += qtyRow('🏋 Workout', 'minutes', storedQty('workoutMin','workoutLog','minutes'), 'workoutMin', 'var(--gym)');
+  html += qtyRow('💪 Pushups', 'reps', storedQty('pushupReps','pushupLog','count'), 'pushupReps', '#0369a1');
+  html += qtyRow('🪃 Jump rope', 'jumps', storedQty('jumpReps','jumpRopeLog','count'), 'jumpReps', '#7c3aed');
+
+  // Sleep duration bonus & score (no point effect beyond the +4 above)
   html += '<div style="' + headerStyle + ';margin-top:10px">OTHER</div>';
-  html += activityRow('🎉 Woohoo count', '+12 pts each', entry.woohoos || 0, 'woohoos', '#16a34a');
-  html += activityRow('😔 Boohoo count', '−12 pts each', entry.boohoos || 0, 'boohoos', '#dc2626');
-  html += activityRow('🍺 Drink spend', 'points spent', entry.drinkSpend || 0, 'drinkSpend', '#7c3aed');
-  html += activityRow('🍽 Food spend', 'points spent', entry.foodSpendOverride !== undefined ? entry.foodSpendOverride : r2((entry.food || []).reduce((s,f)=>s+(f.spend||0),0)), 'foodSpend', 'var(--food)');
-  html += activityRow('⚖ Manual adjust', 'extra net (+/−)', entry.adjust || 0, 'adjust', null);
+  html += qtyRow('🎉 Woohoo count', '+12 pts each', entry.woohoos || 0, 'woohoos', '#16a34a');
+  html += qtyRow('😔 Boohoo count', '−12 pts each', entry.boohoos || 0, 'boohoos', '#dc2626');
+  html += qtyRow('🍺 Drink spend', 'points spent', entry.drinkSpend || 0, 'drinkSpend', '#7c3aed');
+  html += qtyRow('🍽 Food spend', 'points spent', entry.foodSpendOverride !== undefined ? entry.foodSpendOverride : r2((entry.food || []).reduce((s,f)=>s+(f.spend||0),0)), 'foodSpend', 'var(--food)');
+  html += qtyRow('⚖ Manual adjust', 'extra net (+/−)', entry.adjust || 0, 'adjust', null);
 
   // Sleep
   html += '<div style="' + headerStyle + ';margin-top:10px">SLEEP (no point effect)</div>';
@@ -2906,12 +2932,50 @@ function saveHistoryTasks() {
     if (reward) ptsSpent = r2(ptsSpent + count * reward.cost);
   });
 
-  // Direct activity points — chores
-  const choreFields = ['waterPts','workPts','dishPts','garbPts','hdPts','ldPts','dkPts','tkPts','crPts','egPts','tePts','laPts','spPts','gaPts','oiPts','lgPts','slPts','metPts','fastPts',
-                       'workoutPts','pushupPts','jumpRopePts'];
-  const chorePts = {};
+  // Direct activity points — convert entered QUANTITIES to points via live formulas
+  const num = k => parseFloat(direct[k]) || 0;
+  const intNum = k => Math.max(0, Math.round(num(k)));
+
+  // Press-based: first press one value, rest another
+  function pressPts(count, first, after) {
+    count = Math.max(0, Math.round(count));
+    if (count <= 0) return 0;
+    return r2(first + (count - 1) * after);
+  }
+  // Water: 4 pts first 2 presses, 2 after
+  function waterPtsFromPresses(count) {
+    count = Math.max(0, Math.round(count));
+    let p = 0; for (let i = 1; i <= count; i++) p += (i <= 2 ? 4 : 2); return r2(p);
+  }
+
+  const waterPts  = waterPtsFromPresses(num('waterPresses'));
+  const workPts   = calcWorkPts(intNum('workH'), intNum('workM'));
+  const dishPts   = pressPts(num('dishPresses'), 8, 4);
+  const garbPts   = pressPts(num('garbPresses'), 4, 2);
+  const hdPts     = pressPts(num('hdPresses'), 8, 4);
+  const ldPts     = pressPts(num('ldPresses'), 4, 2);
+  const dkPts     = pressPts(num('dkPresses'), 8, 4);
+  const tkPts     = calcTakeKidsPts(intNum('tkH'), intNum('tkM'));
+  const crPts     = intNum('crCount') > 0 ? 3 : 0;
+  const egPts     = intNum('egCount');           // 1 pt per egg
+  const tePts     = pressPts(num('tePresses'), 8, 4);
+  const laPts     = pressPts(num('laPresses'), 3, 3);
+  const spPts     = intNum('spCount') > 0 ? 12 : 0;
+  const gaPts     = intNum('gaCount') > 0 ? 4 : 0;
+  const oiPts     = intNum('oiCount') > 0 ? 8 : 0;
+  const metPts    = calcMeditationPts(num('metMin'));
+  const fastPts   = calcFastPts(intNum('fastH'));
+  const lgPts     = intNum('lgCount') > 0 ? 4 : 0;
+  const slPts     = intNum('slCount') > 0 ? 4 : 0;
+  const workoutPts  = calcWorkoutPts(num('workoutMin'));
+  const pushupPts   = calcPushupPts(intNum('pushupReps'));
+  const jumpRopePts = calcJumpRopePts(intNum('jumpReps'));
+
+  const choreVals = { waterPts, workPts, dishPts, garbPts, hdPts, ldPts, dkPts, tkPts,
+    crPts, egPts, tePts, laPts, spPts, gaPts, oiPts, metPts, fastPts, lgPts, slPts,
+    workoutPts, pushupPts, jumpRopePts };
   let choreTotal = 0;
-  choreFields.forEach(f => { chorePts[f] = r2(direct[f] || 0); choreTotal = r2(choreTotal + chorePts[f]); });
+  Object.values(choreVals).forEach(v => { choreTotal = r2(choreTotal + v); });
 
   const woohoos     = Math.max(0, Math.round(direct.woohoos || 0));
   const boohoos     = Math.max(0, Math.round(direct.boohoos || 0));
@@ -2925,10 +2989,18 @@ function saveHistoryTasks() {
   const newNet = r2(ptsEarned - ptsSpent + adjust);
   const diff   = r2(newNet - (entry.netPts || 0));
 
-  // Store everything on the entry
+  // Store everything on the entry (both the points and the raw quantities so re-edits show them)
   entry.tasks = newTasks;
   entry.rewards = newRewards;
-  choreFields.forEach(f => { entry[f] = chorePts[f]; });
+  Object.entries(choreVals).forEach(([k,v]) => { entry[k] = v; });
+  // raw quantities for re-editing
+  entry.waterPresses = intNum('waterPresses'); entry.workH = intNum('workH'); entry.workM = intNum('workM');
+  entry.dishPresses = intNum('dishPresses'); entry.garbPresses = intNum('garbPresses');
+  entry.hdPresses = intNum('hdPresses'); entry.ldPresses = intNum('ldPresses');
+  entry.dkPresses = intNum('dkPresses'); entry.tkH = intNum('tkH'); entry.tkM = intNum('tkM');
+  entry.crCount = intNum('crCount'); entry.egCount = intNum('egCount'); entry.tePresses = intNum('tePresses');
+  entry.laPresses = intNum('laPresses'); entry.metMin = num('metMin'); entry.fastH = intNum('fastH');
+  entry.workoutMin = num('workoutMin'); entry.pushupReps = intNum('pushupReps'); entry.jumpReps = intNum('jumpReps');
   entry.woohoos = woohoos;
   entry.boohoos = boohoos;
   entry.drinkSpend = drinkSpend;
@@ -4446,11 +4518,10 @@ function calcPushupPts(n) {
 }
 
 function calcJumpRopePts(n) {
-  // 1-100: 0.08/jump, 101-200: 0.04/jump, 201+: 0.02/jump
+  // First 1000 jumps = 24 pts (0.024/jump), then halved to 0.012/jump after that
   let pts = 0;
-  pts += Math.min(n, 100) * 0.08;
-  pts += Math.min(Math.max(n - 100, 0), 100) * 0.04;
-  pts += Math.max(n - 200, 0) * 0.02;
+  pts += Math.min(n, 1000) * 0.024;
+  pts += Math.max(n - 1000, 0) * 0.012;
   return r2(pts);
 }
 
