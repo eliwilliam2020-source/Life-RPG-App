@@ -48,7 +48,7 @@
   #app {
     max-width: 680px;
     margin: 0 auto;
-    padding: 0 16px 100px;
+    padding: 0 16px 40px;
   }
 
   /* ── Header ── */
@@ -73,14 +73,26 @@
   .hist-value { font-family: 'Cinzel', serif; font-size: 18px; color: var(--text); line-height: 1; }
   .hist-value.no-data { font-size: 13px; color: var(--border2); }
 
-  .day-corner {
+  .day-corner-wrap {
     position: absolute; top: 14px; right: 4px;
+    display: flex; flex-direction: column; gap: 5px; align-items: stretch;
+  }
+  .day-corner {
     text-align: right; pointer-events: none;
     background: #1a1a1a;
     border-radius: 8px;
     padding: 8px 12px;
     display: flex; flex-direction: column; gap: 2px;
   }
+  .past-day-btn {
+    width: 100%;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); font-family: 'Cinzel', serif;
+    font-size: 9px; letter-spacing: 1px;
+    padding: 6px 8px; border-radius: 6px; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap; line-height: 1;
+  }
+  .past-day-btn:hover { border-color: var(--border2); color: var(--text2); background: var(--surface2); }
   .day-corner-dow  { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; display: block; line-height: 1.4; }
   .day-corner-date { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px; display: block; line-height: 1.4; opacity: 0.85; }
 
@@ -139,25 +151,16 @@
     text-align: center;
   }
   .tab-btn:hover { color: var(--text2); border-color: var(--border2); background: var(--surface2); }
-  .tab-btn.dragging { opacity: 0.4; cursor: grabbing; }
-  .tab-btn.drag-over { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tab-btn.dragging { opacity: 0.45; transform: scale(1.08); box-shadow: 0 4px 14px rgba(0,0,0,0.18); z-index: 5; }
+  .tab-btn.drop-before { box-shadow: inset 3px 0 0 var(--accent); }
+  .tab-btn.drop-after  { box-shadow: inset -3px 0 0 var(--accent); }
   .tab-color-dot {
     width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid var(--border2);
     cursor: pointer; flex-shrink: 0; display: inline-block; vertical-align: middle;
     margin-left: 4px; transition: border-color 0.15s;
   }
   .tab-color-dot:hover { border-color: var(--border2); transform: scale(1.2); }
-  .color-picker-popup {
-    position: absolute; background: var(--surface); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px; display: flex; flex-wrap: wrap; gap: 5px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12); z-index: 300; width: 132px;
-  }
-  .color-swatch {
-    width: 22px; height: 22px; border-radius: 50%; cursor: pointer; border: 2px solid transparent;
-    transition: all 0.15s; flex-shrink: 0;
-  }
-  .color-swatch:hover, .color-swatch.selected { border-color: #555; transform: scale(1.15); }
-  .tab-dot { display: block; width: 5px; height: 5px; border-radius: 50%; margin: 0 auto 4px; opacity: 0.7; }
+  .tab-icon { display: block; font-size: 15px; line-height: 1; margin: 0 auto 3px; }
 
   .tab-btn[data-tab="common"].active    { border-color: var(--common);   color: var(--common);   background: #e8f7fc; }
   .tab-btn[data-tab="uncommon"].active  { border-color: var(--uncommon); color: var(--uncommon); background: #e8f5ee; }
@@ -434,6 +437,40 @@
   .btn-reset-stats:hover { color: var(--danger); border-color: var(--danger); }
   .stats-empty { text-align: center; color: var(--muted); font-style: italic; padding: 48px 32px; border: 1px dashed var(--border); border-radius: 8px; font-size: 14px; line-height: 1.8; }
   .stats-group { margin-bottom: 28px; }
+  /* Collapsible */
+  .stats-collapse { margin-bottom: 10px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: var(--surface); }
+  .stats-collapse > summary {
+    list-style: none; cursor: pointer; padding: 11px 14px;
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text2); display: flex; align-items: center; justify-content: space-between;
+    transition: background 0.15s;
+  }
+  .stats-collapse > summary::-webkit-details-marker { display: none; }
+  .stats-collapse > summary:hover { background: var(--surface2); }
+  .stats-collapse > summary::after { content: '▾'; font-size: 12px; color: var(--muted); transition: transform 0.2s; }
+  .stats-collapse[open] > summary::after { transform: rotate(180deg); }
+  .stats-collapse[open] > summary { border-bottom: 1px solid var(--border); }
+  .stats-collapse-body { padding: 12px 14px 14px; }
+  .collapse-hint { font-family: 'Crimson Pro', serif; font-size: 12px; color: var(--muted); text-transform: none; letter-spacing: 0; margin-left: 8px; }
+
+  /* Hero block */
+  .hero-grade { font-family: 'Cinzel Decorative', serif; font-size: 40px; line-height: 1; }
+  .hero-row { display: flex; gap: 8px; margin-bottom: 10px; }
+  .hero-card { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; text-align: center; }
+  .hero-label { font-family: 'Cinzel', serif; font-size: 8px; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 5px; }
+  .hero-value { font-family: 'Cinzel', serif; font-size: 22px; line-height: 1.1; }
+  .hero-sub { font-family: 'Crimson Pro', serif; font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  /* Sparkline strip of last N days */
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 46px; margin: 4px 0 2px; }
+  .spark-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 2px; }
+
+  /* Source breakdown rows */
+  .src-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .src-label { font-family: 'Crimson Pro', serif; font-size: 13px; width: 108px; flex-shrink: 0; color: var(--text); }
+  .src-track { flex: 1; height: 12px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .src-fill { height: 100%; border-radius: 3px; }
+  .src-val { font-family: 'Cinzel', serif; font-size: 11px; width: 62px; text-align: right; flex-shrink: 0; color: var(--muted); }
   .stats-group-title { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text2); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
   .stat-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px,1fr)); gap: 8px; margin-bottom: 20px; }
   .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
@@ -470,6 +507,14 @@
   .challenge-info { flex: 1; min-width: 0; }
   .challenge-name { font-size: 14px; color: var(--text); }
   .challenge-detail { font-size: 11px; color: var(--muted); margin-top: 2px; font-family: 'Cinzel', serif; letter-spacing: 0.5px; }
+  .challenge-wrap { margin-bottom: 6px; }
+  .challenge-caret { font-size: 11px; color: var(--muted); flex-shrink: 0; transition: transform 0.2s; }
+  .challenge-caret.open { transform: rotate(180deg); }
+  .challenge-results {
+    background: var(--surface2); border: 1px solid var(--border); border-top: none;
+    border-radius: 0 0 8px 8px; padding: 8px 12px 10px; margin-top: -4px;
+  }
+  .challenge-results-head { font-family: 'Cinzel', serif; font-size: 9px; color: var(--muted); letter-spacing: 1.5px; margin-bottom: 6px; }
   .challenge-log-btn { background: var(--gym); border: none; color: #fff; font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 1px; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s; white-space: nowrap; font-weight: 600; flex-shrink: 0; }
   .challenge-log-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
@@ -526,7 +571,7 @@
 
   /* ── Toast ── */
   #toast {
-    position: fixed; bottom: 76px; left: 50%; transform: translateX(-50%) translateY(12px);
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(12px);
     background: var(--text); border-radius: 8px; padding: 10px 20px;
     font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 1px; color: #fff;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15); opacity: 0;
@@ -538,7 +583,10 @@
 <body>
 <div id="app">
   <header>
-    <div class="day-corner" id="dayCorner"></div>
+    <div class="day-corner-wrap">
+      <div class="day-corner" id="dayCorner"></div>
+      <button class="past-day-btn" onclick="openPastDaysModal()" title="Edit a past day">📅 Past Day</button>
+    </div>
     <div class="header-history" id="headerHistory"></div>
     <div style="display:flex;align-items:center;justify-content:center;gap:14px;min-height:1.2em">
       <button id="plans-btn" onclick="openPlansModal()" style="display:none;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Cinzel',serif;font-size:10px;letter-spacing:1px;padding:7px 12px;border-radius:7px;cursor:pointer;transition:all 0.15s;line-height:1" title="View current plans">📋 Plans</button>
@@ -549,7 +597,8 @@
   <div class="points-bar">
     <span class="points-label">TODAY</span>
     <span id="netDisplay" onclick="editPoints('daily')" style="font-family:'Cinzel',serif;font-size:22px;color:var(--pos);transition:color 0.2s;cursor:pointer;text-decoration:underline dotted;text-underline-offset:4px" title="Edit daily points">+0</span>
-    <button class="stats-nav-btn btn-vacation" id="vacationBtn" onclick="takeVacationDay()" style="margin-left:auto;background:linear-gradient(135deg,#0ea5e9,#0369a1);box-shadow:0 2px 10px #38bdf844" title="Vacation Day">🏖</button>
+    <button class="stats-nav-btn" id="missedBtn" onclick="markDayMissed()" style="margin-left:auto;background:#991b1b" title="Mark today as a missed day (X)">✕</button>
+    <button class="stats-nav-btn btn-vacation" id="vacationBtn" onclick="takeVacationDay()" style="background:linear-gradient(135deg,#0ea5e9,#0369a1);box-shadow:0 2px 10px #38bdf844" title="Vacation Day">🏖</button>
     <button class="stats-nav-btn btn-export" onclick="exportData()" title="Export data">⬇</button>
     <button class="stats-nav-btn btn-import" onclick="document.getElementById('importInput').click()" title="Import data">⬆</button>
     <input type="file" id="importInput" accept=".json" style="display:none" onchange="importData(event)" />
@@ -991,6 +1040,40 @@
   </div>
 </div>
 
+<!-- Challenge Record Edit Modal -->
+<div class="modal-overlay" id="recordEditModal">
+  <div class="modal" style="max-width:320px">
+    <div class="modal-title" id="recordEditTitle">Edit Record</div>
+    <div class="modal-field">
+      <div class="modal-label" id="recordEditValLabel">VALUE</div>
+      <input class="modal-input" id="recordEditVal" type="text" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">DATE</div>
+      <input class="modal-input" id="recordEditDate" type="date" />
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="modal-cancel" style="border-color:var(--danger);color:var(--danger)" onclick="deleteRecordEntry()">Delete</button>
+      <div style="display:flex;gap:8px">
+        <button class="modal-cancel" onclick="closeRecordEdit()">Cancel</button>
+        <button class="modal-save" style="background:var(--gym)" onclick="saveRecordEdit()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Missed Day Confirm Modal -->
+<div class="modal-overlay" id="missedModal">
+  <div class="modal" style="max-width:340px">
+    <div class="modal-title">✕ Mark Today as Missed?</div>
+    <p style="font-size:14px;color:var(--muted);line-height:1.6;margin-top:4px">Today will be graded <strong style="color:#991b1b">X</strong> and excluded from all stats and averages. Anything you logged today will be cleared.</p>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="document.getElementById('missedModal').classList.remove('open')">Cancel</button>
+      <button class="modal-save" style="background:#991b1b" onclick="confirmDayMissed()">Yes, Mark Missed</button>
+    </div>
+  </div>
+</div>
+
 <!-- Vacation Confirm Modal -->
 <div class="modal-overlay" id="vacationModal">
   <div class="modal" style="max-width:340px">
@@ -1126,9 +1209,6 @@
   </div>
 </div>
 
-<div class="eod-footer">
-  <button class="eod-btn" id="pastDaysBtn" onclick="openPastDaysModal()">📅 Edit a Past Day</button>
-</div>
 
 <div id="toast"></div>
 
@@ -1477,12 +1557,12 @@ function _renderRewardsOld() {
 // Each item: { name, yuka, ptsLittle, ptsMedium, ptsLot, todaySpend, log:[{portion,pts,date}] }
 // Yuka 0-49: smallPts = (50-rating)*0.2. Medium = small*2.5. Lot = small*6.25. 50+ = free.
 
-// Base cost from Yuka score — penalties start below 60, ramp across 0-59
+// Base cost from Yuka score — single smooth slope
 function yukaBase(yuka) {
-  if (yuka === null || yuka === undefined || isNaN(yuka)) return 9.57; // unknown → treat as bad (~Yuka 19)
+  if (yuka === null || yuka === undefined || isNaN(yuka)) return 9.8; // unknown → treat as bad (Yuka ~15)
   const rating = Math.min(100, Math.max(0, yuka));
-  if (rating >= 60) return 0;
-  return r2((60 - rating) * 0.2333); // Yuka 59=0.23, 35=5.83, 0=14.0
+  if (rating >= 50) return 0;
+  return r2((50 - rating) * 0.28); // 0-49: 0.28/pt → Yuka 49=0.28, 25=7, 0=14
 }
 
 // Role and amount multipliers
@@ -1510,7 +1590,7 @@ function previewYukaPts() {
   if (raw === '' || isNaN(raw)) { el.textContent = ''; return; }
   const base = yukaBase(parseFloat(raw));
   el.innerHTML = base === 0
-    ? '<span style="color:var(--pos)">Free (60+ Yuka)</span>'
+    ? '<span style="color:var(--pos)">Free (50+ Yuka)</span>'
     : `Base cost −${base} · scaled by role &amp; amount when logged`;
 }
 
@@ -1539,7 +1619,7 @@ function openFoodPrompt(idx) {
   const base = yukaBase(item.yuka);
   const grid = document.getElementById('foodGrid');
   if (base === 0) {
-    grid.innerHTML = `<div style="text-align:center;color:var(--pos);font-family:'Cinzel',serif;padding:16px">This food is free (Yuka 60+).<br><button class="modal-save" style="margin-top:12px;background:var(--pos)" onclick="logFood('main','medium')">Log it (0 pts)</button></div>`;
+    grid.innerHTML = `<div style="text-align:center;color:var(--pos);font-family:'Cinzel',serif;padding:16px">This food is free (Yuka 50+).<br><button class="modal-save" style="margin-top:12px;background:var(--pos)" onclick="logFood('main','medium')">Log it (0 pts)</button></div>`;
   } else {
     const roles = ['accent','side','main'];
     const amounts = ['little','medium','lot'];
@@ -1661,26 +1741,40 @@ function renderFood() {
       // If logged today, show it in the meal it was eaten today
       meal = todayLogs[todayLogs.length-1].meal || nowMeal;
     } else if (totalLogs > 0) {
-      // Otherwise put it in the meal it's historically most eaten
-      meal = ['breakfast','lunch','dinner'].reduce((best, m) => counts[m] > counts[best] ? m : best, 'breakfast');
+      // Otherwise put it in the meal it was MOST RECENTLY eaten in
+      let bestMeal = null, bestDate = '';
+      (item.log || []).forEach(e => {
+        if (e.meal && e.date > bestDate) { bestDate = e.date; bestMeal = e.meal; }
+      });
+      meal = bestMeal || ['breakfast','lunch','dinner'].reduce((best, m) => counts[m] > counts[best] ? m : best, 'breakfast');
     } else {
       // Never logged → current meal
       meal = nowMeal;
     }
+    // Most recent date this item was eaten IN THIS MEAL (drives sort order)
+    const mealLogs = (item.log || []).filter(e => e.meal === meal);
+    const lastInMeal = mealLogs.length
+      ? mealLogs.reduce((best, e) => (e.date > best ? e.date : best), '')
+      : '';
+    // Most recent date eaten at all (fallback tiebreaker)
+    const lastAny = (item.log || []).reduce((best, e) => (e.date > best ? e.date : best), '');
     meals[meal].push({
       item, idx,
       logged: todayLogs.length > 0,
       mealFreq: counts[meal] || 0,
-      lastDate: (item.log||[]).length ? (item.log||[]).slice(-1)[0].date : ''
+      lastInMeal,
+      lastAny
     });
   });
 
-  // Within each meal: logged-today first, then by how often eaten in THIS meal, then recency
+  // Within each meal: logged-today first, then MOST RECENTLY eaten in this meal,
+  // then overall recency, then how often it's eaten here.
   Object.keys(meals).forEach(m => {
     meals[m].sort((a,b) => {
       if (a.logged !== b.logged) return a.logged ? -1 : 1;
-      if (b.mealFreq !== a.mealFreq) return b.mealFreq - a.mealFreq;
-      return b.lastDate.localeCompare(a.lastDate);
+      if (b.lastInMeal !== a.lastInMeal) return b.lastInMeal.localeCompare(a.lastInMeal);
+      if (b.lastAny !== a.lastAny) return b.lastAny.localeCompare(a.lastAny);
+      return b.mealFreq - a.mealFreq;
     });
   });
 
@@ -1698,6 +1792,24 @@ function renderFood() {
     }
   });
   el.innerHTML = html;
+
+  // ── Fold the long tail: turn each remaining .stats-group into a collapsed section ──
+  // Done on the DOM so nested markup is preserved correctly.
+  el.querySelectorAll(':scope > .stats-group').forEach(group => {
+    const titleEl = group.querySelector(':scope > .stats-group-title');
+    if (!titleEl) return;
+    const details = document.createElement('details');
+    details.className = 'stats-collapse';
+    const summary = document.createElement('summary');
+    summary.innerHTML = titleEl.innerHTML;
+    const body = document.createElement('div');
+    body.className = 'stats-collapse-body';
+    titleEl.remove();
+    while (group.firstChild) body.appendChild(group.firstChild);
+    details.appendChild(summary);
+    details.appendChild(body);
+    group.replaceWith(details);
+  });
 }
 
 function moveFood(i, dir) {
@@ -1954,6 +2066,53 @@ function commitEndOfDay(daysAgo, explicitDate) {
 }
 
 
+function markDayMissed() {
+  if (!state.history) state.history = [];
+  const dateStr = new Date().toLocaleDateString('en-CA');
+  if (state.history.find(h => h.date === dateStr)) {
+    toast('⚠ Today is already logged.');
+    return;
+  }
+  document.getElementById('missedModal').classList.add('open');
+}
+
+function confirmDayMissed() {
+  document.getElementById('missedModal').classList.remove('open');
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('en-CA');
+  const dow = today.getDay();
+  if (!state.history) state.history = [];
+  state.history.push({
+    date: dateStr, dow, netPts: 0, ptsEarned: 0, ptsSpent: 0,
+    tasks: {}, rewards: {}, food: [], drinks: 0,
+    gradeOverride: 'X', missed: true
+  });
+  state.history.sort((a, b) => a.date < b.date ? -1 : 1);
+
+  // Clear everything logged today so no points carry over
+  ['common','uncommon','rare'].forEach(type => {
+    state.tasks[type].forEach(t => { t.count = 0; });
+  });
+  state.tasks.onetime.forEach(t => { if (t.done) t.snapshotted = true; });
+  (state.clean || []).forEach(t => { if (t.isLog) t.snapshotted = true; });
+  (state.gymTasks || []).forEach(t => { t.count = 0; });
+  if (state.food) state.food.forEach(f => { f.log = (f.log||[]).filter(e => e.date !== dateStr); f.todaySpend = 0; });
+  state.rewards.forEach(r => { r.redeemed = 0; });
+  if (state.drink) { state.drink.todayCount = 0; state.drink.todaySpend = 0; }
+  // Purge today's date-stamped activity logs
+  ['sexLog','workoutLog','pushupLog','jumpRopeLog','waterLog','workLog','dishesLog',
+   'garbageLog','heavyDiaperLog','lightDiaperLog','driveKidsLog','takeKidsLog',
+   'creatineLog','eggsLog','teethLog','showerLog','laundryLog','shoppingLog','gasLog','oilLog',
+   'logBonusLog','sleepBonusLog','meditationLog','fastingLog'].forEach(k => {
+    if (state[k]) state[k] = state[k].filter(e => e.date !== dateStr);
+  });
+  state.manualPointsSet = false;
+  state.dailyAdjust = 0;
+  state.workingDate = dateStr;
+  save(); renderAll(); updatePoints(); setGreeting();
+  toast('✕ Today marked missed. Excluded from stats.');
+}
+
 function takeVacationDay() {
   if (!state.history) state.history = [];
   const dateStr = new Date().toLocaleDateString('en-CA');
@@ -2057,40 +2216,291 @@ function renderStats() {
   const activeDays = hist.filter(d => !d.vacation && !d.missed); // exclude vacation AND missed days from all stats/averages
   const totalDays = activeDays.length || 1;
 
-  // ── Summary cards ──
+  // ── Helpers ──
+  function median(nums) {
+    if (!nums.length) return 0;
+    const s = nums.slice().sort((a,b) => a-b);
+    const m = Math.floor(s.length/2);
+    return s.length % 2 ? s[m] : r2((s[m-1]+s[m])/2);
+  }
+  function avgOf(days) {
+    if (!days.length) return null;
+    return r2(days.reduce((s,d)=>s+(d.netPts||0),0) / days.length);
+  }
+  function collapsible(title, hint, bodyHtml, openByDefault) {
+    if (!bodyHtml) return '';
+    return `<details class="stats-collapse"${openByDefault?' open':''}>
+      <summary>${title}${hint?`<span class="collapse-hint">${hint}</span>`:''}</summary>
+      <div class="stats-collapse-body">${bodyHtml}</div>
+    </details>`;
+  }
+  const todayStr = new Date().toLocaleDateString('en-CA');
+  function daysAgoStr(n) { const d = new Date(); d.setDate(d.getDate()-n); return d.toLocaleDateString('en-CA'); }
+
   const totalEarned  = r2(activeDays.reduce((s,d) => s + (d.ptsEarned||0), 0));
   const totalSpent   = r2(activeDays.reduce((s,d) => s + (d.ptsSpent||0), 0));
   const avgNet       = r2(activeDays.reduce((s,d) => s + (d.netPts||0), 0) / totalDays);
   const bestDay      = activeDays.reduce((best, d) => best === null || d.netPts > best.netPts ? d : best, null);
   const worstDay     = activeDays.reduce((worst, d) => worst === null || d.netPts < worst.netPts ? d : worst, null);
 
-  let html = `<div class="stat-cards">
-    <div class="stat-card"><div class="stat-card-label">DAYS TRACKED</div><div class="stat-card-value">${totalDays}</div></div>
-    <div class="stat-card"><div class="stat-card-label">AVG NET PTS/DAY</div><div class="stat-card-value ${avgNet>=0?'pos':'neg'}">${avgNet>=0?'+':''}${avgNet}</div></div>
-    <div class="stat-card"><div class="stat-card-label">TOTAL EARNED</div><div class="stat-card-value pos">+${totalEarned}</div></div>
-    <div class="stat-card"><div class="stat-card-label">TOTAL SPENT</div><div class="stat-card-value neg">−${totalSpent}</div></div>
-    ${bestDay ? `<div class="stat-card"><div class="stat-card-label">BEST DAY</div><div class="stat-card-value pos" style="font-size:14px">${bestDay.date}<br>+${r2(bestDay.netPts)}</div></div>` : ''}
-    ${worstDay ? `<div class="stat-card"><div class="stat-card-label">WORST DAY</div><div class="stat-card-value neg" style="font-size:14px">${worstDay.date}<br>${r2(worstDay.netPts)}</div></div>` : ''}
-  </div>`;
+  let html = '';
 
-  // ── Net pts last 30 days ──
-  const last30 = hist.slice(-30);
-  if (last30.length) {
-    const maxAbs = Math.max(...last30.map(d => Math.abs(d.netPts)), 1);
-    html += `<div class="stats-group">
-      <div class="stats-group-title">Net Points — Last ${last30.length} Days</div>
-      <div class="bar-chart">`;
-    last30.forEach(d => {
-      const pct = Math.min(100, Math.abs(d.netPts) / maxAbs * 100);
-      const pos = d.netPts >= 0;
-      const label = d.date.slice(5); // MM-DD
-      html += `<div class="bar-row">
-        <span class="bar-label">${label}</span>
-        <div class="bar-track"><div class="bar-fill ${pos?'pos':'neg'}" style="width:${pct}%"></div></div>
-        <span class="bar-val ${pos?'pos':'neg'}">${pos?'+':''}${r2(d.netPts)}</span>
-      </div>`;
+  // ════════════════════════════════════════════════════════
+  // TIER 1 — At a glance
+  // ════════════════════════════════════════════════════════
+
+  // Streak (consecutive B-or-better ending most recently)
+  const STREAK_GRADES = new Set(['S+','S','A+','A','A−','B+','B']);
+  const qualifies = d => !d.vacation && !d.missed && STREAK_GRADES.has(scoreDay(d));
+  let streak = 0;
+  for (let i = hist.length - 1; i >= 0; i--) {
+    if (qualifies(hist[i])) streak++; else break;
+  }
+
+  // Recent windows
+  const last7  = activeDays.filter(d => d.date > daysAgoStr(7));
+  const prev7  = activeDays.filter(d => d.date > daysAgoStr(14) && d.date <= daysAgoStr(7));
+  const last30d = activeDays.filter(d => d.date > daysAgoStr(30));
+  const avg7 = avgOf(last7), avgPrev7 = avgOf(prev7);
+  const delta = (avg7 !== null && avgPrev7 !== null) ? r2(avg7 - avgPrev7) : null;
+  const medianNet = median(activeDays.map(d => d.netPts||0));
+  const typicalGrade = netToGrade(medianNet);
+
+  // Hero row: current 7-day average grade, trend, streak
+  const avg7Grade = avg7 !== null ? netToGrade(avg7) : null;
+  html += `<div class="hero-row">`;
+  html += `<div class="hero-card">
+      <div class="hero-label">LAST 7 DAYS</div>
+      <div class="hero-value hero-grade" style="color:${avg7Grade?gradeColor(avg7Grade):'var(--muted)'}">${avg7Grade||'—'}</div>
+      <div class="hero-sub">${avg7!==null?`avg ${avg7>=0?'+':''}${avg7} pts`:'no data'}</div>
+    </div>`;
+  html += `<div class="hero-card">
+      <div class="hero-label">TREND</div>
+      <div class="hero-value" style="color:${delta===null?'var(--muted)':(delta>=0?'var(--pos)':'var(--neg)')}">${delta===null?'—':(delta>=0?'▲':'▼')+' '+Math.abs(delta)}</div>
+      <div class="hero-sub">vs previous 7 days</div>
+    </div>`;
+  html += `<div class="hero-card">
+      <div class="hero-label">STREAK</div>
+      <div class="hero-value" style="color:${streak>0?'var(--onetime)':'var(--muted)'}">${streak}${streak>0?' 🔥':''}</div>
+      <div class="hero-sub">days at B or better</div>
+    </div>`;
+  html += `</div>`;
+
+  // Second hero row: typical day + consistency
+  const netsAll = activeDays.map(d => d.netPts||0);
+  const mean = netsAll.length ? netsAll.reduce((a,b)=>a+b,0)/netsAll.length : 0;
+  const variance = netsAll.length ? netsAll.reduce((s,n)=>s+Math.pow(n-mean,2),0)/netsAll.length : 0;
+  const stdev = r2(Math.sqrt(variance));
+  const consistencyPct = mean > 0 ? Math.max(0, Math.min(100, Math.round((1 - (stdev/Math.max(mean,1))) * 100))) : 0;
+  const goodDays = activeDays.filter(d => STREAK_GRADES.has(scoreDay(d))).length;
+  const goodPct = totalDays ? Math.round(goodDays/totalDays*100) : 0;
+
+  html += `<div class="hero-row">`;
+  html += `<div class="hero-card">
+      <div class="hero-label">TYPICAL DAY</div>
+      <div class="hero-value hero-grade" style="font-size:30px;color:${gradeColor(typicalGrade)}">${typicalGrade}</div>
+      <div class="hero-sub">median ${medianNet>=0?'+':''}${medianNet} pts</div>
+    </div>`;
+  html += `<div class="hero-card">
+      <div class="hero-label">B-OR-BETTER</div>
+      <div class="hero-value" style="color:${goodPct>=50?'var(--pos)':'var(--muted)'}">${goodPct}%</div>
+      <div class="hero-sub">${goodDays} of ${totalDays} days</div>
+    </div>`;
+  html += `<div class="hero-card">
+      <div class="hero-label">CONSISTENCY</div>
+      <div class="hero-value" style="color:${consistencyPct>=60?'var(--pos)':consistencyPct>=35?'var(--accent2)':'var(--neg)'}">${consistencyPct}%</div>
+      <div class="hero-sub">±${stdev} swing</div>
+    </div>`;
+  html += `</div>`;
+
+  // Sparkline — last 30 days, colored by grade
+  if (last30d.length || hist.length) {
+    const spark = hist.slice(-30);
+    const maxAbsS = Math.max(...spark.map(d => Math.abs(d.netPts||0)), 1);
+    let sparkHtml = `<div class="spark">`;
+    spark.forEach(d => {
+      const g = scoreDay(d);
+      const isOff = d.vacation || d.missed;
+      const h = Math.max(3, Math.round(Math.abs(d.netPts||0) / maxAbsS * 46));
+      const col = isOff ? 'var(--border2)' : gradeColor(g);
+      sparkHtml += `<div class="spark-bar" style="height:${h}px;background:${col}" title="${d.date}: ${d.netPts>=0?'+':''}${r2(d.netPts||0)} (${g})"></div>`;
     });
-    html += `</div></div>`;
+    sparkHtml += `</div><div style="display:flex;justify-content:space-between;font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:1px">
+      <span>${spark[0]?spark[0].date.slice(5):''}</span><span>LAST ${spark.length} DAYS</span><span>${spark[spark.length-1]?spark[spark.length-1].date.slice(5):''}</span></div>`;
+    html += `<div style="margin-bottom:14px">${sparkHtml}</div>`;
+  }
+
+  // ── What's driving the score: points by source (last 30 days) ──
+  {
+    const src = {};
+    const add = (k, v) => { if (v) src[k] = r2((src[k]||0) + v); };
+    last30d.forEach(d => {
+      add('Chores', (d.waterPts||0)+(d.workPts||0)+(d.dishPts||0)+(d.garbPts||0)+(d.hdPts||0)+(d.ldPts||0)
+        +(d.dkPts||0)+(d.tkPts||0)+(d.crPts||0)+(d.egPts||0)+(d.tePts||0)+(d.laPts||0)+(d.spPts||0)
+        +(d.gaPts||0)+(d.oiPts||0));
+      add('Gym', (d.workoutPts||0)+(d.pushupPts||0)+(d.jumpRopePts||0));
+      add('Meditation', d.metPts||0);
+      add('Fasting', d.fastPts||0);
+      add('Sex', (d.woohoos||0)*12);
+      add('Logging', (d.lgPts||0)+(d.slPts||0));
+      // Tasks / clean / gym tasks fold into leftover earned
+    });
+    // Leftover earned (custom tasks, deep clean, etc.)
+    const namedTotal = Object.values(src).reduce((a,b)=>a+b,0);
+    const earned30 = r2(last30d.reduce((s,d)=>s+(d.ptsEarned||0),0));
+    const other = r2(earned30 - namedTotal);
+    if (other > 0.5) src['Tasks & other'] = other;
+
+    const rows = Object.entries(src).filter(([,v]) => v > 0).sort((a,b) => b[1]-a[1]);
+    if (rows.length) {
+      const maxV = rows[0][1];
+      const COLORS = { 'Chores':'#0ea5c8','Gym':'#ea6c00','Meditation':'#7c3aed','Fasting':'#0d9488',
+                       'Sex':'#16a34a','Logging':'#0f766e','Tasks & other':'#9333ea' };
+      let body = '';
+      rows.forEach(([k,v]) => {
+        const pct = Math.round(v/maxV*100);
+        const share = earned30 ? Math.round(v/earned30*100) : 0;
+        body += `<div class="src-row">
+          <span class="src-label">${k}</span>
+          <div class="src-track"><div class="src-fill" style="width:${pct}%;background:${COLORS[k]||'var(--muted)'}"></div></div>
+          <span class="src-val">+${v} · ${share}%</span>
+        </div>`;
+      });
+      // Spending side
+      const spent30 = r2(last30d.reduce((s,d)=>s+(d.ptsSpent||0),0));
+      if (spent30 > 0) {
+        const foodSp = r2(last30d.reduce((s,d)=>s+(d.foodSpendOverride!==undefined?d.foodSpendOverride:(d.food||[]).reduce((ss,f)=>ss+(f.spend||0),0)),0));
+        const drinkSp = r2(last30d.reduce((s,d)=>s+(d.drinkSpend||0),0));
+        const booSp = r2(last30d.reduce((s,d)=>s+((d.boohoos||0)*12),0));
+        body += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border);font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:6px">SPENT</div>`;
+        [['Food',foodSp,'var(--food)'],['Drink',drinkSp,'var(--drink)'],['Boohoos',booSp,'var(--neg)']].forEach(([k,v,c]) => {
+          if (v <= 0) return;
+          const pct = Math.round(v/Math.max(spent30,1)*100);
+          body += `<div class="src-row">
+            <span class="src-label">${k}</span>
+            <div class="src-track"><div class="src-fill" style="width:${pct}%;background:${c}"></div></div>
+            <span class="src-val">−${v} · ${pct}%</span>
+          </div>`;
+        });
+      }
+      html += collapsible('What\'s Driving Your Score', 'last 30 days', body, true);
+    }
+  }
+
+  // ── Day-of-week deep dive ──
+  {
+    const DOW_ORDER = [1,2,3,4,5,6,0];
+    const rows = DOW_ORDER.map(di => {
+      const days = activeDays.filter(d => d.dow === di);
+      if (!days.length) return null;
+      const nets = days.map(d => d.netPts||0);
+      const a = r2(nets.reduce((x,y)=>x+y,0)/nets.length);
+      const med = median(nets);
+      const best = Math.max(...nets), worst = Math.min(...nets);
+      const good = days.filter(d => STREAK_GRADES.has(scoreDay(d))).length;
+      return { label: DOW_LABELS[di], n: days.length, avg: a, med, best, worst,
+               goodPct: Math.round(good/days.length*100), grade: netToGrade(a) };
+    }).filter(Boolean);
+
+    if (rows.length) {
+      const maxAvg = Math.max(...rows.map(r => Math.abs(r.avg)), 1);
+      const bestDow = rows.reduce((b,r) => r.avg > b.avg ? r : b, rows[0]);
+      const worstDow = rows.reduce((w,r) => r.avg < w.avg ? r : w, rows[0]);
+      let body = `<div style="font-family:'Crimson Pro',serif;font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6">
+        Your strongest day is <strong style="color:var(--pos)">${bestDow.label}</strong> (avg ${bestDow.avg>=0?'+':''}${bestDow.avg}), weakest is <strong style="color:var(--neg)">${worstDow.label}</strong> (avg ${worstDow.avg>=0?'+':''}${worstDow.avg}).
+      </div>`;
+      body += `<div class="bar-chart" style="margin-bottom:12px">`;
+      rows.forEach(r => {
+        const pct = Math.min(100, Math.abs(r.avg)/maxAvg*100);
+        body += `<div class="bar-row">
+          <span class="bar-label">${r.label.slice(0,3)}</span>
+          <div class="bar-track"><div class="bar-fill ${r.avg>=0?'pos':'neg'}" style="width:${pct}%"></div></div>
+          <span class="bar-val" style="color:${gradeColor(r.grade)};font-weight:600">${r.grade}</span>
+        </div>`;
+      });
+      body += `</div>`;
+      body += `<table class="stats-table"><thead><tr><th>DAY</th><th style="text-align:right">N</th><th style="text-align:right">AVG</th><th style="text-align:right">MEDIAN</th><th style="text-align:right">BEST</th><th style="text-align:right">B+%</th></tr></thead><tbody>`;
+      rows.forEach(r => {
+        body += `<tr>
+          <td>${r.label}</td>
+          <td class="num" style="color:var(--muted)">${r.n}</td>
+          <td class="num ${r.avg>=0?'pos':'neg'}">${r.avg>=0?'+':''}${r.avg}</td>
+          <td class="num" style="color:var(--text2)">${r.med>=0?'+':''}${r.med}</td>
+          <td class="num pos">+${r2(r.best)}</td>
+          <td class="num" style="color:${r.goodPct>=50?'var(--pos)':'var(--muted)'}">${r.goodPct}%</td>
+        </tr>`;
+      });
+      body += `</tbody></table>`;
+      html += collapsible('Day of the Week', 'which days work for you', body, true);
+    }
+  }
+
+  // ── Drifting habits: what you used to do and stopped ──
+  {
+    const ACTS = [
+      ['Workout','workoutLog'], ['Pushups','pushupLog'], ['Jump rope','jumpRopeLog'],
+      ['Meditation','meditationLog'], ['Fasting','fastingLog'], ['Water','waterLog'],
+      ['Teeth','teethLog'], ['Creatine','creatineLog'], ['Dishes','dishesLog'],
+      ['Laundry','laundryLog'], ['Sleep log','sleepEntries'], ['Journal','logEntries']
+    ];
+    const drift = [];
+    ACTS.forEach(([label, key]) => {
+      const log = state[key] || [];
+      if (log.length < 3) return; // need some history to call it a habit
+      const last = log.reduce((b,e) => (e.date > b ? e.date : b), '');
+      if (!last) return;
+      const daysSince = Math.round((new Date(todayStr) - new Date(last)) / 86400000);
+      // How often in the 30 days before it stopped
+      const recent30 = log.filter(e => e.date > daysAgoStr(60)).length;
+      if (daysSince >= 4 && recent30 >= 2) drift.push({ label, daysSince, last });
+    });
+    drift.sort((a,b) => b.daysSince - a.daysSince);
+    if (drift.length) {
+      let body = `<div style="font-family:'Crimson Pro',serif;font-size:13px;color:var(--text2);margin-bottom:10px;line-height:1.6">Things you were doing regularly but haven't logged lately.</div>`;
+      body += `<table class="stats-table"><thead><tr><th>ACTIVITY</th><th style="text-align:right">LAST DONE</th><th style="text-align:right">DAYS AGO</th></tr></thead><tbody>`;
+      drift.forEach(d => {
+        const col = d.daysSince >= 14 ? 'var(--neg)' : d.daysSince >= 7 ? 'var(--accent2)' : 'var(--muted)';
+        body += `<tr><td>${d.label}</td>
+          <td class="num" style="color:var(--muted)">${d.last.slice(5)}</td>
+          <td class="num" style="color:${col};font-weight:600">${d.daysSince}</td></tr>`;
+      });
+      body += `</tbody></table>`;
+      html += collapsible('Slipping', `${drift.length} habit${drift.length!==1?'s':''} drifting`, body, true);
+    }
+  }
+
+  // ── Overall totals (collapsed) ──
+  {
+    const body = `<div class="stat-cards" style="margin-bottom:0">
+      <div class="stat-card"><div class="stat-card-label">DAYS TRACKED</div><div class="stat-card-value">${totalDays}</div></div>
+      <div class="stat-card"><div class="stat-card-label">AVG NET PTS/DAY</div><div class="stat-card-value ${avgNet>=0?'pos':'neg'}">${avgNet>=0?'+':''}${avgNet}</div></div>
+      <div class="stat-card"><div class="stat-card-label">TOTAL EARNED</div><div class="stat-card-value pos">+${totalEarned}</div></div>
+      <div class="stat-card"><div class="stat-card-label">TOTAL SPENT</div><div class="stat-card-value neg">−${totalSpent}</div></div>
+      ${bestDay ? `<div class="stat-card"><div class="stat-card-label">BEST DAY</div><div class="stat-card-value pos" style="font-size:14px">${bestDay.date}<br>+${r2(bestDay.netPts)}</div></div>` : ''}
+      ${worstDay ? `<div class="stat-card"><div class="stat-card-label">WORST DAY</div><div class="stat-card-value neg" style="font-size:14px">${worstDay.date}<br>${r2(worstDay.netPts)}</div></div>` : ''}
+    </div>`;
+    html += collapsible('All-Time Totals', '', body, false);
+  }
+
+  // ── Daily history chart (collapsed) ──
+  {
+    const last30 = hist.slice(-30);
+    if (last30.length) {
+      const maxAbs = Math.max(...last30.map(d => Math.abs(d.netPts)), 1);
+      let body = `<div class="bar-chart">`;
+      last30.slice().reverse().forEach(d => {
+        const pct = Math.min(100, Math.abs(d.netPts) / maxAbs * 100);
+        const pos = d.netPts >= 0;
+        const g = scoreDay(d);
+        body += `<div class="bar-row">
+          <span class="bar-label">${d.date.slice(5)}</span>
+          <div class="bar-track"><div class="bar-fill ${pos?'pos':'neg'}" style="width:${pct}%"></div></div>
+          <span class="bar-val" style="color:${gradeColor(g)};font-weight:600;width:54px">${g} ${pos?'+':''}${r2(d.netPts)}</span>
+        </div>`;
+      });
+      body += `</div>`;
+      html += collapsible('Daily History', `last ${last30.length} days`, body, false);
+    }
   }
 
   // ── Multi-period breakdown: averages by DOW, month, season, year, all-time ──
@@ -2137,13 +2547,7 @@ function renderStats() {
     return h;
   }
 
-  // ── By Day of Week (Mon → Sun) ──
-  const DOW_MON_FIRST = [1,2,3,4,5,6,0];
-  html += periodTable('By Day of Week',
-    DOW_MON_FIRST.map(i => ({
-      label: DOW_LABELS[i], days: activeDays.filter(d => d.dow === i)
-    }))
-  );
+  // (Day-of-week breakdown now lives in the richer "Day of the Week" section above)
 
   // ── By Month of Year (aggregated across all years) ──
   html += periodTable('By Month',
@@ -2275,19 +2679,6 @@ function renderStats() {
       });
       html += `</div></div>`;
     }
-  }
-  // Streak: consecutive days ending yesterday with B or better (net >= 40)
-  const STREAK_GRADES = new Set(['S+','S','A+','A','A−','B+','B']);
-  const qualifies = d => !d.vacation && !d.missed && STREAK_GRADES.has(scoreDay(d));
-  let streak = 0;
-  for (let i = hist.length - 1; i >= 0; i--) {
-    if (qualifies(hist[i])) streak++;
-    else break;
-  }
-  if (streak > 0) {
-    html += `<div class="stat-cards" style="margin-top:0">
-      <div class="stat-card"><div class="stat-card-label">CURRENT STREAK (B+)</div><div class="stat-card-value" style="color:var(--onetime)">${streak} day${streak!==1?'s':''} 🔥</div></div>
-    </div>`;
   }
 
   // ── Drink log ──
@@ -2696,7 +3087,7 @@ function renderStats() {
 
   // ── Gym Challenge Records ──
   if ((state.challenges || []).length) {
-    state.challenges.forEach(c => {
+    state.challenges.forEach((c, ci) => {
       if (!c.entries.length) return;
       const sorted = c.entries.slice().sort((a, b) =>
         c.type === 'time' ? a.val - b.val : b.val - a.val
@@ -2705,53 +3096,40 @@ function renderStats() {
       html += `<div class="stats-group">
         <div class="stats-group-title">🏋 ${esc(c.name)}${c.detail ? ' — ' + esc(c.detail) : ''} (${c.type === 'time' ? 'Best Times' : 'Top Scores'})</div>
         <table class="stats-table">
-          <thead><tr><th>#</th><th>DATE</th><th style="text-align:right">${esc(c.unit)}</th></tr></thead>
+          <thead><tr><th>#</th><th>DATE</th><th style="text-align:right">${esc(c.unit)}</th><th></th></tr></thead>
           <tbody>`;
       top10.forEach((e, rank) => {
+        // Index of this entry in the unsorted array, so edits target the right one
+        const ei = c.entries.indexOf(e);
         html += `<tr>
           <td style="color:${rank===0?'var(--reward)':'var(--muted)'};font-family:'Cinzel',serif;font-size:11px">${rank===0?'★':rank+1}</td>
           <td style="font-family:'Cinzel',serif;font-size:12px">${e.date}</td>
           <td class="num" style="color:${rank===0?'var(--gym)':'var(--text)'}">${formatChallengeVal(e.val, c.type, c.unit)}</td>
+          <td style="text-align:right"><button class="edit-btn" onclick="openRecordEdit(${ci},${ei})">✎</button></td>
         </tr>`;
       });
       html += `</tbody></table></div>`;
     });
   }
 
-  // ── History log (editable) ──
-  html += `<div class="stats-group">
-    <div class="stats-group-title">History Log</div>
-    <table class="stats-table">
-      <thead><tr><th>#</th><th>DATE</th><th>DAY</th><th style="text-align:right">NET PTS</th><th style="text-align:right">🍺</th><th></th></tr></thead>
-      <tbody>`;
-  hist.slice().reverse().forEach((d, ri) => {
-    const realIndex = hist.length - 1 - ri;
-    const dowName = DOW_LABELS[d.dow] || '—';
-    const foodList = (d.food || []);
-    const foodSummary = foodList.length
-      ? foodList.map(f => {
-          const portionStr = f.entries
-            ? f.entries.map(e => ({tiny:'Tiny',little:'A little',medium:'Medium',lot:'A lot'}[e.portion]||e.portion)).join(', ')
-            : '';
-          return `${f.name}${portionStr ? ' ('+portionStr+')' : ''} −${f.spend}pts`;
-        }).join(' · ')
-      : '';
-    html += `<tr>
-      <td style="color:var(--muted);font-family:'Cinzel',serif;font-size:11px">${realIndex+1}</td>
-      <td style="font-family:'Cinzel',serif;font-size:12px">${d.date}</td>
-      <td style="font-family:'Cinzel',serif;font-size:12px;color:var(--muted)">${dowName}</td>
-      <td class="num ${d.netPts>=0?'pos':'neg'}">${d.netPts>=0?'+':''}${r2(d.netPts)}</td>
-      <td class="num" style="color:var(--drink)">${d.drinks||''}</td>
-      <td style="white-space:nowrap">
-        <button class="edit-btn" onclick="openEditHistory(${realIndex})">📅</button>
-        <button class="edit-btn" onclick="openHistoryTaskModal(${realIndex})">✎</button>
-      </td>
-    </tr>
-    ${foodSummary ? `<tr><td colspan="6" style="font-size:12px;color:var(--food);font-style:italic;padding:2px 10px 8px">🍔 ${esc(foodSummary)}</td></tr>` : ''}`;
-  });
-  html += `</tbody></table></div>`;
-
   el.innerHTML = html;
+
+  // ── Fold the long tail: turn each remaining .stats-group into a collapsed section ──
+  el.querySelectorAll(':scope > .stats-group').forEach(group => {
+    const titleEl = group.querySelector(':scope > .stats-group-title');
+    if (!titleEl) return;
+    const details = document.createElement('details');
+    details.className = 'stats-collapse';
+    const summary = document.createElement('summary');
+    summary.innerHTML = titleEl.innerHTML;
+    const body = document.createElement('div');
+    body.className = 'stats-collapse-body';
+    titleEl.remove();
+    while (group.firstChild) body.appendChild(group.firstChild);
+    details.appendChild(summary);
+    details.appendChild(body);
+    group.replaceWith(details);
+  });
 }
 
 // ── History Task Editor ───────────────────────────────────────────────
@@ -2768,8 +3146,10 @@ function openHistoryTaskModal(histIndex) {
       allTasks[t.name] = { ptsPerUnit: t.ptsPerUnit, unit: t.unit || 'unit' };
     });
   });
+  // Names handled by the dedicated To-Do section below — don't duplicate them here
+  const todoNames = new Set((state.tasks.onetime || []).map(t => t.name));
   Object.keys(entry.tasks || {}).forEach(name => {
-    if (!allTasks[name]) allTasks[name] = { ptsPerUnit: null, unit: 'unit' };
+    if (!allTasks[name] && !todoNames.has(name)) allTasks[name] = { ptsPerUnit: null, unit: 'unit' };
   });
   const rewardNames = Object.keys(entry.rewards || {});
 
@@ -2872,6 +3252,44 @@ function openHistoryTaskModal(histIndex) {
   html += qtyRow('💪 Pushups', 'reps', storedQty('pushupReps','pushupLog','count'), 'pushupReps', '#0369a1');
   html += qtyRow('🪃 Jump rope', 'jumps', storedQty('jumpReps','jumpRopeLog','count'), 'jumpReps', '#7c3aed');
 
+  // Custom gym tasks (count × ptsPerUnit)
+  if ((state.gymTasks || []).length) {
+    html += '<div style="' + headerStyle + ';margin-top:10px">GYM TASKS (count)</div>';
+    state.gymTasks.forEach(t => {
+      const stored = (entry.gymTasks || {})[t.name] || 0;
+      html += '<div style="' + rowStyle + '">'
+        + '<div style="flex:1;font-size:14px;color:var(--text)">' + esc(t.name)
+        + '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + t.ptsPerUnit + ' pts/' + (t.unit||'unit') + '</span></div>'
+        + '<input type="number" min="0" step="1" value="' + stored + '" data-gymtask="' + esc(t.name) + '" data-kind="gymtask" style="' + inputStyle + '" /></div>';
+    });
+  }
+
+  // Deep clean templates (completing one earns its pts)
+  const cleanTemplates = (state.clean || []).filter(c => !c.isLog);
+  if (cleanTemplates.length) {
+    html += '<div style="' + headerStyle + ';margin-top:10px">DEEP CLEAN (1 = completed)</div>';
+    cleanTemplates.forEach(c => {
+      const stored = (entry.cleanDone || {})[c.name] || 0;
+      html += '<div style="' + rowStyle + '">'
+        + '<div style="flex:1;font-size:14px;color:var(--text)">' + esc(c.name)
+        + '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + c.pts + ' pts</span></div>'
+        + '<input type="number" min="0" step="1" value="' + stored + '" data-clean="' + esc(c.name) + '" data-kind="cleanitem" style="' + inputStyle + '" /></div>';
+    });
+  }
+
+  // To-Do items (one-time tasks) — allow adding ones not already in the snapshot
+  const todos = (state.tasks.onetime || []);
+  if (todos.length) {
+    html += '<div style="' + headerStyle + ';margin-top:10px">TO-DO (1 = completed)</div>';
+    todos.forEach(t => {
+      const stored = (entry.tasks || {})[t.name] || 0;
+      html += '<div style="' + rowStyle + '">'
+        + '<div style="flex:1;font-size:14px;color:var(--text)">' + esc(t.name)
+        + '<br><span style="font-size:11px;color:var(--muted);font-family:Cinzel,serif">' + t.pts + ' pts</span></div>'
+        + '<input type="number" min="0" step="1" value="' + stored + '" data-task="' + esc(t.name) + '" data-kind="task" style="' + inputStyle + '" /></div>';
+    });
+  }
+
   // Sleep duration bonus & score (no point effect beyond the +4 above)
   html += '<div style="' + headerStyle + ';margin-top:10px">OTHER</div>';
   html += qtyRow('🎉 Woohoo count', '+12 pts each', entry.woohoos || 0, 'woohoos', '#16a34a');
@@ -2907,10 +3325,13 @@ function saveHistoryTasks() {
   const inputs = document.querySelectorAll('#historyTaskList input');
   const newTasks = {}, newRewards = {};
   const direct = {};
+  const newGymTasks = {}, newCleanDone = {};
   inputs.forEach(inp => {
     const kind = inp.dataset.kind;
     if (kind === 'task')   { const v = Math.max(0, parseInt(inp.value)||0); if (v>0) newTasks[inp.dataset.task] = v; }
     else if (kind === 'reward') { const v = Math.max(0, parseInt(inp.value)||0); if (v>0) newRewards[inp.dataset.task] = v; }
+    else if (kind === 'gymtask') { const v = Math.max(0, parseInt(inp.value)||0); if (v>0) newGymTasks[inp.dataset.gymtask] = v; }
+    else if (kind === 'cleanitem') { const v = Math.max(0, parseInt(inp.value)||0); if (v>0) newCleanDone[inp.dataset.clean] = v; }
     else { direct[kind] = parseFloat(inp.value) || 0; }
   });
 
@@ -2923,6 +3344,18 @@ function saveHistoryTasks() {
     });
     if (found) ptsEarned = r2(ptsEarned + count * found.ptsPerUnit);
     else { const ot = state.tasks.onetime.find(t => t.name === name); if (ot) ptsEarned = r2(ptsEarned + count * ot.pts); }
+  });
+
+  // Earned from custom gym tasks
+  Object.entries(newGymTasks).forEach(([name, count]) => {
+    const gt = (state.gymTasks || []).find(t => t.name === name);
+    if (gt) ptsEarned = r2(ptsEarned + count * gt.ptsPerUnit);
+  });
+
+  // Earned from deep clean completions
+  Object.entries(newCleanDone).forEach(([name, count]) => {
+    const ci = (state.clean || []).find(c => c.name === name && !c.isLog);
+    if (ci) ptsEarned = r2(ptsEarned + count * ci.pts);
   });
 
   // Spent from rewards
@@ -2992,6 +3425,8 @@ function saveHistoryTasks() {
   // Store everything on the entry (both the points and the raw quantities so re-edits show them)
   entry.tasks = newTasks;
   entry.rewards = newRewards;
+  entry.gymTasks = newGymTasks;
+  entry.cleanDone = newCleanDone;
   Object.entries(choreVals).forEach(([k,v]) => { entry[k] = v; });
   // raw quantities for re-editing
   entry.waterPresses = intNum('waterPresses'); entry.workH = intNum('workH'); entry.workM = intNum('workM');
@@ -3203,6 +3638,7 @@ function saveModal() {
 // Close modal on overlay click
 document.getElementById('editModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
 document.getElementById('challengeLogModal').addEventListener('click', e => { if (e.target === e.currentTarget) closeChallengeLog(); });
+document.getElementById('missedModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('missedModal').classList.remove('open'); });
 document.getElementById('vacationModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('vacationModal').classList.remove('open'); });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); document.getElementById('plansModal').classList.remove('open'); } });
 document.getElementById('plansModal').addEventListener('click', e => { if (e.target === e.currentTarget) document.getElementById('plansModal').classList.remove('open'); });
@@ -3213,23 +3649,24 @@ const TAB_LABELS = {
   rewards:'Sex', food:'Diet', drink:'Drink', grocery:'Grocery',
   clean:'Deep Clean', gym:'Gym', stats:'Stats', log:'Log', sleep:'Sleep', meditation:'Meditate', fasting:'Fasting'
 };
+const TAB_ICONS = {
+  chores:'🧹', onetime:'✓',
+  rewards:'❤️', food:'🍽', drink:'🍺', grocery:'🛒',
+  clean:'🧽', gym:'🏋', stats:'📊', log:'📓', sleep:'😴', meditation:'🧘', fasting:'🍃'
+};
 const TAB_DEFAULT_COLORS = {
   chores:'#0ea5c8', onetime:'#ea6c00',
   rewards:'#b59a00', food:'#e05020', drink:'#7c3aed', grocery:'#2a9060',
   clean:'#dc2626', gym:'#ea6c00', stats:'#9333ea', log:'#0f766e', sleep:'#4338ca', meditation:'#7c3aed', fasting:'#0d9488'
 };
-const SWATCHES = [
-  '#0ea5c8','#16a34a','#9333ea','#ea6c00','#b59a00','#e05020',
-  '#7c3aed','#2a9060','#dc2626','#0369a1','#be185d','#0891b2',
-  '#65a30d','#c2410c','#6d28d9','#0f766e','#4f46e5','#1a1a1a'
-];
 
 let _activeTab = 'chores';
 let _dragSrc = null;
 let _dragBtn = null;
 let _touchDragging = false;
 let _touchDragTimer = null;
-let _colorPickerTab = null;
+let _suppressTabClick = false;
+let _dragStartX = 0, _dragStartY = 0;
 
 function tabColor(tab) {
   return (state.tabColors && state.tabColors[tab]) || TAB_DEFAULT_COLORS[tab] || '#999';
@@ -3271,56 +3708,81 @@ function renderTabs() {
         btn.style.color = col;
         btn.style.background = hex2rgba(col, 0.08);
       }
-      btn.innerHTML = `<span class="tab-dot" style="background:${col}"></span>${TAB_LABELS[tab]}`;
+      btn.innerHTML = `<span class="tab-icon">${TAB_ICONS[tab]||'•'}</span>${TAB_LABELS[tab]}`;
 
       // Click to switch
-      btn.addEventListener('click', () => switchTab(tab));
+      btn.addEventListener('click', () => { if (_suppressTabClick) return; switchTab(tab); });
 
-      // Touch-based drag to reorder
+      // ── Long-press then drag to reorder ──
       btn.addEventListener('touchstart', e => {
-        _dragSrc = tab;
-        _dragBtn = btn;
-        btn.classList.add('dragging');
-        _touchDragTimer = setTimeout(() => { _touchDragging = true; }, 200);
+        const t = e.touches[0];
+        _dragStartX = t.clientX; _dragStartY = t.clientY;
+        _dragSrc = tab; _dragBtn = btn;
+        // Require a deliberate 400ms hold before drag mode engages
+        _touchDragTimer = setTimeout(() => {
+          _touchDragging = true;
+          btn.classList.add('dragging');
+          try { navigator.vibrate && navigator.vibrate(30); } catch(err){}
+        }, 400);
       }, { passive: true });
+
       btn.addEventListener('touchmove', e => {
-        if (!_touchDragging) return;
+        const t = e.touches[0];
+        // If the finger moves before the hold completes, it's a scroll — cancel drag
+        if (!_touchDragging) {
+          const dx = Math.abs(t.clientX - _dragStartX);
+          const dy = Math.abs(t.clientY - _dragStartY);
+          if (dx > 8 || dy > 8) { clearTimeout(_touchDragTimer); _dragSrc = null; }
+          return;
+        }
         e.preventDefault();
-        const touch = e.touches[0];
-        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        const el = document.elementFromPoint(t.clientX, t.clientY);
         const target = el && el.closest('.tab-btn');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drag-over'));
-        if (target && target !== btn) target.classList.add('drag-over');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drop-before','drop-after'));
+        if (target && target !== btn) {
+          // Show which side it will land on
+          const rect = target.getBoundingClientRect();
+          const before = t.clientX < rect.left + rect.width / 2;
+          target.classList.add(before ? 'drop-before' : 'drop-after');
+        }
       }, { passive: false });
+
       btn.addEventListener('touchend', e => {
         clearTimeout(_touchDragTimer);
         btn.classList.remove('dragging');
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drag-over'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drop-before','drop-after'));
         if (!_touchDragging) { _dragSrc = null; _touchDragging = false; return; }
-        const touch = e.changedTouches[0];
-        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+
+        const t = e.changedTouches[0];
+        const el = document.elementFromPoint(t.clientX, t.clientY);
         const target = el && el.closest('.tab-btn');
         const targetTab = target && target.dataset.tab;
         if (targetTab && targetTab !== _dragSrc) {
           const order = state.tabOrder;
           const from = order.indexOf(_dragSrc);
-          const to   = order.indexOf(targetTab);
-          if (from >= 0 && to >= 0) {
-            order.splice(from, 1);
+          if (from >= 0) {
+            const rect = target.getBoundingClientRect();
+            const before = t.clientX < rect.left + rect.width / 2;
+            order.splice(from, 1);                       // remove first
+            let to = order.indexOf(targetTab);           // recompute after removal
+            if (!before) to += 1;                        // drop on the right half → after
             order.splice(to, 0, _dragSrc);
             save();
+            try { navigator.vibrate && navigator.vibrate(15); } catch(err){}
           }
         }
-        _dragSrc = null; _touchDragging = false; renderTabs();
+        _dragSrc = null; _touchDragging = false;
+        _suppressTabClick = true;
+        setTimeout(() => { _suppressTabClick = false; }, 350);
+        renderTabs();
       });
 
-      // Long-press to open color picker
-      let pressTimer;
-      btn.addEventListener('pointerdown', () => {
-        pressTimer = setTimeout(() => openColorPicker(tab, btn), 500);
+      btn.addEventListener('touchcancel', () => {
+        clearTimeout(_touchDragTimer);
+        btn.classList.remove('dragging');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('drop-before','drop-after'));
+        _dragSrc = null; _touchDragging = false;
       });
-      btn.addEventListener('pointerup',   () => clearTimeout(pressTimer));
-      btn.addEventListener('pointerleave',() => clearTimeout(pressTimer));
 
       row.appendChild(btn);
     });
@@ -3346,52 +3808,6 @@ function switchTab(tab) {
   renderTabs();
 }
 
-function openColorPicker(tab, btn) {
-  closeColorPicker();
-  _colorPickerTab = tab;
-  const popup = document.createElement('div');
-  popup.className = 'color-picker-popup';
-  popup.id = 'color-picker-popup';
-  const current = tabColor(tab);
-  SWATCHES.forEach(hex => {
-    const sw = document.createElement('div');
-    sw.className = 'color-swatch' + (hex === current ? ' selected' : '');
-    sw.style.background = hex;
-    sw.addEventListener('click', e => {
-      e.stopPropagation();
-      if (!state.tabColors) state.tabColors = {};
-      state.tabColors[tab] = hex;
-      save(); renderTabs(); closeColorPicker();
-    });
-    popup.appendChild(sw);
-  });
-  // Reset option
-  const reset = document.createElement('div');
-  reset.className = 'color-swatch';
-  reset.style.background = '#fff';
-  reset.style.border = '2px solid #ccc';
-  reset.title = 'Reset to default';
-  reset.innerHTML = '<span style="font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;height:100%;color:#999">↺</span>';
-  reset.addEventListener('click', e => {
-    e.stopPropagation();
-    if (state.tabColors) delete state.tabColors[tab];
-    save(); renderTabs(); closeColorPicker();
-  });
-  popup.appendChild(reset);
-
-  const rect = btn.getBoundingClientRect();
-  popup.style.position = 'fixed';
-  popup.style.top = (rect.bottom + 6) + 'px';
-  popup.style.left = Math.min(rect.left, window.innerWidth - 148) + 'px';
-  document.body.appendChild(popup);
-  setTimeout(() => document.addEventListener('click', closeColorPicker, { once: true }), 10);
-}
-
-function closeColorPicker() {
-  const p = document.getElementById('color-picker-popup');
-  if (p) p.remove();
-  _colorPickerTab = null;
-}
 
 
 document.getElementById('onetime-name').addEventListener('keydown', e => { if (e.key==='Enter') addOnetimeTask(); });
@@ -3908,6 +4324,8 @@ function renderChallenges() {
   const list = document.getElementById('list-challenges');
   if (!list) return;
   if (!state.challenges.length) { list.innerHTML = ''; return; }
+  if (!window._challengeOpen) window._challengeOpen = {};
+
   list.innerHTML = state.challenges.map((c, i) => {
     const entryCount = c.entries.length;
     const best = entryCount === 0 ? null :
@@ -3915,19 +4333,62 @@ function renderChallenges() {
         ? c.entries.reduce((b, e) => e.val < b.val ? e : b, c.entries[0])
         : c.entries.reduce((b, e) => e.val > b.val ? e : b, c.entries[0]);
     const bestStr = best ? `Best: ${formatChallengeVal(best.val, c.type, c.unit)} on ${best.date}` : 'No entries yet';
-    return `<div class="challenge-card">
-      <div class="reorder-btns">
-        <button class="arrow-btn" onclick="moveChallenge(${i},-1)" ${i===0?'disabled':''}>▲</button>
-        <button class="arrow-btn" onclick="moveChallenge(${i},+1)" ${i===state.challenges.length-1?'disabled':''}>▼</button>
+    const isOpen = !!window._challengeOpen[c.name];
+
+    // Ranked results (best first)
+    const sorted = c.entries.slice().sort((a, b) =>
+      c.type === 'time' ? a.val - b.val : b.val - a.val
+    );
+    // Recent results (newest first) for context
+    const recent = c.entries.slice().sort((a, b) => (a.date < b.date ? 1 : -1)).slice(0, 10);
+
+    let resultsHtml = '';
+    if (isOpen && entryCount) {
+      const rankOf = e => sorted.indexOf(e) + 1;
+      resultsHtml = `<div class="challenge-results">
+        <div class="challenge-results-head">Results · newest first</div>
+        <table class="stats-table" style="margin-bottom:2px">
+          <thead><tr><th>#</th><th>DATE</th><th style="text-align:right">${esc(c.unit || '')}</th><th></th></tr></thead>
+          <tbody>` +
+        recent.map(e => {
+          const rk = rankOf(e);
+          const ei = c.entries.indexOf(e);
+          const isPB = rk === 1;
+          return `<tr>
+            <td style="color:${isPB?'var(--reward)':'var(--muted)'};font-family:'Cinzel',serif;font-size:11px">${isPB?'★':rk}</td>
+            <td style="font-family:'Cinzel',serif;font-size:12px">${e.date}</td>
+            <td class="num" style="color:${isPB?'var(--gym)':'var(--text)'};font-weight:${isPB?'600':'400'}">${formatChallengeVal(e.val, c.type, c.unit)}</td>
+            <td style="text-align:right"><button class="edit-btn" onclick="event.stopPropagation();openRecordEdit(${i},${ei})">✎</button></td>
+          </tr>`;
+        }).join('') +
+        `</tbody></table>
+        ${entryCount > recent.length ? `<div style="font-family:'Cinzel',serif;font-size:9px;color:var(--muted);letter-spacing:1px;padding:4px 2px">showing ${recent.length} of ${entryCount}</div>` : ''}
+      </div>`;
+    }
+
+    return `<div class="challenge-wrap">
+      <div class="challenge-card" onclick="toggleChallengeResults('${esc(c.name).replace(/'/g,"\\'")}')" style="cursor:pointer">
+        <div class="reorder-btns">
+          <button class="arrow-btn" onclick="event.stopPropagation();moveChallenge(${i},-1)" ${i===0?'disabled':''}>▲</button>
+          <button class="arrow-btn" onclick="event.stopPropagation();moveChallenge(${i},+1)" ${i===state.challenges.length-1?'disabled':''}>▼</button>
+        </div>
+        <div class="challenge-info">
+          <div class="challenge-name">${esc(c.name)}${c.detail ? ` <span style="color:var(--muted);font-size:13px">— ${esc(c.detail)}</span>` : ''}</div>
+          <div class="challenge-detail">${c.type === 'time' ? '⏱ m.ss' : '📊 Units'} · ${entryCount} entr${entryCount===1?'y':'ies'} · ${bestStr}</div>
+        </div>
+        ${entryCount ? `<span class="challenge-caret${isOpen?' open':''}">▾</span>` : ''}
+        <button class="challenge-log-btn" onclick="event.stopPropagation();openChallengeLog(${i})">+ Log</button>
+        <button class="delete-btn" onclick="event.stopPropagation();deleteChallenge(${i})">✕</button>
       </div>
-      <div class="challenge-info">
-        <div class="challenge-name">${esc(c.name)}${c.detail ? ` <span style="color:var(--muted);font-size:13px">— ${esc(c.detail)}</span>` : ''}</div>
-        <div class="challenge-detail">${c.type === 'time' ? '⏱ Time (m.ss)' : '📊 Units'} · ${entryCount} entr${entryCount===1?'y':'ies'} · ${bestStr}</div>
-      </div>
-      <button class="challenge-log-btn" onclick="openChallengeLog(${i})">+ Log</button>
-      <button class="delete-btn" onclick="deleteChallenge(${i})">✕</button>
+      ${resultsHtml}
     </div>`;
   }).join('');
+}
+
+function toggleChallengeResults(name) {
+  if (!window._challengeOpen) window._challengeOpen = {};
+  window._challengeOpen[name] = !window._challengeOpen[name];
+  renderChallenges();
 }
 
 function moveChallenge(i, dir) {
@@ -5247,6 +5708,69 @@ function renderFasting() {
 }
 
 
+// ── Challenge Record Editing ──────────────────────────────────────────
+let _recordEditCtx = null;
+
+function openRecordEdit(challengeIdx, entryIdx) {
+  const c = state.challenges[challengeIdx];
+  if (!c) return;
+  const e = c.entries[entryIdx];
+  if (!e) return;
+  _recordEditCtx = { ci: challengeIdx, ei: entryIdx };
+  document.getElementById('recordEditTitle').textContent = '✎ ' + c.name;
+  document.getElementById('recordEditValLabel').textContent =
+    c.type === 'time' ? 'TIME (minutes.seconds)' : (c.unit ? c.unit.toUpperCase() : 'VALUE');
+  document.getElementById('recordEditVal').value = formatChallengeVal(e.val, c.type, c.unit);
+  document.getElementById('recordEditDate').value = e.date || '';
+  document.getElementById('recordEditModal').classList.add('open');
+  setTimeout(() => document.getElementById('recordEditVal').select(), 50);
+}
+
+function closeRecordEdit() {
+  document.getElementById('recordEditModal').classList.remove('open');
+  _recordEditCtx = null;
+}
+
+function saveRecordEdit() {
+  if (!_recordEditCtx) return;
+  const c = state.challenges[_recordEditCtx.ci];
+  const e = c && c.entries[_recordEditCtx.ei];
+  if (!e) { closeRecordEdit(); return; }
+  const raw = document.getElementById('recordEditVal').value.trim();
+  const val = parseChallengeValue(raw, c.type);
+  if (isNaN(val)) { toast('Enter a valid value.'); return; }
+  const date = document.getElementById('recordEditDate').value || e.date;
+  e.val = val;
+  e.date = date;
+  save(); closeRecordEdit();
+  if (document.getElementById('stats-content')) renderStats();
+  renderChallenges();
+  toast('✎ Record updated.');
+}
+
+function deleteRecordEntry() {
+  if (!_recordEditCtx) return;
+  const c = state.challenges[_recordEditCtx.ci];
+  if (!c) { closeRecordEdit(); return; }
+  if (!deleteRecordEntry._confirm) {
+    deleteRecordEntry._confirm = true;
+    toast('Tap Delete again to confirm.');
+    setTimeout(() => { deleteRecordEntry._confirm = false; }, 3000);
+    return;
+  }
+  deleteRecordEntry._confirm = false;
+  c.entries.splice(_recordEditCtx.ei, 1);
+  save(); closeRecordEdit();
+  if (document.getElementById('stats-content')) renderStats();
+  renderChallenges();
+  toast('✕ Record deleted.');
+}
+
+document.getElementById('recordEditModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeRecordEdit();
+});
+
+
 // ── Past Days Picker ──────────────────────────────────────────────────
 function openPastDaysModal() {
   const list = document.getElementById('pastDaysList');
@@ -5302,7 +5826,7 @@ setGreeting();
 renderAll();
 checkAndApplyMisses();
 renderTabs();
-switchTab(_activeTab && _activeTab !== 'common' && _activeTab !== 'uncommon' && _activeTab !== 'rare' ? _activeTab : 'chores');
+switchTab('chores');
 
 </script>
 </body>
