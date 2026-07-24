@@ -1200,7 +1200,9 @@
       <tr><td style="color:#6d28d9">D+</td><td>11–15 pts</td></tr>
       <tr><td style="color:#6d28d9">D</td><td>6–10 pts</td></tr>
       <tr><td style="color:#6d28d9">D−</td><td>1–5 pts</td></tr>
-      <tr><td style="color:#dc2626">F</td><td>0 or negative pts</td></tr>
+      <tr><td style="color:#ef4444">F</td><td>0 to −9 pts</td></tr>
+      <tr><td style="color:#dc2626">F⁻¹ … F⁻⁹</td><td>each −10 pts lower</td></tr>
+      <tr><td style="color:#5f0f0f">F⁻¹⁰</td><td>−100 pts or below</td></tr>
     </table>
     <p style="font-size:12px;color:var(--muted);margin-top:10px;line-height:1.6">Week and month grades show the average grade across those days.</p>
     <div class="modal-actions">
@@ -3841,12 +3843,22 @@ function netToGrade(net) {
   if (net >= 11)  return 'D+';
   if (net >= 6)   return 'D';
   if (net >= 1)   return 'D−';
-  return 'F';
+  if (net >= -9)   return 'F';       //   0 to  -9
+  if (net >= -19)  return 'F⁻¹';     // -10 to -19
+  if (net >= -29)  return 'F⁻²';     // -20 to -29
+  if (net >= -39)  return 'F⁻³';     // -30 to -39
+  if (net >= -49)  return 'F⁻⁴';     // -40 to -49
+  if (net >= -59)  return 'F⁻⁵';     // -50 to -59
+  if (net >= -69)  return 'F⁻⁶';     // -60 to -69
+  if (net >= -79)  return 'F⁻⁷';     // -70 to -79
+  if (net >= -89)  return 'F⁻⁸';     // -80 to -89
+  if (net >= -99)  return 'F⁻⁹';     // -90 to -99
+  return 'F⁻¹⁰';                     // -100 and below
 }
 
 // Numeric weight for averaging grades (maps grade → midpoint pts for avg display)
 function gradeToNum(g) {
-  const map = { 'S+':132,'S':108,'A+':84,'A':66,'A−':60,'B+':53,'B':43,'B−':34,'C+':26,'C':22,'C−':17,'D+':12,'D':7,'D−':2,'F':0,'X+':0,'X':0,'X−':0,'V':0 };
+  const map = { 'S+':132,'S':108,'A+':84,'A':66,'A−':60,'B+':53,'B':43,'B−':34,'C+':26,'C':22,'C−':17,'D+':12,'D':7,'D−':2,'F':-5,'F⁻¹':-15,'F⁻²':-25,'F⁻³':-35,'F⁻⁴':-45,'F⁻⁵':-55,'F⁻⁶':-65,'F⁻⁷':-75,'F⁻⁸':-85,'F⁻⁹':-95,'F⁻¹⁰':-110,'X+':0,'X':0,'X−':0,'V':0 };
   return map[g] ?? 0;
 }
 
@@ -3864,6 +3876,22 @@ function gradeColor(g) {
   if (g.startsWith('D'))       return '#6d28d9';
   if (g.startsWith('X'))       return '#991b1b';
   if (g === 'V')               return '#0369a1';
+  if (g && g.startsWith('F')) {
+    // F, F⁻¹ … F⁻¹⁰ — deepen the red as it gets worse
+    const F_SHADES = ['#ef4444','#e03131','#dc2626','#c81e1e','#b91c1c',
+                      '#a81919','#991b1b','#8a1616','#7f1d1d','#6b1414','#5f0f0f'];
+    const SUP = { '¹':1,'²':2,'³':3,'⁴':4,'⁵':5,'⁶':6,'⁷':7,'⁸':8,'⁹':9 };
+    let tier = 0;
+    const m = g.slice(1); // everything after the F
+    if (m) {
+      if (m === '⁻¹⁰') tier = 10;
+      else {
+        const d = m.replace('⁻','');
+        tier = SUP[d] || 0;
+      }
+    }
+    return F_SHADES[Math.min(tier, F_SHADES.length - 1)];
+  }
   return '#dc2626';
 }
 
